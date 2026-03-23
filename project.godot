@@ -7,6 +7,14 @@ config/name="Rogue1 Prototype"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 run/main_scene="res://src/main.tscn"
 
+[autoload]
+
+ECS="*res://addons/gecs/ecs/ecs.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gecs/plugin.cfg")
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
