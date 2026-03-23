@@ -30,6 +30,13 @@ horizontal_alignment = 1
 layout_mode = 2
 placeholder_text = "Lobby ID"
 
+[node name="SoloButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Play Solo"
+
+[node name="Separator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
 [node name="HostButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Host"

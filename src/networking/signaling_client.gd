@@ -11,6 +11,7 @@ signal lobby_sealed()
 
 var ws := WebSocketPeer.new()
 var _connected := false
+var _pending_lobby: String = ""
 
 func connect_to_server(url: String) -> Error:
     var err = ws.connect_to_url(url)
@@ -22,6 +23,11 @@ func poll() -> void:
     ws.poll()
     var state = ws.get_ready_state()
     if state == WebSocketPeer.STATE_OPEN:
+        if not _connected:
+            _connected = true
+            if not _pending_lobby.is_empty():
+                _send({"type": "join", "lobby": _pending_lobby})
+                _pending_lobby = ""
         while ws.get_available_packet_count() > 0:
             var msg = ws.get_packet().get_string_from_utf8()
             _handle_message(msg)
@@ -31,7 +37,10 @@ func poll() -> void:
             push_warning("SignalingClient: Connection closed")
 
 func join_lobby(lobby_id: String) -> void:
-    _send({"type": "join", "lobby": lobby_id})
+    if _connected:
+        _send({"type": "join", "lobby": lobby_id})
+    else:
+        _pending_lobby = lobby_id
 
 func send_offer(peer_id: int, offer: String) -> void:
     _send({"type": "offer", "peer_id": peer_id, "sdp": offer})
