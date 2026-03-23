@@ -28,6 +28,9 @@ func setup(peer_id: int, is_local: bool) -> void:
     net_id.peer_id = peer_id
     net_id.is_local = is_local
 
+    # Set multiplayer authority so MultiplayerSynchronizer works
+    set_multiplayer_authority(peer_id)
+
     if is_local:
         camera.make_current()
         Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
