@@ -11,6 +11,7 @@ run/main_scene="res://src/main.tscn"
 
 ECS="*res://addons/gecs/ecs/ecs.gd"
 Config="*res://src/config/game_config.gd"
+Net="*res://src/networking/network_manager.gd"
 
 [editor_plugins]
 
