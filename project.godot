@@ -1,0 +1,12 @@
+; Engine configuration file.
+; DO NOT edit manually.
+
+[application]
+
+config/name="Rogue1 Prototype"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+run/main_scene="res://src/main.tscn"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
