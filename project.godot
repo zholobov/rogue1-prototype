@@ -10,6 +10,7 @@ run/main_scene="res://src/main.tscn"
 [autoload]
 
 ECS="*res://addons/gecs/ecs/ecs.gd"
+Config="*res://src/config/game_config.gd"
 
 [editor_plugins]
 
