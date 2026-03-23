@@ -47,3 +47,25 @@ func _input(event: InputEvent) -> void:
 
     if event.is_action_pressed("ui_cancel"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _physics_process(delta: float) -> void:
+    var net_id := get_component(C_NetworkIdentity) as C_NetworkIdentity
+    if not net_id.is_local:
+        return
+
+    var vel_comp := get_component(C_Velocity) as C_Velocity
+
+    # Apply gravity
+    if not is_on_floor():
+        velocity.y -= Config.gravity * delta
+
+    # Apply horizontal movement from ECS velocity
+    velocity.x = vel_comp.direction.x * vel_comp.speed
+    velocity.z = vel_comp.direction.z * vel_comp.speed
+
+    # Jump
+    var pi := get_component(C_PlayerInput) as C_PlayerInput
+    if pi.jumping and is_on_floor():
+        velocity.y = Config.jump_speed
+
+    move_and_slide()
