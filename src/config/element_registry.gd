@@ -11,7 +11,8 @@ var interactions: Dictionary = {}
 @export var stacking_mode: String = "reset"
 
 func _ready() -> void:
-    _setup_defaults()
+    if elements.is_empty():
+        _setup_defaults()
 
 func _setup_defaults() -> void:
     # Default elements
@@ -35,7 +36,7 @@ func add_element(name: String, color: Color, applies_condition: String, conditio
         "condition_duration": condition_duration,
     }
 
-func get_element(name: String):
+func get_element(name: String) -> Variant:
     if elements.has(name):
         return elements[name]
     return null
@@ -51,7 +52,7 @@ func add_interaction(existing_condition: String, incoming_element: String, resul
         "damage_per_tick": damage_per_tick,
     }
 
-func get_interaction(existing_condition: String, incoming_element: String):
+func get_interaction(existing_condition: String, incoming_element: String) -> Variant:
     var key = "%s+%s" % [existing_condition, incoming_element]
     if interactions.has(key):
         return interactions[key]
