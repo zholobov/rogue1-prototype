@@ -16,7 +16,7 @@ func _ready():
     env.background_color = Color(0.02, 0.02, 0.04)
     env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
     env.ambient_light_color = Color(0.1, 0.1, 0.2)
-    env.ambient_light_energy = 0.1
+    env.ambient_light_energy = 0.4
     # Depth fog (do NOT use volumetric — Forward+ only)
     env.fog_enabled = true
     env.fog_light_color = Color(0.02, 0.02, 0.06)

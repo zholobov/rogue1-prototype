@@ -13,19 +13,19 @@ var _ceiling_material: StandardMaterial3D
 
 func _init() -> void:
 	_floor_material_room = StandardMaterial3D.new()
-	_floor_material_room.albedo_color = Color(0.06, 0.05, 0.08)
+	_floor_material_room.albedo_color = Color(0.3, 0.28, 0.32)
 	_floor_material_room.roughness = 0.9
 
 	_floor_material_corridor = StandardMaterial3D.new()
-	_floor_material_corridor.albedo_color = Color(0.04, 0.05, 0.07)
+	_floor_material_corridor.albedo_color = Color(0.25, 0.26, 0.3)
 	_floor_material_corridor.roughness = 0.9
 
 	_wall_material = StandardMaterial3D.new()
-	_wall_material.albedo_color = Color(0.08, 0.08, 0.1)
+	_wall_material.albedo_color = Color(0.4, 0.38, 0.42)
 	_wall_material.roughness = 0.85
 
 	_ceiling_material = StandardMaterial3D.new()
-	_ceiling_material.albedo_color = Color(0.03, 0.03, 0.05)
+	_ceiling_material.albedo_color = Color(0.2, 0.2, 0.22)
 	_ceiling_material.roughness = 0.95
 
 func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
@@ -74,7 +74,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 	var dir_light = DirectionalLight3D.new()
 	dir_light.transform = Transform3D(Basis(), Vector3(0, 10, 0))
 	dir_light.rotation_degrees = Vector3(-45, 30, 0)
-	dir_light.light_energy = 0.1
+	dir_light.light_energy = 0.5
 	dir_light.light_color = Color(0.6, 0.65, 0.8)
 	root.add_child(dir_light)
 
