@@ -17,6 +17,8 @@ func _ready():
     ecs_entity.add_component(C_PlayerInput.new())
     ecs_entity.add_component(C_NetworkIdentity.new())
 
+    add_to_group("players")
+
     # Register with ECS world
     ECS.world.add_entity(ecs_entity)
 
