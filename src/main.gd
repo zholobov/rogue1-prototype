@@ -1,6 +1,7 @@
 extends Node
 
-const TestLevel = preload("res://src/levels/test_level.tscn")
+const GeneratedLevel = preload("res://src/levels/generated_level.tscn")
+const TestLevel = preload("res://src/levels/test_level.tscn")  # keep as fallback
 const PlayerScene = preload("res://src/entities/player.tscn")
 const LobbyScene = preload("res://src/ui/lobby_ui.tscn")
 
@@ -19,7 +20,7 @@ func _on_game_started(solo: bool):
 	_start_game()
 
 func _start_game():
-	current_level = TestLevel.instantiate()
+	current_level = GeneratedLevel.instantiate()
 	add_child(current_level)
 
 	if is_solo:
@@ -36,8 +37,12 @@ func _start_game():
 func _spawn_player(peer_id: int, is_local: bool) -> void:
 	var player = PlayerScene.instantiate()
 	player.name = "Player_%d" % peer_id
-	var spawn = current_level.get_node("SpawnPoint")
-	player.position = spawn.position + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
+
+	var spawn_pos = Vector3(0, 1, 0)
+	if current_level.has_method("get_player_spawn"):
+		spawn_pos = current_level.get_player_spawn()
+
+	player.position = spawn_pos + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
 	current_level.add_child(player)
 	player.setup(peer_id, is_local)
 
