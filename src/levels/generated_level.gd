@@ -10,13 +10,20 @@ var level_data: Dictionary = {}
 func _ready():
     print("[GeneratedLevel] _ready() started")
 
-    # Environment (so background isn't default grey)
+    # Neon dungeon environment
     var env = Environment.new()
     env.background_mode = Environment.BG_COLOR
-    env.background_color = Color(0.05, 0.05, 0.1)
+    env.background_color = Color(0.02, 0.02, 0.04)
     env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-    env.ambient_light_color = Color(0.3, 0.3, 0.35)
-    env.ambient_light_energy = 0.5
+    env.ambient_light_color = Color(0.1, 0.1, 0.2)
+    env.ambient_light_energy = 0.1
+    # Depth fog (do NOT use volumetric — Forward+ only)
+    env.fog_enabled = true
+    env.fog_light_color = Color(0.02, 0.02, 0.06)
+    env.fog_density = 0.02
+    env.fog_depth_begin = 5.0
+    env.fog_depth_end = 40.0
+    env.fog_sky_affect = 0.0
     var world_env = WorldEnvironment.new()
     world_env.environment = env
     add_child(world_env)
