@@ -14,10 +14,15 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
         if health.current_health <= 0:
             var parent = entity.get_parent()
             print("[S_Death] Entity died: %s (parent: %s)" % [entity.name, parent.name if parent else "none"])
+
+            # Floating kill text for monsters
+            if parent is MonsterEntity and is_instance_valid(parent):
+                var ft = FloatingText.new()
+                parent.get_tree().current_scene.add_child(ft)
+                ft.show_text(parent.global_position, "+10")
+
             actor_died.emit(entity)
-            # Remove from ECS world (cleans up archetypes, prevents stale refs)
             if ECS.world:
                 ECS.world.remove_entity(entity)
-            # Free the parent body (player/monster CharacterBody3D)
             if is_instance_valid(parent):
                 parent.queue_free()
