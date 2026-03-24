@@ -25,7 +25,11 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
 		var basis = body.global_transform.basis
 		var move_dir = basis * Vector3(pi.move_direction.x, 0, pi.move_direction.y)
 		vel.direction = move_dir.normalized() if move_dir.length() > 0 else Vector3.ZERO
-		vel.speed = Config.player_speed if vel.direction != Vector3.ZERO else 0.0
+		var base_speed = Config.player_speed
+		var ps := entity.get_component(C_PlayerStats) as C_PlayerStats
+		if ps:
+			base_speed *= ps.speed_mult
+		vel.speed = base_speed if vel.direction != Vector3.ZERO else 0.0
 
 		# Fire weapon
 		var weapon := entity.get_component(C_Weapon) as C_Weapon

@@ -5,6 +5,7 @@ extends CharacterBody3D
 @onready var collision: CollisionShape3D = $CollisionShape3D
 
 var ecs_entity: Entity
+var _current_weapon_index: int = 0
 
 func _ready():
     # Create an Entity child for ECS component management
@@ -23,6 +24,7 @@ func _ready():
     ecs_entity.add_component(C_Conditions.new())
     ecs_entity.add_component(C_Weapon.new())
     ecs_entity.add_component(C_ActorTag.new())
+    ecs_entity.add_component(C_PlayerStats.new())
 
     var tag := ecs_entity.get_component(C_ActorTag) as C_ActorTag
     tag.actor_type = C_ActorTag.ActorType.PLAYER
@@ -65,11 +67,13 @@ func _input(event: InputEvent) -> void:
 func _equip_weapon(index: int) -> void:
     if index >= Config.weapon_presets.size():
         return
+    _current_weapon_index = index
     var preset = Config.weapon_presets[index]
     var weapon := get_component(C_Weapon) as C_Weapon
-    weapon.damage = preset.damage
-    weapon.fire_rate = preset.fire_rate
-    weapon.projectile_speed = preset.speed
+    var ps := get_component(C_PlayerStats) as C_PlayerStats
+    weapon.damage = int(preset.damage * (ps.damage_mult if ps else 1.0))
+    weapon.fire_rate = preset.fire_rate * (1.0 / (1.0 + (ps.fire_rate_bonus if ps else 0.0)))
+    weapon.projectile_speed = preset.speed * (1.0 + (ps.proj_speed_bonus if ps else 0.0))
     weapon.element = preset.element
     weapon.cooldown_remaining = 0.0
 
@@ -94,3 +98,18 @@ func _physics_process(delta: float) -> void:
         velocity.y = Config.jump_speed
 
     move_and_slide()
+
+func apply_upgrades() -> void:
+    var ps := get_component(C_PlayerStats) as C_PlayerStats
+    if not ps:
+        return
+    ps.recalculate(RunManager.active_upgrades if RunManager else [])
+
+    # Apply max health bonus
+    var health := get_component(C_Health) as C_Health
+    if health:
+        health.max_health = Config.player_max_health + ps.max_health_bonus
+        health.current_health = health.max_health
+
+    # Re-equip current weapon to apply fire_rate/proj_speed/damage bonuses
+    _equip_weapon(_current_weapon_index)
