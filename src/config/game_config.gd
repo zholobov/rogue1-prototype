@@ -27,3 +27,6 @@ var weapon_presets: Array[Dictionary] = [
 @export var level_tile_size: float = 4.0
 @export var level_seed: int = 0  # 0 = random seed
 @export var monsters_per_room: int = 1
+
+# Debug
+var god_mode: bool = true

@@ -8,6 +8,10 @@ func _ready():
     ecs_entity.name = "ECSEntity"
     add_child(ecs_entity)
 
+    # Register with ECS world first, then add components
+    if ECS.world:
+        ECS.world.add_entity(ecs_entity)
+
     ecs_entity.add_component(C_Health.new())
     ecs_entity.add_component(C_Velocity.new())
     ecs_entity.add_component(C_Conditions.new())
@@ -17,9 +21,6 @@ func _ready():
     var tag := ecs_entity.get_component(C_ActorTag) as C_ActorTag
     tag.actor_type = C_ActorTag.ActorType.MONSTER
     tag.team = 1
-
-    if ECS.world:
-        ECS.world.add_entity(ecs_entity)
 
 func get_component(component_class) -> Component:
     return ecs_entity.get_component(component_class)

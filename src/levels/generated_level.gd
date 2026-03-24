@@ -8,11 +8,25 @@ var weapon_system: S_Weapon
 var level_data: Dictionary = {}
 
 func _ready():
+    print("[GeneratedLevel] _ready() started")
+
+    # Environment (so background isn't default grey)
+    var env = Environment.new()
+    env.background_mode = Environment.BG_COLOR
+    env.background_color = Color(0.05, 0.05, 0.1)
+    env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+    env.ambient_light_color = Color(0.3, 0.3, 0.35)
+    env.ambient_light_energy = 0.5
+    var world_env = WorldEnvironment.new()
+    world_env.environment = env
+    add_child(world_env)
+
     # Create and register the ECS world
     var world = World.new()
     world.name = "World"
     add_child(world)
     ECS.world = world
+    print("[GeneratedLevel] ECS world created")
 
     # Register all systems
     ECS.world.add_system(S_PlayerInput.new())
@@ -25,6 +39,7 @@ func _ready():
     weapon_system = S_Weapon.new()
     weapon_system.projectile_requested.connect(_on_projectile_requested)
     ECS.world.add_system(weapon_system)
+    print("[GeneratedLevel] Systems registered")
 
     # Generate level
     var gen = LevelGenerator.new()
@@ -32,7 +47,9 @@ func _ready():
     level_data = gen.generate(Config.level_grid_width, Config.level_grid_height, seed_val, Config.level_tile_size)
     add_child(level_data.geometry)
 
-    print("Level generated with seed: %d" % level_data.seed)
+    print("[GeneratedLevel] Level generated with seed: %d, spawn_points: %d" % [level_data.seed, level_data.spawn_points.size()])
+    for i in range(level_data.spawn_points.size()):
+        print("[GeneratedLevel]   spawn[%d] = %s" % [i, str(level_data.spawn_points[i])])
 
     # HUD
     var hud = HUDScene.instantiate()
@@ -40,6 +57,7 @@ func _ready():
 
     # Spawn monsters at spawn points
     _spawn_monsters()
+    print("[GeneratedLevel] _ready() completed")
 
 func get_spawn_points() -> Array[Vector3]:
     var points: Array[Vector3] = []
@@ -51,7 +69,10 @@ func get_player_spawn() -> Vector3:
     var points = get_spawn_points()
     if points.size() > 0:
         return points[0]
-    return Vector3(0, 1, 0)  # fallback
+    # Fallback to center of grid (avoids border walls)
+    var cx = level_data.width * Config.level_tile_size / 2.0
+    var cz = level_data.height * Config.level_tile_size / 2.0
+    return Vector3(cx, 1.0, cz)
 
 func _spawn_monsters() -> void:
     var spawn_points = get_spawn_points()

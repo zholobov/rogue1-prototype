@@ -6,6 +6,8 @@ func query() -> QueryBuilder:
 
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
     for entity in entities:
+        if not is_instance_valid(entity):
+            continue
         var vel := entity.get_component(C_Velocity) as C_Velocity
         # For non-CharacterBody3D entities (projectiles, etc.)
         # CharacterBody3D players handle their own movement via move_and_slide()

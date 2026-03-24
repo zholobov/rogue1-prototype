@@ -12,6 +12,8 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
         player_positions.append(node.global_position)
 
     for entity in entities:
+        if not is_instance_valid(entity):
+            continue
         var ai := entity.get_component(C_MonsterAI) as C_MonsterAI
         var vel := entity.get_component(C_Velocity) as C_Velocity
         var health := entity.get_component(C_Health) as C_Health
@@ -72,5 +74,7 @@ func _attack_nearest(monster_entity: Entity, target_pos: Vector3, ai: C_MonsterA
     for player in _get_players():
         if player.global_position.distance_to(body.global_position) <= ai.attack_range + 0.5:
             if player is PlayerEntity:
+                var hp = player.ecs_entity.get_component(C_Health) as C_Health
+                print("[S_MonsterAI] Monster attacks player for %d dmg (player HP: %d→%d)" % [ai.attack_damage, hp.current_health if hp else -1, (hp.current_health - ai.attack_damage) if hp else -1])
                 S_Damage.apply_damage(player.ecs_entity, ai.attack_damage, ai.attack_element)
                 break

@@ -43,6 +43,7 @@ func _spawn_player(peer_id: int, is_local: bool) -> void:
 		spawn_pos = current_level.get_player_spawn()
 
 	player.position = spawn_pos + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
+	print("[Main] Spawning player at %s (spawn_pos=%s)" % [str(player.position), str(spawn_pos)])
 	current_level.add_child(player)
 	player.setup(peer_id, is_local)
 

@@ -6,11 +6,13 @@ func query() -> QueryBuilder:
 
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
     for entity in entities:
+        if not is_instance_valid(entity):
+            continue
         var lt := entity.get_component(C_Lifetime) as C_Lifetime
         lt.remaining -= delta
         if lt.remaining <= 0:
             var parent = entity.get_parent()
-            if parent:
+            if ECS.world:
+                ECS.world.remove_entity(entity)
+            if is_instance_valid(parent):
                 parent.queue_free()
-            else:
-                entity.queue_free()

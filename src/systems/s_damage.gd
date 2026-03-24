@@ -18,6 +18,12 @@ static func apply_damage(target_entity: Entity, damage: int, element: String) ->
     if not health:
         return
 
+    # God mode: skip damage for players
+    if Config.god_mode:
+        var tag := target_entity.get_component(C_ActorTag) as C_ActorTag
+        if tag and tag.actor_type == C_ActorTag.ActorType.PLAYER:
+            return
+
     # Apply raw damage
     health.current_health -= damage
     health.current_health = maxi(health.current_health, 0)

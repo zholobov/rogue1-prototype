@@ -8,12 +8,13 @@ func _ready():
     ecs_entity.name = "ECSEntity"
     add_child(ecs_entity)
 
+    # Register with ECS world first, then add components
+    if ECS.world:
+        ECS.world.add_entity(ecs_entity)
+
     ecs_entity.add_component(C_Projectile.new())
     ecs_entity.add_component(C_DamageDealer.new())
     ecs_entity.add_component(C_Lifetime.new())
-
-    if ECS.world:
-        ECS.world.add_entity(ecs_entity)
 
     body_entered.connect(_on_body_entered)
 

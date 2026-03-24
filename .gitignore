@@ -10,3 +10,6 @@ Thumbs.db
 # Node
 signaling_server/node_modules/
 .worktrees/
+
+# Claude Code
+.claude/

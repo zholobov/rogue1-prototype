@@ -7,6 +7,20 @@ extends RefCounted
 const WALL_HEIGHT := 3.0
 const FLOOR_THICKNESS := 0.2
 
+var _floor_material: StandardMaterial3D
+var _wall_material: StandardMaterial3D
+var _ceiling_material: StandardMaterial3D
+
+func _init() -> void:
+	_floor_material = StandardMaterial3D.new()
+	_floor_material.albedo_color = Color(0.35, 0.35, 0.3)
+
+	_wall_material = StandardMaterial3D.new()
+	_wall_material.albedo_color = Color(0.5, 0.45, 0.4)
+
+	_ceiling_material = StandardMaterial3D.new()
+	_ceiling_material.albedo_color = Color(0.25, 0.25, 0.25)
+
 func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 	var root = Node3D.new()
 	root.name = "GeneratedLevel"
@@ -35,11 +49,11 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				if tile_name == "wall":
 					_add_wall_block(root, world_pos, tile_size)
 
-	# Add ambient directional light as fallback
+	# Add ambient directional light
 	var dir_light = DirectionalLight3D.new()
 	dir_light.transform = Transform3D(Basis(), Vector3(0, 10, 0))
 	dir_light.rotation_degrees = Vector3(-45, 30, 0)
-	dir_light.light_energy = 0.3
+	dir_light.light_energy = 1.0
 	root.add_child(dir_light)
 
 	return root
@@ -53,6 +67,7 @@ func _add_floor(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var box_mesh = BoxMesh.new()
 	box_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
 	mesh_inst.mesh = box_mesh
+	mesh_inst.material_override = _floor_material
 	floor_body.add_child(mesh_inst)
 
 	var col = CollisionShape3D.new()
@@ -68,6 +83,7 @@ func _add_ceiling(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var box_mesh = BoxMesh.new()
 	box_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
 	ceiling.mesh = box_mesh
+	ceiling.material_override = _ceiling_material
 	ceiling.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT, tile_size / 2.0)
 	parent.add_child(ceiling)
 
@@ -80,6 +96,7 @@ func _add_wall_block(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var box_mesh = BoxMesh.new()
 	box_mesh.size = Vector3(tile_size, WALL_HEIGHT, tile_size)
 	mesh_inst.mesh = box_mesh
+	mesh_inst.material_override = _wall_material
 	wall_body.add_child(mesh_inst)
 
 	var col = CollisionShape3D.new()

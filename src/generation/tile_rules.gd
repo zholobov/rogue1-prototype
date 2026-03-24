@@ -5,10 +5,10 @@ var tiles: Dictionary = {}
 var adjacency: Dictionary = {}
 
 func setup_defaults() -> void:
-    add_tile("room", 1.0, true, true)
-    add_tile("corridor", 0.8, true, false)
-    add_tile("wall", 1.5, false, false)
-    add_tile("empty", 2.0, false, false)
+    add_tile("room", 3.0, true, true)
+    add_tile("corridor", 2.0, true, false)
+    add_tile("wall", 1.0, false, false)
+    add_tile("empty", 0.3, false, false)
 
     set_adjacency("room", ["room", "corridor", "wall"])
     set_adjacency("corridor", ["room", "corridor", "wall"])

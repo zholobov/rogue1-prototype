@@ -12,6 +12,10 @@ func _ready():
     ecs_entity.name = "ECSEntity"
     add_child(ecs_entity)
 
+    # Register with ECS world first (empty entity), then add components
+    # This avoids GECS _initialize() clearing and re-adding pre-existing components
+    ECS.world.add_entity(ecs_entity)
+
     ecs_entity.add_component(C_Health.new())
     ecs_entity.add_component(C_Velocity.new())
     ecs_entity.add_component(C_PlayerInput.new())
@@ -25,9 +29,6 @@ func _ready():
     tag.team = 0
 
     add_to_group("players")
-
-    # Register with ECS world
-    ECS.world.add_entity(ecs_entity)
 
 func get_component(component_class) -> Component:
     return ecs_entity.get_component(component_class)
