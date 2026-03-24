@@ -98,6 +98,7 @@ func _apply_modifier(modifier: String) -> void:
     Config.monsters_per_room = 1
     Config.light_range_mult = 1.0
     Config.monster_hp_mult = 1.0
+    Config.monster_damage_mult = 1.0
 
     match modifier:
         "dense":
@@ -116,3 +117,8 @@ func _apply_modifier(modifier: String) -> void:
             Config.monsters_per_room = 3
             Config.monster_hp_mult = 2.0
             Config.max_monsters_per_level = 0  # No cap for boss
+
+    # Loop scaling: +50% HP, +25% damage per loop
+    if stats.loop > 0:
+        Config.monster_hp_mult *= (1.0 + 0.5 * stats.loop)
+        Config.monster_damage_mult *= (1.0 + 0.25 * stats.loop)

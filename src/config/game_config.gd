@@ -39,6 +39,7 @@ var weapon_presets: Array[Dictionary] = [
 var current_modifier: String = "normal"
 var light_range_mult: float = 1.0
 var monster_hp_mult: float = 1.0
+var monster_damage_mult: float = 1.0
 
 # Debug
 var god_mode: bool = true

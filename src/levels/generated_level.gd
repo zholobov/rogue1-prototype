@@ -105,6 +105,10 @@ func _spawn_monsters() -> void:
                 if health:
                     health.max_health = int(health.max_health * Config.monster_hp_mult)
                     health.current_health = health.max_health
+            if Config.monster_damage_mult != 1.0 and monster.ecs_entity:
+                var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
+                if ai:
+                    ai.attack_damage = int(ai.attack_damage * Config.monster_damage_mult)
             monsters_remaining += 1
 
 func _auto_clear() -> void:
