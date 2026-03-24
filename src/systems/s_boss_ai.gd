@@ -21,15 +21,16 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
 
         # Fire ranged attack when in ATTACK or CHASE state and cooldown ready
         if monster_ai.state != C_MonsterAI.AIState.IDLE and boss_ai.ranged_cooldown_remaining <= 0:
-            boss_ai.ranged_cooldown_remaining = boss_ai.ranged_cooldown
             var body = entity.get_parent() as CharacterBody3D
             if not body:
                 continue
-            var target = _find_nearest_player(body.global_position)
-            if target != Vector3.ZERO:
-                var dir = (target - body.global_position).normalized()
-                var spawn_pos = body.global_position + Vector3(0, 1.0, 0) + dir * 1.5
-                boss_projectile_requested.emit(spawn_pos, dir, boss_ai.projectile_damage, boss_ai.projectile_speed, body.get_instance_id())
+            var target_pos = _find_nearest_player(body.global_position)
+            if target_pos == Vector3.ZERO:
+                continue
+            boss_ai.ranged_cooldown_remaining = boss_ai.ranged_cooldown
+            var dir = (target_pos - body.global_position).normalized()
+            var spawn_pos = body.global_position + Vector3(0, 1.0, 0) + dir * 1.5
+            boss_projectile_requested.emit(spawn_pos, dir, boss_ai.projectile_damage, boss_ai.projectile_speed, body.get_instance_id())
 
 func _find_nearest_player(from: Vector3) -> Vector3:
     var tree = ECS.world.get_tree()
@@ -42,4 +43,6 @@ func _find_nearest_player(from: Vector3) -> Vector3:
         if dist < nearest_dist:
             nearest_dist = dist
             nearest_pos = node.global_position
+    if nearest_dist == INF:
+        return Vector3.ZERO
     return nearest_pos
