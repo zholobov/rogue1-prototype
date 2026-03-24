@@ -2,7 +2,7 @@ class_name S_PlayerInput
 extends System
 
 func query() -> QueryBuilder:
-    return q.with_all([C_PlayerInput, C_Velocity, C_NetworkIdentity])
+    return q.with_all([C_PlayerInput, C_Velocity, C_NetworkIdentity, C_Weapon])
 
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
     for entity in entities:
@@ -23,3 +23,7 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
         var move_dir = basis * Vector3(pi.move_direction.x, 0, pi.move_direction.y)
         vel.direction = move_dir.normalized() if move_dir.length() > 0 else Vector3.ZERO
         vel.speed = Config.player_speed if vel.direction != Vector3.ZERO else 0.0
+
+        # Fire weapon
+        var weapon := entity.get_component(C_Weapon) as C_Weapon
+        weapon.is_firing = Input.is_action_pressed("fire")

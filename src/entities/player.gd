@@ -16,6 +16,13 @@ func _ready():
     ecs_entity.add_component(C_Velocity.new())
     ecs_entity.add_component(C_PlayerInput.new())
     ecs_entity.add_component(C_NetworkIdentity.new())
+    ecs_entity.add_component(C_Conditions.new())
+    ecs_entity.add_component(C_Weapon.new())
+    ecs_entity.add_component(C_ActorTag.new())
+
+    var tag := ecs_entity.get_component(C_ActorTag) as C_ActorTag
+    tag.actor_type = C_ActorTag.ActorType.PLAYER
+    tag.team = 0
 
     add_to_group("players")
 

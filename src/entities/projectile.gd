@@ -35,8 +35,8 @@ func _physics_process(delta: float) -> void:
     position += proj.direction * proj.speed * delta
 
 func _on_body_entered(body: Node) -> void:
-    if body is CharacterBody3D:
-        # Damage handled by collision detection
-        pass
-    # Destroy on any collision
+    if body is CharacterBody3D and body.has_method("get_component"):
+        var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+        if body.get_instance_id() != proj.owner_id:
+            S_Damage.apply_damage(body.ecs_entity, proj.damage, proj.element)
     queue_free()
