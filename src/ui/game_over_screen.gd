@@ -29,12 +29,14 @@ func _build_ui() -> void:
 
     var stats = RunManager.stats if RunManager else RunStats.new()
 
+    var meta_earned = int(stats.total_currency_earned * Config.meta_currency_rate)
     var stats_text = """Levels Cleared: %d
 Monsters Killed: %d
 Damage Dealt: %d
 Time Survived: %ds
 Loop Reached: %d
 Currency Earned: %d
+Meta-Currency Earned: %d
 Upgrades: %d""" % [
         stats.levels_cleared,
         stats.kills,
@@ -42,6 +44,7 @@ Upgrades: %d""" % [
         int(stats.time_elapsed),
         stats.loop,
         stats.total_currency_earned,
+        meta_earned,
         RunManager.active_upgrades.size() if RunManager else 0,
     ]
 

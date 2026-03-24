@@ -42,12 +42,24 @@ func _clear_current() -> void:
 func _show_lobby() -> void:
 	var lobby = LobbyScene.instantiate()
 	lobby.game_started.connect(_on_game_started)
+	lobby.meta_upgrades_pressed.connect(_on_meta_upgrades)
 	add_child(lobby)
 	current_scene = lobby
 
 func _on_game_started(solo: bool) -> void:
 	is_solo = solo
 	RunManager.start_run()
+
+func _on_meta_upgrades() -> void:
+	_clear_current()
+	var screen = MetaUpgradesScreen.new()
+	screen.back_pressed.connect(_on_meta_upgrades_back)
+	add_child(screen)
+	current_scene = screen
+
+func _on_meta_upgrades_back() -> void:
+	_clear_current()
+	_show_lobby()
 
 func _show_map() -> void:
 	var map_screen = MapScreen.new()

@@ -1,6 +1,7 @@
 extends Control
 
 signal game_started(solo: bool)
+signal meta_upgrades_pressed()
 
 @onready var lobby_input: LineEdit = $VBoxContainer/LobbyInput
 @onready var solo_button: Button = $VBoxContainer/SoloButton
@@ -19,6 +20,19 @@ func _ready():
 	Net.player_connected.connect(_on_player_connected)
 	Net.player_disconnected.connect(_on_player_disconnected)
 	Net.connection_established.connect(_on_connected)
+
+	# Meta-progression display
+	var vbox = $VBoxContainer
+	if MetaSave:
+		var meta_label = Label.new()
+		meta_label.text = "Meta-Currency: %d | Best Loop: %d" % [MetaSave.meta_currency, MetaSave.best_loop]
+		meta_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		vbox.add_child(meta_label)
+
+		var upgrades_btn = Button.new()
+		upgrades_btn.text = "Permanent Upgrades"
+		upgrades_btn.pressed.connect(_on_meta_upgrades)
+		vbox.add_child(upgrades_btn)
 
 func _on_solo():
 	game_started.emit(true)
@@ -57,6 +71,9 @@ func _start_game_rpc():
 func _on_player_connected(peer_id: int):
 	player_list.add_item("Peer %d" % peer_id)
 	status_label.text = "%d players connected" % player_list.item_count
+
+func _on_meta_upgrades():
+	meta_upgrades_pressed.emit()
 
 func _on_player_disconnected(peer_id: int):
 	for i in range(player_list.item_count):

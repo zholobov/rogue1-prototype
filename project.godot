@@ -25,6 +25,7 @@ Config="*res://src/config/game_config.gd"
 Net="*res://src/networking/network_manager.gd"
 Elements="*res://src/config/element_registry.gd"
 RunManager="*res://src/run/run_manager.gd"
+MetaSave="*res://src/run/meta_save.gd"
 
 [display]
 

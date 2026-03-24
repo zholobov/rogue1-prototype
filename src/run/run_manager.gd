@@ -26,6 +26,9 @@ func start_run() -> void:
     currency = 0
     active_upgrades.clear()
     last_selected_node_index = 0
+    # Apply permanent meta-upgrades
+    if MetaSave:
+        active_upgrades.append_array(MetaSave.get_starting_upgrades())
     map = RunMap.generate(Config.boss_depth)
     run_started.emit()
     _change_state(State.MAP)
@@ -57,6 +60,8 @@ func on_level_cleared() -> void:
 
 func on_player_died() -> void:
     run_ended.emit(stats)
+    if MetaSave:
+        MetaSave.on_run_ended(stats)
     _change_state(State.GAME_OVER)
 
 func pick_upgrade(upgrade: UpgradeData) -> void:
@@ -95,6 +100,8 @@ func continue_run() -> void:
 
 func end_run() -> void:
     run_ended.emit(stats)
+    if MetaSave:
+        MetaSave.on_run_ended(stats)
     _change_state(State.GAME_OVER)
 
 func finish_shopping() -> void:
