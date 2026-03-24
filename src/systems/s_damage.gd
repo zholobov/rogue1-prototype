@@ -28,6 +28,11 @@ static func apply_damage(target_entity: Entity, damage: int, element: String) ->
     health.current_health -= damage
     health.current_health = maxi(health.current_health, 0)
 
+    # Visual hit flash on monsters
+    var parent = target_entity.get_parent()
+    if parent is MonsterEntity:
+        parent.flash_hit()
+
     # Apply elemental condition
     if element != "" and Elements:
         var elem = Elements.get_element(element)
