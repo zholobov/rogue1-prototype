@@ -63,10 +63,18 @@ func _generate_room_seeds(rng: RandomNumberGenerator, width: int, height: int, m
             room_count = rng.randi_range(3, 5)
             min_dist = 5
         "boss":
-            # Single central room
+            # Large central arena — pin a 5x5 block of room tiles with spawn at center
             var cx = width / 2
             var cy = height / 2
-            pinned[Vector2i(cx, cy)] = "spawn"
+            for dy in range(-2, 3):
+                for dx in range(-2, 3):
+                    var px = cx + dx
+                    var py = cy + dy
+                    if px > 0 and px < width - 1 and py > 0 and py < height - 1:
+                        if dx == 0 and dy == 0:
+                            pinned[Vector2i(px, py)] = "spawn"
+                        else:
+                            pinned[Vector2i(px, py)] = "room"
             return pinned
         _:  # "normal"
             room_count = rng.randi_range(4, 7)

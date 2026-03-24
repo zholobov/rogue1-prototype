@@ -100,3 +100,9 @@ func _apply_modifier(modifier: String) -> void:
         "horde":
             Config.monsters_per_room = 3
             Config.monster_hp_mult = 0.5
+        "boss":
+            Config.level_grid_width = 14
+            Config.level_grid_height = 14
+            Config.monsters_per_room = 3
+            Config.monster_hp_mult = 2.0
+            Config.max_monsters_per_level = 0  # No cap for boss
