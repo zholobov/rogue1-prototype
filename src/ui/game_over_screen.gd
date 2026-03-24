@@ -4,6 +4,7 @@ extends Control
 signal return_pressed()
 
 func _ready() -> void:
+    set_anchors_preset(PRESET_FULL_RECT)
     _build_ui()
 
 func _build_ui() -> void:
@@ -12,12 +13,14 @@ func _build_ui() -> void:
     bg.set_anchors_preset(PRESET_FULL_RECT)
     add_child(bg)
 
+    # Center container for content
+    var center = CenterContainer.new()
+    center.set_anchors_preset(PRESET_FULL_RECT)
+    add_child(center)
+
     var vbox = VBoxContainer.new()
-    vbox.set_anchors_preset(PRESET_CENTER)
     vbox.set("theme_override_constants/separation", 12)
-    vbox.position = Vector2(-200, -200)
-    vbox.size = Vector2(400, 400)
-    add_child(vbox)
+    center.add_child(vbox)
 
     var title = Label.new()
     title.text = "GAME OVER"

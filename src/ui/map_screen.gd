@@ -6,6 +6,7 @@ signal node_selected(node_index: int)
 var _current_depth: int = 0
 
 func _ready() -> void:
+    set_anchors_preset(PRESET_FULL_RECT)
     _build_ui()
 
 func _build_ui() -> void:
@@ -20,29 +21,39 @@ func _build_ui() -> void:
         return
     _current_depth = RunManager.current_depth
 
-    # Title
+    # Root margin container for padding
+    var margin = MarginContainer.new()
+    margin.set_anchors_preset(PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 40)
+    margin.add_theme_constant_override("margin_right", 40)
+    margin.add_theme_constant_override("margin_top", 20)
+    margin.add_theme_constant_override("margin_bottom", 20)
+    add_child(margin)
+
+    var root_vbox = VBoxContainer.new()
+    root_vbox.set("theme_override_constants/separation", 10)
+    margin.add_child(root_vbox)
+
+    # Title row
+    var title_row = HBoxContainer.new()
+    root_vbox.add_child(title_row)
+
     var title = Label.new()
     title.text = "Choose Your Path — Depth %d" % _current_depth
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.position = Vector2(0, 20)
-    title.size = Vector2(get_viewport_rect().size.x, 40)
-    add_child(title)
+    title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    title_row.add_child(title)
 
-    # Currency display
     var currency_label = Label.new()
     currency_label.text = "Currency: %d" % RunManager.currency
     currency_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-    currency_label.position = Vector2(0, 20)
-    currency_label.size = Vector2(get_viewport_rect().size.x - 20, 40)
-    add_child(currency_label)
+    title_row.add_child(currency_label)
 
-    # HBox for columns
+    # HBox for depth columns
     var hbox = HBoxContainer.new()
-    hbox.set_anchors_preset(PRESET_FULL_RECT)
+    hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
     hbox.set("theme_override_constants/separation", 20)
-    hbox.position = Vector2(40, 80)
-    hbox.size = Vector2(get_viewport_rect().size.x - 80, get_viewport_rect().size.y - 120)
-    add_child(hbox)
+    root_vbox.add_child(hbox)
 
     # Draw columns for each depth layer
     for depth in range(map.layers.size()):

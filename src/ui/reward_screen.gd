@@ -6,6 +6,7 @@ signal upgrade_picked(upgrade: UpgradeData)
 var _upgrades: Array = []
 
 func _ready() -> void:
+    set_anchors_preset(PRESET_FULL_RECT)
     _upgrades = UpgradeData.roll_random(3, RunManager.stats.loop if RunManager else 0)
     _build_ui()
 
@@ -15,26 +16,33 @@ func _build_ui() -> void:
     bg.set_anchors_preset(PRESET_FULL_RECT)
     add_child(bg)
 
+    # Root margin container
+    var margin = MarginContainer.new()
+    margin.set_anchors_preset(PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 60)
+    margin.add_theme_constant_override("margin_right", 60)
+    margin.add_theme_constant_override("margin_top", 30)
+    margin.add_theme_constant_override("margin_bottom", 30)
+    add_child(margin)
+
+    var root_vbox = VBoxContainer.new()
+    root_vbox.set("theme_override_constants/separation", 15)
+    margin.add_child(root_vbox)
+
     var title = Label.new()
     title.text = "Level Complete! Pick an Upgrade"
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.position = Vector2(0, 30)
-    title.size = Vector2(get_viewport_rect().size.x, 40)
-    add_child(title)
+    root_vbox.add_child(title)
 
-    # Currency display
     var currency_label = Label.new()
     currency_label.text = "Currency: %d" % (RunManager.currency if RunManager else 0)
     currency_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    currency_label.position = Vector2(0, 60)
-    currency_label.size = Vector2(get_viewport_rect().size.x, 30)
-    add_child(currency_label)
+    root_vbox.add_child(currency_label)
 
     var hbox = HBoxContainer.new()
+    hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
     hbox.set("theme_override_constants/separation", 20)
-    hbox.position = Vector2(60, 120)
-    hbox.size = Vector2(get_viewport_rect().size.x - 120, get_viewport_rect().size.y - 200)
-    add_child(hbox)
+    root_vbox.add_child(hbox)
 
     var rarity_colors = {
         "common": Color(0.8, 0.8, 0.8),
@@ -47,6 +55,7 @@ func _build_ui() -> void:
 
         var panel = PanelContainer.new()
         panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
         hbox.add_child(panel)
 
         var vbox = VBoxContainer.new()
