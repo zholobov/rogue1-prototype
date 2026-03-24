@@ -24,6 +24,8 @@ func _on_state_changed(new_state: int) -> void:
 			_start_level()
 		RunManager.State.REWARD:
 			_show_reward()
+		RunManager.State.SHOP:
+			_show_shop()
 		RunManager.State.VICTORY:
 			_show_victory()
 		RunManager.State.GAME_OVER:
@@ -111,4 +113,13 @@ func _on_continue_run() -> void:
 
 func _on_end_run() -> void:
 	RunManager.end_run()
+
+func _show_shop() -> void:
+	var shop = ShopScreen.new()
+	shop.shop_finished.connect(_on_shop_finished)
+	add_child(shop)
+	current_scene = shop
+
+func _on_shop_finished() -> void:
+	RunManager.finish_shopping()
 

@@ -61,12 +61,22 @@ func on_player_died() -> void:
 
 func pick_upgrade(upgrade: UpgradeData) -> void:
     active_upgrades.append(upgrade)
-    _change_state(State.MAP)
+    if current_depth > 0 and current_depth % Config.shop_frequency == 0:
+        _change_state(State.SHOP)
+    else:
+        _change_state(State.MAP)
 
 func add_currency(amount: int) -> void:
     currency += amount
     stats.total_currency_earned += amount
     currency_changed.emit(currency)
+
+func spend_currency(amount: int) -> bool:
+    if currency < amount:
+        return false
+    currency -= amount
+    currency_changed.emit(currency)
+    return true
 
 func register_kill(max_hp: int) -> void:
     stats.kills += 1
@@ -86,6 +96,9 @@ func continue_run() -> void:
 func end_run() -> void:
     run_ended.emit(stats)
     _change_state(State.GAME_OVER)
+
+func finish_shopping() -> void:
+    _change_state(State.MAP)
 
 func _change_state(new_state: int) -> void:
     state = new_state
