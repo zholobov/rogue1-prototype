@@ -24,6 +24,8 @@ func _on_state_changed(new_state: int) -> void:
 			_start_level()
 		RunManager.State.REWARD:
 			_show_reward()
+		RunManager.State.VICTORY:
+			_show_victory()
 		RunManager.State.GAME_OVER:
 			_show_game_over()
 
@@ -96,4 +98,17 @@ func _show_game_over() -> void:
 
 func _on_return_to_lobby() -> void:
 	RunManager.return_to_lobby()
+
+func _show_victory() -> void:
+	var screen = VictoryScreen.new()
+	screen.continue_pressed.connect(_on_continue_run)
+	screen.end_run_pressed.connect(_on_end_run)
+	add_child(screen)
+	current_scene = screen
+
+func _on_continue_run() -> void:
+	RunManager.continue_run()
+
+func _on_end_run() -> void:
+	RunManager.end_run()
 

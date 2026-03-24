@@ -50,9 +50,8 @@ func on_level_cleared() -> void:
     current_depth += 1
     level_cleared_signal.emit()
     if current_depth > Config.boss_depth:
-        # Boss beaten — end run
-        run_ended.emit(stats)
-        _change_state(State.GAME_OVER)
+        # Boss beaten — show victory screen
+        _change_state(State.VICTORY)
     else:
         _change_state(State.REWARD)
 
@@ -76,6 +75,17 @@ func register_kill(max_hp: int) -> void:
 
 func return_to_lobby() -> void:
     _change_state(State.LOBBY)
+
+func continue_run() -> void:
+    stats.loop += 1
+    current_depth = 0
+    last_selected_node_index = 0
+    map = RunMap.generate(Config.boss_depth)
+    _change_state(State.MAP)
+
+func end_run() -> void:
+    run_ended.emit(stats)
+    _change_state(State.GAME_OVER)
 
 func _change_state(new_state: int) -> void:
     state = new_state
