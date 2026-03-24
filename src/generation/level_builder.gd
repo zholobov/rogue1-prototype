@@ -2,24 +2,31 @@ class_name LevelBuilder
 extends RefCounted
 
 ## Converts a 2D tile grid into 3D geometry nodes.
-## Uses CSGBox3D for walls/floors (no external assets needed).
 
 const WALL_HEIGHT := 3.0
 const FLOOR_THICKNESS := 0.2
 
-var _floor_material: StandardMaterial3D
+var _floor_material_room: StandardMaterial3D
+var _floor_material_corridor: StandardMaterial3D
 var _wall_material: StandardMaterial3D
 var _ceiling_material: StandardMaterial3D
 
 func _init() -> void:
-	_floor_material = StandardMaterial3D.new()
-	_floor_material.albedo_color = Color(0.35, 0.35, 0.3)
+	_floor_material_room = StandardMaterial3D.new()
+	_floor_material_room.albedo_color = Color(0.06, 0.05, 0.08)
+	_floor_material_room.roughness = 0.9
+
+	_floor_material_corridor = StandardMaterial3D.new()
+	_floor_material_corridor.albedo_color = Color(0.04, 0.05, 0.07)
+	_floor_material_corridor.roughness = 0.9
 
 	_wall_material = StandardMaterial3D.new()
-	_wall_material.albedo_color = Color(0.5, 0.45, 0.4)
+	_wall_material.albedo_color = Color(0.08, 0.08, 0.1)
+	_wall_material.roughness = 0.85
 
 	_ceiling_material = StandardMaterial3D.new()
-	_ceiling_material.albedo_color = Color(0.25, 0.25, 0.25)
+	_ceiling_material.albedo_color = Color(0.03, 0.03, 0.05)
+	_ceiling_material.roughness = 0.95
 
 func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 	var root = Node3D.new()
@@ -27,6 +34,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 
 	var height = grid.size()
 	var width = grid[0].size() if height > 0 else 0
+	var light_index := 0
 
 	for y in range(height):
 		for x in range(width):
@@ -38,27 +46,41 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 			var world_pos = Vector3(x * tile_size, 0, y * tile_size)
 
 			if tile.walkable:
-				_add_floor(root, world_pos, tile_size)
+				var is_room = (tile_name == "room")
+				var floor_mat = _floor_material_room if is_room else _floor_material_corridor
+				_add_floor(root, world_pos, tile_size, floor_mat)
 				_add_ceiling(root, world_pos, tile_size)
+
+				# Edge strips where walkable meets wall
+				var accent_color = NeonPalette.random_color()
+				_add_edge_strips(root, grid, x, y, width, height, world_pos, tile_size, accent_color)
+
+				# Floor glow overlay for rooms
+				if is_room:
+					_add_floor_glow(root, world_pos, tile_size, accent_color)
+
 				if tile.can_spawn:
 					_add_spawn_point(root, world_pos, tile_size)
-				# Add light every few room tiles
-				if x % 3 == 1 and y % 3 == 1:
-					_add_light(root, world_pos, tile_size)
+
+				# Neon lights every 2x2 tiles
+				if x % 2 == 1 and y % 2 == 1:
+					_add_light(root, world_pos, tile_size, light_index)
+					light_index += 1
 			else:
 				if tile_name == "wall":
 					_add_wall_block(root, world_pos, tile_size)
 
-	# Add ambient directional light
+	# Dim directional light — neon should dominate
 	var dir_light = DirectionalLight3D.new()
 	dir_light.transform = Transform3D(Basis(), Vector3(0, 10, 0))
 	dir_light.rotation_degrees = Vector3(-45, 30, 0)
-	dir_light.light_energy = 1.0
+	dir_light.light_energy = 0.1
+	dir_light.light_color = Color(0.6, 0.65, 0.8)
 	root.add_child(dir_light)
 
 	return root
 
-func _add_floor(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+func _add_floor(parent: Node3D, pos: Vector3, tile_size: float, mat: StandardMaterial3D) -> void:
 	var floor_body = StaticBody3D.new()
 	floor_body.position = pos + Vector3(tile_size / 2.0, 0, tile_size / 2.0)
 	floor_body.add_to_group("floor")
@@ -67,7 +89,7 @@ func _add_floor(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var box_mesh = BoxMesh.new()
 	box_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
 	mesh_inst.mesh = box_mesh
-	mesh_inst.material_override = _floor_material
+	mesh_inst.material_override = mat
 	floor_body.add_child(mesh_inst)
 
 	var col = CollisionShape3D.new()
@@ -113,9 +135,71 @@ func _add_spawn_point(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	marker.add_to_group("spawn_point")
 	parent.add_child(marker)
 
-func _add_light(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+func _add_light(parent: Node3D, pos: Vector3, tile_size: float, index: int) -> void:
 	var light = OmniLight3D.new()
 	light.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT - 0.5, tile_size / 2.0)
-	light.omni_range = tile_size * 2.0
-	light.light_energy = 1.5
+	light.omni_range = tile_size * 1.5
+	light.light_energy = 0.8
+	light.omni_attenuation = 2.0
+	light.light_color = NeonPalette.ALL[index % NeonPalette.ALL.size()]
 	parent.add_child(light)
+
+func _add_edge_strips(parent: Node3D, grid: Array, x: int, y: int, width: int, height: int, pos: Vector3, tile_size: float, accent: Color) -> void:
+	# Check 4 cardinal neighbors; place strips where walkable meets wall
+	var dirs = [
+		Vector2i(0, -1),  # North (Z-)
+		Vector2i(0, 1),   # South (Z+)
+		Vector2i(-1, 0),  # West (X-)
+		Vector2i(1, 0),   # East (X+)
+	]
+	for dir in dirs:
+		var nx = x + dir.x
+		var ny = y + dir.y
+		if nx < 0 or nx >= width or ny < 0 or ny >= height:
+			continue
+		if grid[ny][nx] == "wall":
+			_place_strip(parent, pos, tile_size, dir, accent, 0.0)  # Floor level
+			_place_strip(parent, pos, tile_size, dir, accent, WALL_HEIGHT)  # Ceiling level
+
+func _place_strip(parent: Node3D, pos: Vector3, tile_size: float, dir: Vector2i, color: Color, y_offset: float) -> void:
+	var strip = MeshInstance3D.new()
+	var mesh = BoxMesh.new()
+
+	# Strip runs perpendicular to the wall direction
+	var center = pos + Vector3(tile_size / 2.0, y_offset, tile_size / 2.0)
+	if dir.x != 0:
+		# East or West wall — strip runs along Z axis
+		mesh.size = Vector3(0.05, 0.02, tile_size)
+		center.x += dir.x * (tile_size / 2.0 - 0.025)
+	else:
+		# North or South wall — strip runs along X axis
+		mesh.size = Vector3(tile_size, 0.02, 0.05)
+		center.z += dir.y * (tile_size / 2.0 - 0.025)
+
+	strip.mesh = mesh
+	strip.position = center
+
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color.BLACK
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = randf_range(2.0, 3.0)
+	strip.material_override = mat
+
+	parent.add_child(strip)
+
+func _add_floor_glow(parent: Node3D, pos: Vector3, tile_size: float, color: Color) -> void:
+	var glow = MeshInstance3D.new()
+	var mesh = BoxMesh.new()
+	mesh.size = Vector3(tile_size, 0.01, tile_size)
+	glow.mesh = mesh
+	glow.position = pos + Vector3(tile_size / 2.0, 0.01, tile_size / 2.0)
+
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(0.0, 0.0, 0.0, 0.0)
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 0.3
+	glow.material_override = mat
+
+	parent.add_child(glow)
