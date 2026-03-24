@@ -1,7 +1,6 @@
 # Godot
 .godot/
 *.import
-export_presets.cfg
 
 # OS
 .DS_Store
@@ -10,6 +9,9 @@ Thumbs.db
 # Node
 signaling_server/node_modules/
 .worktrees/
+
+# Build output
+build/
 
 # Claude Code
 .claude/
