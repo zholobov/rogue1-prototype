@@ -8,6 +8,7 @@ var weapon_system: S_Weapon
 var level_data: Dictionary = {}
 var monsters_remaining: int = 0
 var death_system: S_Death
+var _is_boss_level: bool = false
 
 func _ready():
     print("[GeneratedLevel] _ready() started")
@@ -47,6 +48,9 @@ func _ready():
     ECS.world.add_system(death_system)
     ECS.world.add_system(S_HpRegen.new())
     ECS.world.add_system(S_MonsterAI.new())
+    var boss_ai_system = S_BossAI.new()
+    boss_ai_system.boss_projectile_requested.connect(_on_boss_projectile_requested)
+    ECS.world.add_system(boss_ai_system)
 
     weapon_system = S_Weapon.new()
     weapon_system.projectile_requested.connect(_on_projectile_requested)
@@ -69,6 +73,9 @@ func _ready():
 
     # Spawn monsters at spawn points
     _spawn_monsters()
+    _is_boss_level = RunManager != null and RunManager.state == RunManager.State.BOSS
+    if _is_boss_level:
+        _spawn_boss()
     if monsters_remaining <= 0:
         call_deferred("_auto_clear")
     print("[GeneratedLevel] _ready() completed")
@@ -111,6 +118,16 @@ func _spawn_monsters() -> void:
                     ai.attack_damage = int(ai.attack_damage * Config.monster_damage_mult)
             monsters_remaining += 1
 
+func _spawn_boss() -> void:
+    var boss = MonsterScene.instantiate()
+    var cx = level_data.width * Config.level_tile_size / 2.0
+    var cz = level_data.height * Config.level_tile_size / 2.0
+    boss.position = Vector3(cx, 1.0, cz)
+    add_child(boss)
+    boss.setup_as_boss(RunManager.stats.loop if RunManager else 0)
+    monsters_remaining += 1
+    print("[GeneratedLevel] Boss spawned at center (%s)" % str(boss.position))
+
 func _auto_clear() -> void:
     print("[GeneratedLevel] No monsters — auto-clearing level")
     if RunManager:
@@ -137,19 +154,34 @@ func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
     var flash = VfxFactory.create_muzzle_flash(spawn_pos)
     add_child(flash)
 
+func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int) -> void:
+    var projectile = ProjectileScene.instantiate()
+    add_child(projectile)
+    projectile.global_position = pos
+    projectile.setup(direction, speed, damage, "", owner_id)
+
+    var flash = VfxFactory.create_muzzle_flash(pos)
+    add_child(flash)
+
 func _on_actor_died(entity: Entity) -> void:
     var tag := entity.get_component(C_ActorTag) as C_ActorTag
     if not tag:
         return
 
     if tag.actor_type == C_ActorTag.ActorType.MONSTER:
-        # Notify RunManager for currency
         var health := entity.get_component(C_Health) as C_Health
         if health and RunManager:
             RunManager.register_kill(health.max_health)
 
+        # Boss death = immediate level clear
+        if entity.get_component(C_BossAI):
+            print("[GeneratedLevel] Boss defeated!")
+            if RunManager:
+                RunManager.on_level_cleared()
+            return
+
         monsters_remaining -= 1
-        if monsters_remaining <= 0:
+        if monsters_remaining <= 0 and not _is_boss_level:
             print("[GeneratedLevel] All monsters defeated!")
             if RunManager:
                 RunManager.on_level_cleared()

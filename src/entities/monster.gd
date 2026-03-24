@@ -72,6 +72,35 @@ func _add_eye(offset: Vector3, _accent: Color) -> void:
 
     add_child(eye)
 
+func setup_as_boss(loop: int) -> void:
+    scale = Vector3(2.0, 2.0, 2.0)
+
+    if _body_material:
+        _body_material.albedo_color = Color(0.2, 0.02, 0.02)
+        _body_material.emission = Color(1.0, 0.15, 0.1)
+        _body_material.emission_energy_multiplier = 2.0
+
+    var health := ecs_entity.get_component(C_Health) as C_Health
+    if health:
+        health.max_health = 500 + (250 * loop)
+        health.current_health = health.max_health
+
+    var ai := ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
+    if ai:
+        ai.attack_damage = 20 + (10 * loop)
+        ai.move_speed = 4.0
+        ai.detection_range = 30.0
+        ai.attack_range = 3.0
+        ai.attack_cooldown = 0.8
+
+    ecs_entity.add_component(C_BossAI.new())
+    var boss_ai := ecs_entity.get_component(C_BossAI) as C_BossAI
+    if boss_ai:
+        boss_ai.projectile_damage = 15 + (5 * loop)
+
+    if _health_bar_node:
+        _health_bar_node.position = Vector3(0, 2.4, 0)
+
 func flash_hit() -> void:
     if _body_material:
         _body_material.emission_energy_multiplier = 5.0
