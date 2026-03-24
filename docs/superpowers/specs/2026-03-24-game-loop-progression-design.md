@@ -212,8 +212,8 @@ Upgrades stack additively. Two "+20 max HP" = +40 max HP. Two "+10% damage" = +2
 
 ### Boss Level
 
-- WFC generation with overridden tile weights: room=10.0, corridor=0.1, wall=0.5, empty=0.01 (forces large open area; empty near-zero but nonzero to avoid division issues in WFCSolver)
-- Single boss entity spawned (no regular monsters)
+- WFC generation uses `setup_profile("boss")` with directional adjacency: room=3.0, spawn=3.0, cor=0.2, door=0.3, wall=2.5, empty=0.5. A 5x5 block of room tiles is pinned at the grid center (14x14 grid) with spawn at center cell. Post-processing (connectivity, tiny room removal, dead-end pruning, border sealing) applies as normal.
+- Boss entity spawned alongside regular monsters (Config.monsters_per_room=3, Config.monster_hp_mult=2.0, no monster cap)
 - Boss stats (base, scale with loop):
   - HP: 500 (+250 per loop)
   - Damage: 20 (+10 per loop)
