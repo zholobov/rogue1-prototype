@@ -28,5 +28,15 @@ var weapon_presets: Array[Dictionary] = [
 @export var level_seed: int = 0  # 0 = random seed
 @export var monsters_per_room: int = 1
 
+# Run loop
+@export var boss_depth: int = 4
+@export var shop_frequency: int = 2
+@export var kill_reward_base: int = 10
+@export var meta_currency_rate: float = 0.1
+
+# Modifier support (set by RunManager before level load)
+var light_range_mult: float = 1.0
+var monster_hp_mult: float = 1.0
+
 # Debug
 var god_mode: bool = true
