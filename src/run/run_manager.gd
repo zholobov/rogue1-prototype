@@ -119,6 +119,7 @@ func _apply_modifier(modifier: String) -> void:
     Config.light_range_mult = 1.0
     Config.monster_hp_mult = 1.0
     Config.monster_damage_mult = 1.0
+    Config.max_monsters_per_level = 5
 
     match modifier:
         "dense":
