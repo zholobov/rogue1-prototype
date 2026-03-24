@@ -8,6 +8,11 @@ var current_scene: Node = null
 var is_solo: bool = false
 
 func _ready():
+	# Ensure viewport stretches to fill window (editor can strip project.godot settings)
+	get_tree().root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	get_tree().root.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	get_tree().root.content_scale_size = Vector2i(1152, 648)
+
 	RunManager.state_changed.connect(_on_state_changed)
 	_show_lobby()
 
