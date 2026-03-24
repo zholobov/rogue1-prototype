@@ -212,7 +212,7 @@ Gameplay code (HP, AI, collision) stays completely separate from visuals. Theme 
 ## 6. Theme Definitions
 
 ### Neon Dungeon (migrated from existing hardcoded values)
-- **Palette:** cyan (0.0, 0.83, 1.0), magenta (1.0, 0.0, 0.67), purple (0.67, 0.27, 1.0), teal (0.0, 1.0, 0.5), orange (1.0, 0.5, 0.0)
+- **Palette:** cyan (0.0, 0.83, 1.0), magenta (1.0, 0.0, 0.67), purple (0.67, 0.27, 1.0), teal (0.0, 1.0, 0.67), orange (1.0, 0.53, 0.0)
 - **Environment:** near-black background (0.02, 0.02, 0.04), dim purple ambient (0.15, 0.15, 0.25), depth fog begin 5.0 end 40.0
 - **Levels:** room floors (0.45, 0.42, 0.48), corridor floors (0.38, 0.40, 0.45), walls (0.65, 0.62, 0.68), ceiling (0.50, 0.50, 0.55), neon emission accent strips cycling palette, colored OmniLight grid
 - **Monsters:** dark geometric boxes with neon emission accents, red glowing eyes, boss gets red tint
