@@ -45,6 +45,7 @@ func _ready():
     death_system = S_Death.new()
     death_system.actor_died.connect(_on_actor_died)
     ECS.world.add_system(death_system)
+    ECS.world.add_system(S_HpRegen.new())
     ECS.world.add_system(S_MonsterAI.new())
 
     weapon_system = S_Weapon.new()
