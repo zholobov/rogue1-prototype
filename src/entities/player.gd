@@ -116,3 +116,17 @@ func apply_upgrades() -> void:
 
     # Re-equip current weapon to apply fire_rate/proj_speed/damage bonuses
     _equip_weapon(_current_weapon_index)
+
+    # Special abilities — add components if upgrade acquired
+    var upgrades = RunManager.active_upgrades if RunManager else []
+    for upgrade in upgrades:
+        match upgrade.property:
+            "dash":
+                if not ecs_entity.get_component(C_Dash):
+                    ecs_entity.add_component(C_Dash.new())
+            "aoe_blast":
+                if not ecs_entity.get_component(C_AoEBlast):
+                    ecs_entity.add_component(C_AoEBlast.new())
+            "lifesteal":
+                if not ecs_entity.get_component(C_Lifesteal):
+                    ecs_entity.add_component(C_Lifesteal.new())

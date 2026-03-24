@@ -25,6 +25,10 @@ static func get_pool() -> Array:
             _make("HP Regen +2/s", "+2 HP per second", "defensive", "rare", "hp_regen", 2.0, 60),
             _make("Armor 15%", "-15% damage taken", "defensive", "rare", "damage_reduction", 0.15, 60),
             _make("Resist 30%", "-30% condition duration", "defensive", "rare", "condition_duration_reduction", 0.30, 60),
+            # Special abilities (epic)
+            _make("Dash", "Speed burst (Shift), 3s cooldown", "special", "epic", "dash", 1.0, 120),
+            _make("AoE Blast", "Damage nearby enemies (Q), 8s cooldown", "special", "epic", "aoe_blast", 1.0, 120),
+            _make("Lifesteal", "Heal 10% of killed enemy's max HP", "special", "epic", "lifesteal", 0.1, 120),
         ]
     return _pool
 

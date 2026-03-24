@@ -55,6 +55,9 @@ func _ready():
     boss_ai_system.boss_projectile_requested.connect(_on_boss_projectile_requested)
     ECS.world.add_system(boss_ai_system)
 
+    ECS.world.add_system(S_Dash.new())
+    ECS.world.add_system(S_AoEBlast.new())
+
     weapon_system = S_Weapon.new()
     weapon_system.projectile_requested.connect(_on_projectile_requested)
     ECS.world.add_system(weapon_system)

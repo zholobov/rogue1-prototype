@@ -31,6 +31,10 @@ text = "Players: 1"
 layout_mode = 2
 text = "Weapon: Pistol"
 
+[node name="AbilitiesLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = ""
+
 [node name="GodModeCheck" type="CheckBox" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 button_pressed = true
