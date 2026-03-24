@@ -19,7 +19,8 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
             if parent is MonsterEntity and is_instance_valid(parent):
                 var ft = FloatingText.new()
                 parent.get_tree().current_scene.add_child(ft)
-                ft.show_text(parent.global_position, "+10")
+                var reward = maxi(Config.kill_reward_base, health.max_health / 10)
+                ft.show_text(parent.global_position, "+%d" % reward)
 
             actor_died.emit(entity)
             if ECS.world:

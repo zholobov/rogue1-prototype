@@ -6,6 +6,8 @@ const MonsterScene = preload("res://src/entities/monster.tscn")
 
 var weapon_system: S_Weapon
 var level_data: Dictionary = {}
+var monsters_remaining: int = 0
+var death_system: S_Death
 
 func _ready():
     print("[GeneratedLevel] _ready() started")
@@ -40,7 +42,9 @@ func _ready():
     ECS.world.add_system(S_Movement.new())
     ECS.world.add_system(S_Conditions.new())
     ECS.world.add_system(S_Lifetime.new())
-    ECS.world.add_system(S_Death.new())
+    death_system = S_Death.new()
+    death_system.actor_died.connect(_on_actor_died)
+    ECS.world.add_system(death_system)
     ECS.world.add_system(S_MonsterAI.new())
 
     weapon_system = S_Weapon.new()
@@ -82,14 +86,21 @@ func get_player_spawn() -> Vector3:
     return Vector3(cx, 1.0, cz)
 
 func _spawn_monsters() -> void:
+    monsters_remaining = 0
     var spawn_points = get_spawn_points()
-    # Skip the first spawn point (used for player)
     for i in range(1, spawn_points.size()):
         for _m in range(Config.monsters_per_room):
             var monster = MonsterScene.instantiate()
             var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
             monster.position = spawn_points[i] + offset
             add_child(monster)
+            # Apply horde modifier HP scaling (monster.ecs_entity is set in MonsterEntity._ready)
+            if Config.monster_hp_mult != 1.0 and monster.ecs_entity:
+                var health := monster.ecs_entity.get_component(C_Health) as C_Health
+                if health:
+                    health.max_health = int(health.max_health * Config.monster_hp_mult)
+                    health.current_health = health.max_health
+            monsters_remaining += 1
 
 func _physics_process(delta: float) -> void:
     ECS.process(delta)
@@ -111,6 +122,27 @@ func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
     # Muzzle flash
     var flash = VfxFactory.create_muzzle_flash(spawn_pos)
     add_child(flash)
+
+func _on_actor_died(entity: Entity) -> void:
+    var tag := entity.get_component(C_ActorTag) as C_ActorTag
+    if not tag:
+        return
+
+    if tag.actor_type == C_ActorTag.ActorType.MONSTER:
+        # Notify RunManager for currency
+        var health := entity.get_component(C_Health) as C_Health
+        if health and RunManager:
+            RunManager.register_kill(health.max_health)
+
+        monsters_remaining -= 1
+        if monsters_remaining <= 0:
+            print("[GeneratedLevel] All monsters defeated!")
+            if RunManager:
+                RunManager.on_level_cleared()
+
+    elif tag.actor_type == C_ActorTag.ActorType.PLAYER:
+        if not Config.god_mode and RunManager:
+            RunManager.on_player_died()
 
 func _find_in_group(node: Node, group: String) -> Array[Node]:
     var found: Array[Node] = []
