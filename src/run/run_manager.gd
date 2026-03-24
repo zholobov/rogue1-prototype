@@ -1,4 +1,3 @@
-class_name RunManager
 extends Node
 
 enum State { LOBBY, MAP, LEVEL, REWARD, SHOP, BOSS, VICTORY, GAME_OVER }
