@@ -108,6 +108,10 @@ func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
         owner_body.get_instance_id()
     )
 
+    # Muzzle flash
+    var flash = VfxFactory.create_muzzle_flash(spawn_pos)
+    add_child(flash)
+
 func _find_in_group(node: Node, group: String) -> Array[Node]:
     var found: Array[Node] = []
     for child in node.get_children():

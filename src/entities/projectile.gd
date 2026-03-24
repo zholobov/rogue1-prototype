@@ -8,7 +8,6 @@ func _ready():
     ecs_entity.name = "ECSEntity"
     add_child(ecs_entity)
 
-    # Register with ECS world first, then add components
     if ECS.world:
         ECS.world.add_entity(ecs_entity)
 
@@ -31,13 +30,21 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> v
     dd.element = elem
     dd.owner_entity_id = owner_id
 
+    # Attach trail particles
+    var trail = VfxFactory.create_trail(elem)
+    add_child(trail)
+
 func _physics_process(delta: float) -> void:
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     position += proj.direction * proj.speed * delta
 
 func _on_body_entered(body: Node) -> void:
+    var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+    # Spawn impact particles at collision point
+    var impact = VfxFactory.create_impact(global_position, proj.direction, proj.element)
+    get_tree().current_scene.add_child(impact)
+
     if body is CharacterBody3D and body.has_method("get_component"):
-        var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
         if body.get_instance_id() != proj.owner_id:
             S_Damage.apply_damage(body.ecs_entity, proj.damage, proj.element)
     queue_free()
