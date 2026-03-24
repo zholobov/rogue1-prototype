@@ -69,6 +69,8 @@ func _ready():
 
     # Spawn monsters at spawn points
     _spawn_monsters()
+    if monsters_remaining <= 0:
+        call_deferred("_auto_clear")
     print("[GeneratedLevel] _ready() completed")
 
 func get_spawn_points() -> Array[Vector3]:
@@ -91,6 +93,8 @@ func _spawn_monsters() -> void:
     var spawn_points = get_spawn_points()
     for i in range(1, spawn_points.size()):
         for _m in range(Config.monsters_per_room):
+            if Config.max_monsters_per_level > 0 and monsters_remaining >= Config.max_monsters_per_level:
+                break
             var monster = MonsterScene.instantiate()
             var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
             monster.position = spawn_points[i] + offset
@@ -102,6 +106,11 @@ func _spawn_monsters() -> void:
                     health.max_health = int(health.max_health * Config.monster_hp_mult)
                     health.current_health = health.max_health
             monsters_remaining += 1
+
+func _auto_clear() -> void:
+    print("[GeneratedLevel] No monsters — auto-clearing level")
+    if RunManager:
+        RunManager.on_level_cleared()
 
 func _physics_process(delta: float) -> void:
     ECS.process(delta)

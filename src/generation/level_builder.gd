@@ -46,7 +46,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 			var world_pos = Vector3(x * tile_size, 0, y * tile_size)
 
 			if tile.walkable:
-				var is_room = (tile_name == "room")
+				var is_room = (tile_name == "room" or tile_name == "spawn")
 				var floor_mat = _floor_material_room if is_room else _floor_material_corridor
 				_add_floor(root, world_pos, tile_size, floor_mat)
 				_add_ceiling(root, world_pos, tile_size)

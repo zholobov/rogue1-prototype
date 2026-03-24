@@ -15,10 +15,12 @@ static func generate(boss_depth: int) -> RunMap:
     for depth in range(boss_depth):
         var layer: Array = []
         var node_count = randi_range(2, 3)
+        var used_modifiers: Array = []
         for i in range(node_count):
             var node = MapNode.new()
             node.level_seed = randi()
-            node.modifier = _random_modifier()
+            node.modifier = _random_modifier_excluding(used_modifiers)
+            used_modifiers.append(node.modifier)
             layer.append(node)
         map.layers.append(layer)
 
@@ -53,18 +55,31 @@ static func generate(boss_depth: int) -> RunMap:
 
     return map
 
-static func _random_modifier() -> String:
-    var roll = randf()
-    if roll < 0.50:
+static func _random_modifier_excluding(exclude: Array) -> String:
+    var all_modifiers = ["normal", "dense", "large", "dark", "horde"]
+    var weights = [0.50, 0.20, 0.15, 0.10, 0.05]
+
+    # Remove excluded modifiers and renormalize
+    var available: Array = []
+    var available_weights: Array = []
+    for i in range(all_modifiers.size()):
+        if all_modifiers[i] not in exclude:
+            available.append(all_modifiers[i])
+            available_weights.append(weights[i])
+
+    if available.is_empty():
         return "normal"
-    elif roll < 0.70:
-        return "dense"
-    elif roll < 0.85:
-        return "large"
-    elif roll < 0.95:
-        return "dark"
-    else:
-        return "horde"
+
+    var total = 0.0
+    for w in available_weights:
+        total += w
+    var roll = randf() * total
+    var running = 0.0
+    for i in range(available.size()):
+        running += available_weights[i]
+        if roll <= running:
+            return available[i]
+    return available[available.size() - 1]
 
 func get_node(depth: int, index: int) -> MapNode:
     return layers[depth][index]

@@ -49,7 +49,12 @@ func on_level_cleared() -> void:
     stats.took_damage_this_level = false
     current_depth += 1
     level_cleared_signal.emit()
-    _change_state(State.REWARD)
+    if current_depth > Config.boss_depth:
+        # Boss beaten — end run
+        run_ended.emit(stats)
+        _change_state(State.GAME_OVER)
+    else:
+        _change_state(State.REWARD)
 
 func on_player_died() -> void:
     run_ended.emit(stats)
@@ -57,12 +62,7 @@ func on_player_died() -> void:
 
 func pick_upgrade(upgrade: UpgradeData) -> void:
     active_upgrades.append(upgrade)
-    if current_depth >= Config.boss_depth:
-        # Boss depth reached — placeholder until Plan 4B adds real boss
-        run_ended.emit(stats)
-        _change_state(State.GAME_OVER)
-    else:
-        _change_state(State.MAP)
+    _change_state(State.MAP)
 
 func add_currency(amount: int) -> void:
     currency += amount
@@ -82,6 +82,7 @@ func _change_state(new_state: int) -> void:
     state_changed.emit(new_state)
 
 func _apply_modifier(modifier: String) -> void:
+    Config.current_modifier = modifier
     Config.level_grid_width = 12
     Config.level_grid_height = 12
     Config.monsters_per_room = 1

@@ -27,6 +27,7 @@ var weapon_presets: Array[Dictionary] = [
 @export var level_tile_size: float = 4.0
 @export var level_seed: int = 0  # 0 = random seed
 @export var monsters_per_room: int = 1
+@export var max_monsters_per_level: int = 5
 
 # Run loop
 @export var boss_depth: int = 4
@@ -35,6 +36,7 @@ var weapon_presets: Array[Dictionary] = [
 @export var meta_currency_rate: float = 0.1
 
 # Modifier support (set by RunManager before level load)
+var current_modifier: String = "normal"
 var light_range_mult: float = 1.0
 var monster_hp_mult: float = 1.0
 
