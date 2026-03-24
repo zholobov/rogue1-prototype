@@ -28,6 +28,7 @@ func _ready():
 
     _setup_visuals()
     _setup_health_bar()
+    add_to_group("monsters")
 
 func _setup_visuals() -> void:
     var accent = NeonPalette.random_color()
