@@ -21,11 +21,11 @@ func _init() -> void:
 	_floor_material_corridor.roughness = 0.9
 
 	_wall_material = StandardMaterial3D.new()
-	_wall_material.albedo_color = Color(0.55, 0.52, 0.58)
+	_wall_material.albedo_color = Color(0.65, 0.62, 0.68)
 	_wall_material.roughness = 0.85
 
 	_ceiling_material = StandardMaterial3D.new()
-	_ceiling_material.albedo_color = Color(0.32, 0.32, 0.36)
+	_ceiling_material.albedo_color = Color(0.50, 0.50, 0.55)
 	_ceiling_material.roughness = 0.95
 
 func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
