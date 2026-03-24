@@ -93,6 +93,39 @@ ThemeData (Resource)
 
 **Note on element_colors:** The `palette.element_colors` dictionary replaces both `NeonPalette.ELEMENT_COLORS` and the colors in `element_registry.gd`. Element registry gameplay data (damage types, resistances) stays unchanged — only the display colors are themed.
 
+## 1b. Procedural Texture Generation
+
+All textures are generated procedurally — no external image files. Four approaches, each suited to different use cases. All are fully compatible with web export (WebGL 2 / GL Compatibility).
+
+| Approach | Use case | How it works |
+|---|---|---|
+| GDScript Image generation | Structured static patterns (bricks, circuits, scales, tile grids) | Create `Image`, set pixels in loops, convert to `ImageTexture`. CPU-only. Generate once at theme load, cache. 256x256 or 512x512. |
+| NoiseTexture2D + FastNoiseLite | Organic static surfaces (stone, dirt, flesh, rough terrain) | Built-in Godot resource. CPU-generated noise with cellular/simplex/perlin/value types. Color ramp via Gradient. |
+| GradientTexture2D | Color ramps, glow falloffs, emissive ramps, simple gradients | Built-in Godot resource. Linear/radial/square modes. |
+| Fragment shaders (GL Compatibility subset) | Animated effects (pulsing neon lines, flowing lava, flickering torches) | Godot shader language → GLSL ES 3.0 → WebGL 2. Must hand-roll noise functions (no built-in `noise()` in GLSL ES 3.0). Only option for per-frame animation without CPU cost. |
+
+**ThemeData integration:** ThemeData gains a `textures` section with generation parameters per surface type. A `TextureFactory` utility generates and caches all textures for the active theme on load.
+
+```
+├── textures
+│   ├── floor_pattern: Dictionary    # {type: "noise", noise_type: "cellular", color_ramp: Gradient, ...}
+│   ├── wall_pattern: Dictionary     # {type: "image_gen", pattern: "bricks", color1: Color, color2: Color, ...}
+│   ├── accent_shader: Shader        # optional animated shader for accent surfaces
+│   └── monster_skin: Dictionary     # {type: "noise", noise_type: "simplex", ...}
+```
+
+**TextureFactory** (`src/effects/texture_factory.gd`):
+- `generate_textures(theme: ThemeData) → Dictionary` — returns cached textures keyed by surface name
+- Called once when theme is loaded or changed
+- Static textures (Image, NoiseTexture2D, GradientTexture2D) generated and cached
+- Animated shaders referenced directly — no caching needed
+
+**Neon theme textures:** Minimal — mostly flat colors with emission. Accent strips could use an animated pulsing shader.
+
+**Stone theme textures:** NoiseTexture2D cellular noise for stone surfaces, GDScript Image generation for brick mortar patterns, GradientTexture2D for torch glow falloff.
+
+**Future themes** add their own texture parameters to the same system.
+
 ## 2. ThemeManager Autoload
 
 Singleton that owns the active theme and provides access to all systems.
