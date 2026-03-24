@@ -20,3 +20,10 @@ var weapon_presets: Array[Dictionary] = [
 	{"name": "Ice Rifle", "damage": 15, "fire_rate": 0.8, "speed": 35.0, "element": "ice"},
 	{"name": "Water Gun", "damage": 3, "fire_rate": 0.05, "speed": 30.0, "element": "water"},
 ]
+
+# Level generation
+@export var level_grid_width: int = 12
+@export var level_grid_height: int = 12
+@export var level_tile_size: float = 4.0
+@export var level_seed: int = 0  # 0 = random seed
+@export var monsters_per_room: int = 1
