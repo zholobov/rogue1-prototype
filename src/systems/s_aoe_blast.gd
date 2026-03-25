@@ -54,9 +54,9 @@ func _deal_aoe_damage(center: Vector3, damage: int, radius: float) -> void:
     particles.process_material = mat
 
     var draw_mat = StandardMaterial3D.new()
-    draw_mat.albedo_color = Color(1.0, 0.6, 0.1)
+    draw_mat.albedo_color = ThemeManager.active_theme.aoe_blast_color
     draw_mat.emission_enabled = true
-    draw_mat.emission = Color(1.0, 0.6, 0.1)
+    draw_mat.emission = ThemeManager.active_theme.aoe_blast_color
     draw_mat.emission_energy_multiplier = 4.0
     draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 

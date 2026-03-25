@@ -3,7 +3,7 @@ extends Label3D
 
 func _init() -> void:
     billboard = BaseMaterial3D.BILLBOARD_ENABLED
-    modulate = Color(0.2, 1.0, 0.4, 1.0)
+    modulate = ThemeManager.active_theme.health_bar_foreground
     outline_modulate = Color.BLACK
     outline_size = 8
     font_size = 32

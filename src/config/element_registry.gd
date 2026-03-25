@@ -16,10 +16,10 @@ func _ready() -> void:
 
 func _setup_defaults() -> void:
     # Default elements
-    add_element("fire", Color.ORANGE_RED, "burning", 3.0)
-    add_element("ice", Color.LIGHT_BLUE, "chilled", 3.0)
-    add_element("water", Color.DODGER_BLUE, "wet", 5.0)
-    add_element("oil", Color.DARK_OLIVE_GREEN, "oily", 5.0)
+    add_element("fire", ThemeManager.active_theme.get_element_color("fire"), "burning", 3.0)
+    add_element("ice", ThemeManager.active_theme.get_element_color("ice"), "chilled", 3.0)
+    add_element("water", ThemeManager.active_theme.get_element_color("water"), "wet", 5.0)
+    add_element("oil", ThemeManager.active_theme.get_element_color("oil"), "oily", 5.0)
 
     # Default interactions: existing_condition + incoming_element = result
     add_interaction("wet", "ice", "frozen", 4.0, 0.0)

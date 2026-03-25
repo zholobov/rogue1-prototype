@@ -206,3 +206,25 @@ func test_theme_get_monster_scene_basic_initially_null():
     # Neon theme starts with no scene overrides (procedural)
     var scene = ThemeManager.get_monster_scene("basic")
     assert_null(scene, "Neon should use procedural monsters initially")
+
+# --- VFX theming ---
+func test_neon_theme_element_color_fire():
+    var theme = ThemeManager.active_theme
+    var fire = theme.get_element_color("fire")
+    assert_almost_eq(fire.r, 1.0, 0.01)
+    assert_almost_eq(fire.g, 0.27, 0.01)
+
+func test_neon_theme_element_color_unknown_returns_white():
+    var theme = ThemeManager.active_theme
+    var c = theme.get_element_color("plasma")
+    assert_eq(c, Color.WHITE)
+
+func test_neon_theme_muzzle_flash_color():
+    var theme = ThemeManager.active_theme
+    assert_almost_eq(theme.muzzle_flash_color.r, 1.0, 0.01)
+    assert_almost_eq(theme.muzzle_flash_color.g, 0.9, 0.01)
+
+func test_neon_theme_aoe_blast_color():
+    var theme = ThemeManager.active_theme
+    assert_almost_eq(theme.aoe_blast_color.r, 1.0, 0.01)
+    assert_almost_eq(theme.aoe_blast_color.g, 0.6, 0.01)

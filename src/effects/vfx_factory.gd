@@ -22,9 +22,9 @@ static func create_muzzle_flash(pos: Vector3) -> GPUParticles3D:
     particles.process_material = mat
 
     var draw_mat = StandardMaterial3D.new()
-    draw_mat.albedo_color = Color(1.0, 0.9, 0.6)
+    draw_mat.albedo_color = ThemeManager.active_theme.muzzle_flash_color
     draw_mat.emission_enabled = true
-    draw_mat.emission = Color(1.0, 0.9, 0.6)
+    draw_mat.emission = ThemeManager.active_theme.muzzle_flash_color
     draw_mat.emission_energy_multiplier = 5.0
     draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 
@@ -55,7 +55,7 @@ static func create_trail(element: String) -> GPUParticles3D:
     mat.damping_max = 5.0
     particles.process_material = mat
 
-    var color = NeonPalette.element_color(element)
+    var color = ThemeManager.active_theme.get_element_color(element)
     var draw_mat = StandardMaterial3D.new()
     draw_mat.albedo_color = color
     draw_mat.emission_enabled = true
@@ -94,7 +94,7 @@ static func create_impact(pos: Vector3, direction: Vector3, element: String) -> 
     mat.scale_max = 0.06
     particles.process_material = mat
 
-    var color = NeonPalette.element_color(element)
+    var color = ThemeManager.active_theme.get_element_color(element)
     var draw_mat = StandardMaterial3D.new()
     draw_mat.albedo_color = color
     draw_mat.emission_enabled = true
