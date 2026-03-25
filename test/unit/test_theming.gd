@@ -482,3 +482,49 @@ func test_texture_factory_generate_for_theme_ceiling():
     td.ceiling_pattern = {"type": "image_gen", "pattern": "slabs", "color1": Color.GRAY, "color2": Color.BLACK, "width": 64, "height": 64}
     var textures = TextureFactory.generate_for_theme(td)
     assert_true(textures.has("ceiling"))
+
+func test_stone_theme_accent_use_palette_false():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_false(stone.accent_use_palette, "stone should not use emissive accent strips")
+
+func test_stone_theme_has_corridor_floor_pattern():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_gt(stone.corridor_floor_pattern.size(), 0)
+    assert_eq(stone.corridor_floor_pattern["pattern"], "cobblestone")
+
+func test_stone_theme_has_ceiling_pattern():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_gt(stone.ceiling_pattern.size(), 0)
+    assert_eq(stone.ceiling_pattern["pattern"], "slabs")
+
+func test_stone_theme_prop_density():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_eq(stone.prop_density, 1.0)
+
+func test_stone_theme_textures_generate_corridor_and_ceiling():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    var textures = TextureFactory.generate_for_theme(stone)
+    assert_true(textures.has("corridor_floor"), "should generate corridor floor texture")
+    assert_true(textures.has("ceiling"), "should generate ceiling texture")
+
+func test_stone_theme_floor_pattern_is_flagstone():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_eq(stone.floor_pattern["pattern"], "flagstone")

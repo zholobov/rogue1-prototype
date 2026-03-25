@@ -52,7 +52,7 @@ static func create() -> ThemeData:
     t.ceiling_albedo = Color(0.35, 0.33, 0.30)
     t.ceiling_roughness = 0.95
     t.accent_emission_energy = 1.5
-    t.accent_use_palette = true
+    t.accent_use_palette = false
 
     # Monsters — earthy golems
     t.body_albedo = Color(0.35, 0.3, 0.25)
@@ -81,20 +81,36 @@ static func create() -> ThemeData:
     t.ui_accent_color = Color(0.85, 0.65, 0.2)
     t.ui_damage_flash_color = Color(0.8, 0.2, 0.0, 0.3)
 
-    # Textures — stone and brick patterns
+    # Textures — high-contrast stone patterns
     t.floor_pattern = {
-        "type": "noise",
-        "noise_type": "cellular",
-        "frequency": 0.08,
-        "octaves": 4,
+        "type": "image_gen",
+        "pattern": "flagstone",
+        "color1": Color(0.45, 0.4, 0.35),
+        "color2": Color(0.15, 0.12, 0.1),
+        "width": 256,
+        "height": 256,
+    }
+    t.corridor_floor_pattern = {
+        "type": "image_gen",
+        "pattern": "cobblestone",
+        "color1": Color(0.4, 0.38, 0.35),
+        "color2": Color(0.18, 0.15, 0.12),
         "width": 256,
         "height": 256,
     }
     t.wall_pattern = {
         "type": "image_gen",
-        "pattern": "bricks",
-        "color1": Color(0.35, 0.32, 0.28),
-        "color2": Color(0.22, 0.20, 0.18),
+        "pattern": "ashlar",
+        "color1": Color(0.4, 0.35, 0.3),
+        "color2": Color(0.15, 0.12, 0.1),
+        "width": 256,
+        "height": 256,
+    }
+    t.ceiling_pattern = {
+        "type": "image_gen",
+        "pattern": "slabs",
+        "color1": Color(0.38, 0.35, 0.32),
+        "color2": Color(0.15, 0.12, 0.1),
         "width": 256,
         "height": 256,
     }
@@ -106,6 +122,15 @@ static func create() -> ThemeData:
         "width": 128,
         "height": 128,
     }
+
+    # Props
+    t.prop_density = 1.0
+    t.torch_flicker = true
+    t.ceiling_beam_spacing = 2
+    t.pillar_chance = 0.2
+    t.rubble_chance = 0.15
+    t.room_prop_min = 1
+    t.room_prop_max = 3
 
     t.monster_scenes = {
         "basic": load("res://themes/stone/monster_basic.tscn"),
