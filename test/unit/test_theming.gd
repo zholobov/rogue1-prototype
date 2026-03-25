@@ -597,3 +597,50 @@ func test_all_themes_have_hud_properties():
     for t in ThemeManager.available_themes:
         assert_ne(t.ui_crosshair_color, Color.BLACK, "%s needs crosshair color" % t.theme_name)
         assert_ne(t.ui_minimap_wall, Color.BLACK, "%s needs minimap wall color" % t.theme_name)
+
+# --- HUD smoke tests ---
+func test_hud_scene_instantiates():
+    var scene = preload("res://src/ui/hud.tscn")
+    var hud = scene.instantiate()
+    assert_not_null(hud)
+    # Add to tree so _ready fires
+    add_child(hud)
+    # Verify key child nodes were created
+    await get_tree().process_frame
+    assert_true(hud.has_method("setup_minimap"), "HUD should have setup_minimap method")
+    assert_true(hud.has_method("show_boss_bar"), "HUD should have show_boss_bar method")
+    assert_true(hud.has_method("on_actor_died"), "HUD should have on_actor_died method")
+    hud.queue_free()
+
+func test_crosshair_manager_instantiates():
+    var cm = CrosshairManager.new()
+    assert_not_null(cm)
+    add_child(cm)
+    cm.set_weapon(0, "")
+    cm.set_weapon(1, "fire")
+    cm.set_weapon(2, "ice")
+    cm.set_weapon(3, "water")
+    cm.queue_free()
+
+func test_ability_indicator_instantiates():
+    var ai = AbilityIndicator.new()
+    assert_not_null(ai)
+    add_child(ai)
+    ai.setup("TEST", 5.0)
+    ai.update_state(2.5)
+    ai.update_state(0.0)
+    ai.update_state(0.0, true)
+    ai.queue_free()
+
+func test_minimap_instantiates():
+    var mm = Minimap.new()
+    assert_not_null(mm)
+    add_child(mm)
+    mm.setup({"grid": [["room", "wall"], ["corridor_h", "empty"]], "width": 2, "height": 2})
+    mm.queue_free()
+
+func test_damage_number_factory_creates_floating_text():
+    var ft = DamageNumberFactory.create("fire")
+    assert_not_null(ft)
+    assert_true(ft is FloatingText)
+    ft.queue_free()
