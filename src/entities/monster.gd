@@ -37,6 +37,10 @@ func _setup_visuals() -> void:
     # Scene override: if theme provides a monster scene, use it instead of procedural
     var scene_override := ThemeManager.get_monster_scene("basic")
     if scene_override:
+        # Hide the original mesh from the .tscn
+        var orig_mesh := get_node_or_null("MeshInstance3D") as MeshInstance3D
+        if orig_mesh:
+            orig_mesh.visible = false
         var visual_root := scene_override.instantiate() as Node3D
         add_child(visual_root)
         # Apply body material to BodyMesh child
@@ -200,7 +204,7 @@ func _setup_health_bar() -> void:
     var fg_mesh = BoxMesh.new()
     fg_mesh.size = Vector3(1.0, 0.05, 0.02)
     _health_bar_fg.mesh = fg_mesh
-    _health_bar_fg.position = Vector3(0, 0, 0.01)
+    _health_bar_fg.position = Vector3(0, 0, -0.01)
     var fg_mat = StandardMaterial3D.new()
     fg_mat.albedo_color = theme.health_bar_foreground
     fg_mat.emission_enabled = true
@@ -228,7 +232,7 @@ func _process(_delta: float) -> void:
     # Update bar width and color based on HP ratio
     var ratio = float(health.current_health) / float(health.max_health)
     _health_bar_fg.scale.x = ratio
-    _health_bar_fg.position.x = -(1.0 - ratio) * 0.5
+    _health_bar_fg.position.x = (1.0 - ratio) * 0.5
 
     # Color: foreground at full → low_color at low
     var theme := ThemeManager.active_theme
