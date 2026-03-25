@@ -143,6 +143,97 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 			_add_torch(root, world_pos_torch, tile_size, c.dir, light_index)
 			light_index += 1
 
+	# Props (pillars, rubble, room props)
+	if ThemeManager.active_theme.prop_density > 0.0:
+		var room_spawn_positions: Array[Vector3] = []
+		for child in root.get_children():
+			if child.is_in_group("spawn_point"):
+				room_spawn_positions.append(child.position)
+
+		# Collect room tiles for room-prop placement
+		var room_tiles: Array = []
+
+		for y in range(height):
+			for x in range(width):
+				var tile_name = grid[y][x]
+				var tile = rules.get_tile(tile_name)
+				if not tile or not tile.walkable:
+					continue
+				var world_pos_prop = Vector3(x * tile_size, 0, y * tile_size)
+				var is_room_tile = (tile_name == "room" or tile_name == "spawn")
+
+				if is_room_tile:
+					room_tiles.append(world_pos_prop)
+
+				# Rubble along wall edges
+				var next_to_wall := false
+				for dir in [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]:
+					var nx = x + dir.x
+					var ny = y + dir.y
+					if nx >= 0 and nx < width and ny >= 0 and ny < height:
+						if grid[ny][nx] == "wall":
+							next_to_wall = true
+							break
+				if next_to_wall and randf() < ThemeManager.active_theme.rubble_chance * ThemeManager.active_theme.prop_density:
+					_add_rubble(root, world_pos_prop, tile_size)
+
+				# Pillars at room corners (walkable tile with 2+ adjacent walls forming corner)
+				if is_room_tile:
+					var wall_count := 0
+					var has_north_wall := false
+					var has_south_wall := false
+					var has_east_wall := false
+					var has_west_wall := false
+					for dir in [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]:
+						var nx = x + dir.x
+						var ny = y + dir.y
+						if nx >= 0 and nx < width and ny >= 0 and ny < height:
+							if grid[ny][nx] == "wall":
+								wall_count += 1
+								if dir == Vector2i(0, -1): has_north_wall = true
+								elif dir == Vector2i(0, 1): has_south_wall = true
+								elif dir == Vector2i(-1, 0): has_west_wall = true
+								elif dir == Vector2i(1, 0): has_east_wall = true
+					if wall_count >= 2 and randf() < ThemeManager.active_theme.pillar_chance * ThemeManager.active_theme.prop_density:
+						var corner_offset = Vector3.ZERO
+						if has_north_wall and has_west_wall:
+							corner_offset = Vector3(-tile_size * 0.35, 0, -tile_size * 0.35)
+						elif has_north_wall and has_east_wall:
+							corner_offset = Vector3(tile_size * 0.35, 0, -tile_size * 0.35)
+						elif has_south_wall and has_west_wall:
+							corner_offset = Vector3(-tile_size * 0.35, 0, tile_size * 0.35)
+						elif has_south_wall and has_east_wall:
+							corner_offset = Vector3(tile_size * 0.35, 0, tile_size * 0.35)
+						if corner_offset != Vector3.ZERO:
+							_add_pillar(root, world_pos_prop + Vector3(tile_size / 2.0, 0, tile_size / 2.0) + corner_offset)
+
+		# Room props (barrels, crates, chains)
+		var prop_types = ["barrel", "crate", "chain"]
+		var placed_this_room := 0
+		var room_prop_max_count = ThemeManager.active_theme.room_prop_max
+		var room_prop_min_count = ThemeManager.active_theme.room_prop_min
+		# Simple approach: iterate room tiles and place props with chance
+		var total_room_props := randi_range(room_prop_min_count, room_prop_max_count) * maxi(room_tiles.size() / 20, 1)
+		room_tiles.shuffle()
+		for i in range(mini(total_room_props, room_tiles.size())):
+			var prop_pos = room_tiles[i] + Vector3(tile_size / 2.0 + randf_range(-0.3, 0.3), 0, tile_size / 2.0 + randf_range(-0.3, 0.3))
+			# Check distance from spawn points
+			var too_close := false
+			for sp in room_spawn_positions:
+				if prop_pos.distance_to(sp) < 1.0:
+					too_close = true
+					break
+			if too_close:
+				continue
+			var prop_type = prop_types[randi() % prop_types.size()]
+			match prop_type:
+				"barrel":
+					_add_barrel(root, prop_pos)
+				"crate":
+					_add_crate(root, prop_pos)
+				"chain":
+					_add_chain(root, prop_pos)
+
 	# Directional light from theme
 	var dir_light = DirectionalLight3D.new()
 	dir_light.transform = Transform3D(Basis(), Vector3(0, 10, 0))
@@ -532,3 +623,154 @@ func _add_floor_glow(parent: Node3D, pos: Vector3, tile_size: float, color: Colo
 	glow.material_override = mat
 
 	parent.add_child(glow)
+
+func _add_rubble(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+	var theme = ThemeManager.active_theme
+	var rubble_color = Color(
+		theme.floor_albedo.r - 0.05,
+		theme.floor_albedo.g - 0.05,
+		theme.floor_albedo.b - 0.05
+	)
+	var center = pos + Vector3(tile_size / 2.0, 0, tile_size / 2.0)
+	var num_pieces = randi_range(3, 6)
+	for _i in range(num_pieces):
+		var piece = MeshInstance3D.new()
+		var size = randf_range(0.05, 0.15)
+		if randf() > 0.5:
+			var box = BoxMesh.new()
+			box.size = Vector3(size, size * 0.6, size * randf_range(0.7, 1.3))
+			piece.mesh = box
+		else:
+			var sphere = SphereMesh.new()
+			sphere.radius = size / 2.0
+			sphere.height = size
+			piece.mesh = sphere
+		piece.position = center + Vector3(randf_range(-0.3, 0.3), size * 0.3, randf_range(-0.3, 0.3))
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = rubble_color
+		mat.roughness = 1.0
+		piece.material_override = mat
+		parent.add_child(piece)
+
+func _add_pillar(parent: Node3D, pos: Vector3) -> void:
+	var theme = ThemeManager.active_theme
+	var pillar_mat = StandardMaterial3D.new()
+	pillar_mat.albedo_color = Color(
+		theme.wall_albedo.r + 0.03,
+		theme.wall_albedo.g + 0.03,
+		theme.wall_albedo.b + 0.03
+	)
+	pillar_mat.roughness = 0.85
+
+	# Base
+	var base = MeshInstance3D.new()
+	var base_mesh = CylinderMesh.new()
+	base_mesh.top_radius = 0.2
+	base_mesh.bottom_radius = 0.2
+	base_mesh.height = 0.15
+	base.mesh = base_mesh
+	base.position = pos + Vector3(0, 0.075, 0)
+	base.material_override = pillar_mat
+	parent.add_child(base)
+
+	# Shaft
+	var shaft = MeshInstance3D.new()
+	var shaft_mesh = CylinderMesh.new()
+	shaft_mesh.top_radius = 0.12
+	shaft_mesh.bottom_radius = 0.12
+	shaft_mesh.height = WALL_HEIGHT - 0.3
+	shaft.mesh = shaft_mesh
+	shaft.position = pos + Vector3(0, WALL_HEIGHT / 2.0, 0)
+	shaft.material_override = pillar_mat
+	parent.add_child(shaft)
+
+	# Capital
+	var capital = MeshInstance3D.new()
+	var cap_mesh = CylinderMesh.new()
+	cap_mesh.top_radius = 0.2
+	cap_mesh.bottom_radius = 0.2
+	cap_mesh.height = 0.15
+	capital.mesh = cap_mesh
+	capital.position = pos + Vector3(0, WALL_HEIGHT - 0.075, 0)
+	capital.material_override = pillar_mat
+	parent.add_child(capital)
+
+func _add_barrel(parent: Node3D, pos: Vector3) -> void:
+	var barrel_mat = StandardMaterial3D.new()
+	barrel_mat.albedo_color = Color(0.35, 0.22, 0.1)
+	barrel_mat.roughness = 0.9
+
+	# Body
+	var body = MeshInstance3D.new()
+	var body_mesh = CylinderMesh.new()
+	body_mesh.top_radius = 0.15
+	body_mesh.bottom_radius = 0.15
+	body_mesh.height = 0.4
+	body.mesh = body_mesh
+	body.position = pos + Vector3(0, 0.2, 0)
+	body.material_override = barrel_mat
+	parent.add_child(body)
+
+	# Rim
+	var rim = MeshInstance3D.new()
+	var rim_mesh = CylinderMesh.new()
+	rim_mesh.top_radius = 0.16
+	rim_mesh.bottom_radius = 0.16
+	rim_mesh.height = 0.02
+	rim.mesh = rim_mesh
+	rim.position = pos + Vector3(0, 0.41, 0)
+	var rim_mat = StandardMaterial3D.new()
+	rim_mat.albedo_color = Color(0.2, 0.15, 0.08)
+	rim_mat.roughness = 0.7
+	rim.material_override = rim_mat
+	parent.add_child(rim)
+
+func _add_crate(parent: Node3D, pos: Vector3) -> void:
+	var crate_mat = StandardMaterial3D.new()
+	crate_mat.albedo_color = Color(0.3, 0.2, 0.1)
+	crate_mat.roughness = 0.95
+
+	# Box body
+	var body = MeshInstance3D.new()
+	var body_mesh = BoxMesh.new()
+	body_mesh.size = Vector3(0.3, 0.3, 0.3)
+	body.mesh = body_mesh
+	body.position = pos + Vector3(0, 0.15, 0)
+	body.material_override = crate_mat
+	parent.add_child(body)
+
+	# Cross strip
+	var strip_mat = StandardMaterial3D.new()
+	strip_mat.albedo_color = Color(0.2, 0.12, 0.06)
+	strip_mat.roughness = 0.8
+
+	var h_strip = MeshInstance3D.new()
+	var h_mesh = BoxMesh.new()
+	h_mesh.size = Vector3(0.32, 0.02, 0.04)
+	h_strip.mesh = h_mesh
+	h_strip.position = pos + Vector3(0, 0.15, -0.16)
+	h_strip.material_override = strip_mat
+	parent.add_child(h_strip)
+
+	var v_strip = MeshInstance3D.new()
+	var v_mesh = BoxMesh.new()
+	v_mesh.size = Vector3(0.04, 0.32, 0.02)
+	v_strip.mesh = v_mesh
+	v_strip.position = pos + Vector3(0, 0.15, -0.16)
+	v_strip.material_override = strip_mat
+	parent.add_child(v_strip)
+
+func _add_chain(parent: Node3D, pos: Vector3) -> void:
+	var chain_mat = StandardMaterial3D.new()
+	chain_mat.albedo_color = Color(0.25, 0.22, 0.2)
+	chain_mat.roughness = 0.6
+
+	var num_links = randi_range(5, 8)
+	for i in range(num_links):
+		var link = MeshInstance3D.new()
+		var link_mesh = BoxMesh.new()
+		link_mesh.size = Vector3(0.03, 0.06, 0.03)
+		link.mesh = link_mesh
+		link.position = pos + Vector3(0, WALL_HEIGHT - 0.1 - i * 0.08, 0)
+		link.material_override = chain_mat
+		parent.add_child(link)
