@@ -101,6 +101,18 @@ extends Resource
 @export var wall_pattern: Dictionary = {}
 @export var accent_shader: Shader
 @export var monster_skin: Dictionary = {}
+@export var corridor_floor_pattern: Dictionary = {}
+@export var ceiling_pattern: Dictionary = {}
+
+# --- Props ---
+@export_group("Props")
+@export var prop_density: float = 0.0
+@export var torch_flicker: bool = true
+@export var ceiling_beam_spacing: int = 2
+@export var pillar_chance: float = 0.2
+@export var rubble_chance: float = 0.15
+@export var room_prop_min: int = 1
+@export var room_prop_max: int = 3
 
 # --- Helper methods ---
 

@@ -383,3 +383,38 @@ func test_theme_changed_signal_carries_theme():
     assert_eq(result[0].theme_name, "Stone Dungeon")
     ThemeManager.theme_changed.disconnect(callback)
     ThemeManager.set_theme("Neon Dungeon")
+
+func test_theme_data_has_corridor_floor_pattern():
+    var td = ThemeData.new()
+    assert_typeof(td.corridor_floor_pattern, TYPE_DICTIONARY)
+    assert_eq(td.corridor_floor_pattern.size(), 0)
+
+func test_theme_data_has_ceiling_pattern():
+    var td = ThemeData.new()
+    assert_typeof(td.ceiling_pattern, TYPE_DICTIONARY)
+    assert_eq(td.ceiling_pattern.size(), 0)
+
+func test_theme_data_has_prop_density():
+    var td = ThemeData.new()
+    assert_eq(td.prop_density, 0.0)
+
+func test_theme_data_has_torch_flicker():
+    var td = ThemeData.new()
+    assert_true(td.torch_flicker)
+
+func test_theme_data_has_ceiling_beam_spacing():
+    var td = ThemeData.new()
+    assert_eq(td.ceiling_beam_spacing, 2)
+
+func test_theme_data_has_pillar_chance():
+    var td = ThemeData.new()
+    assert_almost_eq(td.pillar_chance, 0.2, 0.01)
+
+func test_theme_data_has_rubble_chance():
+    var td = ThemeData.new()
+    assert_almost_eq(td.rubble_chance, 0.15, 0.01)
+
+func test_theme_data_has_room_prop_min_max():
+    var td = ThemeData.new()
+    assert_eq(td.room_prop_min, 1)
+    assert_eq(td.room_prop_max, 3)
