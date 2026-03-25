@@ -43,6 +43,7 @@ func _show_lobby() -> void:
 	var lobby = LobbyScene.instantiate()
 	lobby.game_started.connect(_on_game_started)
 	lobby.meta_upgrades_pressed.connect(_on_meta_upgrades)
+	lobby.themes_pressed.connect(_on_themes)
 	add_child(lobby)
 	current_scene = lobby
 
@@ -58,6 +59,17 @@ func _on_meta_upgrades() -> void:
 	current_scene = screen
 
 func _on_meta_upgrades_back() -> void:
+	_clear_current()
+	_show_lobby()
+
+func _on_themes() -> void:
+	_clear_current()
+	var screen = preload("res://src/ui/theme_selector.gd").new()
+	screen.back_pressed.connect(_on_themes_back)
+	add_child(screen)
+	current_scene = screen
+
+func _on_themes_back() -> void:
 	_clear_current()
 	_show_lobby()
 

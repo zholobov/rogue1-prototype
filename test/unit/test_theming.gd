@@ -341,3 +341,9 @@ func test_stone_theme_has_monster_scenes():
             stone = t
     assert_true(stone.monster_scenes.has("basic"))
     assert_true(stone.monster_scenes.has("boss"))
+
+# --- Theme Selector ---
+func test_theme_selector_instantiates():
+    var selector = preload("res://src/ui/theme_selector.gd").new()
+    assert_not_null(selector)
+    selector.queue_free()

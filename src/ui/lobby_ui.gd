@@ -2,6 +2,7 @@ extends Control
 
 signal game_started(solo: bool)
 signal meta_upgrades_pressed()
+signal themes_pressed()
 
 @onready var lobby_input: LineEdit = $VBoxContainer/LobbyInput
 @onready var solo_button: Button = $VBoxContainer/SoloButton
@@ -40,6 +41,11 @@ func _ready():
 		upgrades_btn.text = "Permanent Upgrades"
 		upgrades_btn.pressed.connect(_on_meta_upgrades)
 		vbox.add_child(upgrades_btn)
+
+		var themes_btn = Button.new()
+		themes_btn.text = "Themes"
+		themes_btn.pressed.connect(_on_themes)
+		vbox.add_child(themes_btn)
 
 func _on_solo():
 	game_started.emit(true)
@@ -81,6 +87,9 @@ func _on_player_connected(peer_id: int):
 
 func _on_meta_upgrades():
 	meta_upgrades_pressed.emit()
+
+func _on_themes():
+	themes_pressed.emit()
 
 func _on_player_disconnected(peer_id: int):
 	for i in range(player_list.item_count):
