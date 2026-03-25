@@ -79,7 +79,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				_add_edge_strips(root, grid, x, y, width, height, world_pos, tile_size, accent_color)
 
 				# Floor glow overlay for rooms
-				if is_room:
+				if is_room and ThemeManager.active_theme.accent_use_palette:
 					_add_floor_glow(root, world_pos, tile_size, accent_color)
 
 				if tile.can_spawn:
@@ -91,7 +91,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 					light_index += 1
 			else:
 				if tile_name == "wall":
-					_add_wall_block(root, world_pos, tile_size)
+					_add_wall_block(root, world_pos, tile_size, grid, x, y, width, height)
 
 	# Directional light from theme
 	var dir_light = DirectionalLight3D.new()
@@ -184,7 +184,7 @@ func _add_ceiling(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	ceiling.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT, tile_size / 2.0)
 	parent.add_child(ceiling)
 
-func _add_wall_block(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+func _add_wall_block(parent: Node3D, pos: Vector3, tile_size: float, grid: Array, x: int, y: int, width: int, height: int) -> void:
 	var wall_body = StaticBody3D.new()
 	wall_body.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT / 2.0, tile_size / 2.0)
 	wall_body.add_to_group("wall_geo")
@@ -204,6 +204,83 @@ func _add_wall_block(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 
 	parent.add_child(wall_body)
 
+	# Stone protrusions on faces adjacent to walkable tiles
+	if ThemeManager.active_theme.prop_density > 0.0:
+		_add_wall_detail(parent, pos, tile_size, grid, x, y, width, height)
+
+func _add_wall_detail(parent: Node3D, pos: Vector3, tile_size: float, grid: Array, x: int, y: int, width: int, height: int) -> void:
+	var theme = ThemeManager.active_theme
+	var dirs = [
+		Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0),
+	]
+	for dir in dirs:
+		var nx = x + dir.x
+		var ny = y + dir.y
+		if nx < 0 or nx >= width or ny < 0 or ny >= height:
+			continue
+		# "empty" is a real tile type in TileRules (non-walkable, non-wall filler)
+		if grid[ny][nx] == "wall" or grid[ny][nx] == "empty":
+			continue
+
+		# This face is adjacent to walkable — add protrusions
+		var face_center = pos + Vector3(tile_size / 2.0, 0, tile_size / 2.0)
+		var num_protrusions = randi_range(2, 4)
+		for _i in range(num_protrusions):
+			var depth = randf_range(0.05, 0.15)
+			var prot_w = randf_range(0.15, 0.4)
+			var prot_h = randf_range(0.15, 0.3)
+			var prot_y = randf_range(0.3, WALL_HEIGHT - 0.3)
+
+			var prot = MeshInstance3D.new()
+			var prot_mesh = BoxMesh.new()
+			var prot_pos = face_center
+
+			if dir.x != 0:
+				prot_mesh.size = Vector3(depth, prot_h, prot_w)
+				prot_pos.x += dir.x * (tile_size / 2.0 + depth / 2.0)
+				prot_pos.z += randf_range(-tile_size * 0.3, tile_size * 0.3)
+			else:
+				prot_mesh.size = Vector3(prot_w, prot_h, depth)
+				prot_pos.z += dir.y * (tile_size / 2.0 + depth / 2.0)
+				prot_pos.x += randf_range(-tile_size * 0.3, tile_size * 0.3)
+			prot_pos.y = prot_y
+
+			prot.mesh = prot_mesh
+			prot.position = prot_pos
+
+			var prot_mat = _wall_material.duplicate() as StandardMaterial3D
+			var variation = randf_range(-0.03, 0.03)
+			prot_mat.albedo_color = Color(
+				clampf(theme.wall_albedo.r + variation, 0.0, 1.0),
+				clampf(theme.wall_albedo.g + variation, 0.0, 1.0),
+				clampf(theme.wall_albedo.b + variation, 0.0, 1.0)
+			)
+			prot.material_override = prot_mat
+			parent.add_child(prot)
+
+		# Damage spot — 20% chance per face
+		if randf() < 0.2:
+			var dmg = MeshInstance3D.new()
+			var dmg_mesh = BoxMesh.new()
+			dmg_mesh.size = Vector3(0.3, 0.3, 0.3)
+			var dmg_pos = face_center
+			if dir.x != 0:
+				dmg_pos.x += dir.x * (tile_size / 2.0 - 0.05)
+			else:
+				dmg_pos.z += dir.y * (tile_size / 2.0 - 0.05)
+			dmg_pos.y = randf_range(0.2, 0.8)
+			dmg.mesh = dmg_mesh
+			dmg.position = dmg_pos
+			var dmg_mat = StandardMaterial3D.new()
+			dmg_mat.albedo_color = Color(
+				theme.wall_albedo.r - 0.08,
+				theme.wall_albedo.g - 0.08,
+				theme.wall_albedo.b - 0.08
+			)
+			dmg_mat.roughness = 1.0
+			dmg.material_override = dmg_mat
+			parent.add_child(dmg)
+
 func _add_spawn_point(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var marker = Marker3D.new()
 	marker.position = pos + Vector3(tile_size / 2.0, 1.0, tile_size / 2.0)
@@ -222,12 +299,8 @@ func _add_light(parent: Node3D, pos: Vector3, tile_size: float, index: int) -> v
 	parent.add_child(light)
 
 func _add_edge_strips(parent: Node3D, grid: Array, x: int, y: int, width: int, height: int, pos: Vector3, tile_size: float, accent: Color) -> void:
-	# Check 4 cardinal neighbors; place strips where walkable meets wall
 	var dirs = [
-		Vector2i(0, -1),  # North (Z-)
-		Vector2i(0, 1),   # South (Z+)
-		Vector2i(-1, 0),  # West (X-)
-		Vector2i(1, 0),   # East (X+)
+		Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0),
 	]
 	for dir in dirs:
 		var nx = x + dir.x
@@ -235,35 +308,54 @@ func _add_edge_strips(parent: Node3D, grid: Array, x: int, y: int, width: int, h
 		if nx < 0 or nx >= width or ny < 0 or ny >= height:
 			continue
 		if grid[ny][nx] == "wall":
-			_place_strip(parent, pos, tile_size, dir, accent, 0.0)  # Floor level
-			_place_strip(parent, pos, tile_size, dir, accent, WALL_HEIGHT)  # Ceiling level
+			if ThemeManager.active_theme.accent_use_palette:
+				_place_strip(parent, pos, tile_size, dir, accent, 0.0)
+				_place_strip(parent, pos, tile_size, dir, accent, WALL_HEIGHT)
+			else:
+				_place_wall_trim(parent, pos, tile_size, dir, 0.0)
+				_place_wall_trim(parent, pos, tile_size, dir, WALL_HEIGHT)
 
 func _place_strip(parent: Node3D, pos: Vector3, tile_size: float, dir: Vector2i, color: Color, y_offset: float) -> void:
 	var strip = MeshInstance3D.new()
 	var mesh = BoxMesh.new()
-
-	# Strip runs perpendicular to the wall direction
 	var center = pos + Vector3(tile_size / 2.0, y_offset, tile_size / 2.0)
 	if dir.x != 0:
-		# East or West wall — strip runs along Z axis
 		mesh.size = Vector3(0.05, 0.02, tile_size)
 		center.x += dir.x * (tile_size / 2.0 - 0.025)
 	else:
-		# North or South wall — strip runs along X axis
 		mesh.size = Vector3(tile_size, 0.02, 0.05)
 		center.z += dir.y * (tile_size / 2.0 - 0.025)
-
 	strip.mesh = mesh
 	strip.position = center
-
 	var mat = StandardMaterial3D.new()
 	mat.albedo_color = Color.BLACK
 	mat.emission_enabled = true
 	mat.emission = color
 	mat.emission_energy_multiplier = randf_range(ThemeManager.active_theme.accent_emission_energy * 0.67, ThemeManager.active_theme.accent_emission_energy)
 	strip.material_override = mat
-
 	parent.add_child(strip)
+
+func _place_wall_trim(parent: Node3D, pos: Vector3, tile_size: float, dir: Vector2i, y_offset: float) -> void:
+	var trim = MeshInstance3D.new()
+	var mesh = BoxMesh.new()
+	var center = pos + Vector3(tile_size / 2.0, y_offset, tile_size / 2.0)
+	if dir.x != 0:
+		mesh.size = Vector3(0.08, 0.04, tile_size)
+		center.x += dir.x * (tile_size / 2.0 - 0.04)
+	else:
+		mesh.size = Vector3(tile_size, 0.04, 0.08)
+		center.z += dir.y * (tile_size / 2.0 - 0.04)
+	trim.mesh = mesh
+	trim.position = center
+	var mat = StandardMaterial3D.new()
+	mat.albedo_color = Color(
+		ThemeManager.active_theme.wall_albedo.r - 0.05,
+		ThemeManager.active_theme.wall_albedo.g - 0.05,
+		ThemeManager.active_theme.wall_albedo.b - 0.05
+	)
+	mat.roughness = 0.95
+	trim.material_override = mat
+	parent.add_child(trim)
 
 func _add_floor_glow(parent: Node3D, pos: Vector3, tile_size: float, color: Color) -> void:
 	var glow = MeshInstance3D.new()
