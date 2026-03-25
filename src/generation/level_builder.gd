@@ -72,7 +72,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				var is_room = (tile_name == "room" or tile_name == "spawn")
 				var floor_mat = _floor_material_room if is_room else _floor_material_corridor
 				_add_floor(root, world_pos, tile_size, floor_mat)
-				_add_ceiling(root, world_pos, tile_size)
+				_add_ceiling(root, world_pos, tile_size, is_room)
 
 				# Edge strips where walkable meets wall
 				var accent_color = ThemeManager.active_theme.get_random_palette_color()
@@ -92,6 +92,24 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 			else:
 				if tile_name == "wall":
 					_add_wall_block(root, world_pos, tile_size, grid, x, y, width, height)
+
+	# Ceiling beams
+	var beam_spacing = ThemeManager.active_theme.ceiling_beam_spacing
+	if ThemeManager.active_theme.prop_density > 0.0 and beam_spacing > 0:
+		for y in range(height):
+			for x in range(width):
+				var tile_name = grid[y][x]
+				var tile = rules.get_tile(tile_name)
+				if not tile or not tile.walkable:
+					continue
+				var world_pos_beam = Vector3(x * tile_size, 0, y * tile_size)
+				var is_room_tile = (tile_name == "room" or tile_name == "spawn")
+				# Z-direction beams every beam_spacing tiles
+				if y % beam_spacing == 0:
+					_add_ceiling_beam(root, world_pos_beam, tile_size, true)
+				# X-direction beams in rooms for grid pattern
+				if is_room_tile and x % beam_spacing == 0:
+					_add_ceiling_beam(root, world_pos_beam, tile_size, false)
 
 	# Directional light from theme
 	var dir_light = DirectionalLight3D.new()
@@ -175,14 +193,46 @@ func _add_cracked_slab(floor_body: StaticBody3D, local_x: float, local_z: float,
 		mesh_inst.material_override = slab_mat
 		floor_body.add_child(mesh_inst)
 
-func _add_ceiling(parent: Node3D, pos: Vector3, tile_size: float) -> void:
-	var ceiling = MeshInstance3D.new()
-	var box_mesh = BoxMesh.new()
-	box_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
-	ceiling.mesh = box_mesh
-	ceiling.material_override = _ceiling_material
-	ceiling.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT, tile_size / 2.0)
-	parent.add_child(ceiling)
+func _add_ceiling(parent: Node3D, pos: Vector3, tile_size: float, is_room: bool) -> void:
+	var theme = ThemeManager.active_theme
+	if theme.prop_density > 0.0:
+		# Recessed panel (slightly higher)
+		var panel = MeshInstance3D.new()
+		var panel_mesh = BoxMesh.new()
+		panel_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
+		panel.mesh = panel_mesh
+		panel.material_override = _ceiling_material
+		panel.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT + 0.1, tile_size / 2.0)
+		parent.add_child(panel)
+	else:
+		var ceiling = MeshInstance3D.new()
+		var box_mesh = BoxMesh.new()
+		box_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
+		ceiling.mesh = box_mesh
+		ceiling.material_override = _ceiling_material
+		ceiling.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT, tile_size / 2.0)
+		parent.add_child(ceiling)
+
+func _add_ceiling_beam(parent: Node3D, pos: Vector3, tile_size: float, along_x: bool) -> void:
+	var beam = MeshInstance3D.new()
+	var beam_mesh = BoxMesh.new()
+	if along_x:
+		beam_mesh.size = Vector3(tile_size, 0.15, 0.12)
+	else:
+		beam_mesh.size = Vector3(0.12, 0.15, tile_size)
+	beam.mesh = beam_mesh
+	beam.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT, tile_size / 2.0)
+
+	var beam_mat = StandardMaterial3D.new()
+	var theme = ThemeManager.active_theme
+	beam_mat.albedo_color = Color(
+		theme.ceiling_albedo.r - 0.05,
+		theme.ceiling_albedo.g - 0.05,
+		theme.ceiling_albedo.b - 0.05
+	)
+	beam_mat.roughness = 0.9
+	beam.material_override = beam_mat
+	parent.add_child(beam)
 
 func _add_wall_block(parent: Node3D, pos: Vector3, tile_size: float, grid: Array, x: int, y: int, width: int, height: int) -> void:
 	var wall_body = StaticBody3D.new()
