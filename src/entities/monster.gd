@@ -31,27 +31,52 @@ func _ready():
     add_to_group("monsters")
 
 func _setup_visuals() -> void:
-    var accent = NeonPalette.random_color()
+    var theme := ThemeManager.active_theme
+    var accent = theme.get_random_palette_color()
 
-    # Find existing MeshInstance3D child (from the .tscn scene)
-    var mesh_node: MeshInstance3D = null
-    for child in get_children():
-        if child is MeshInstance3D:
-            mesh_node = child
-            break
+    # Scene override: if theme provides a monster scene, use it instead of procedural
+    var scene_override := ThemeManager.get_monster_scene("basic")
+    if scene_override:
+        var visual_root := scene_override.instantiate() as Node3D
+        add_child(visual_root)
+        # Apply body material to BodyMesh child
+        var body_mesh := visual_root.get_node_or_null("BodyMesh") as MeshInstance3D
+        if body_mesh:
+            _body_material = StandardMaterial3D.new()
+            _body_material.albedo_color = theme.body_albedo
+            _body_material.emission_enabled = true
+            _body_material.emission = accent
+            _body_material.emission_energy_multiplier = _base_emission_energy
+            body_mesh.material_override = _body_material
+        # Apply eye material to optional EyeMesh child
+        var eye_mesh := visual_root.get_node_or_null("EyeMesh") as MeshInstance3D
+        if eye_mesh:
+            var eye_mat = StandardMaterial3D.new()
+            eye_mat.albedo_color = Color.BLACK
+            eye_mat.emission_enabled = true
+            eye_mat.emission = theme.eye_color
+            eye_mat.emission_energy_multiplier = 3.0
+            eye_mesh.material_override = eye_mat
+    else:
+        # Procedural fallback: find existing MeshInstance3D child (from the .tscn scene)
+        var mesh_node: MeshInstance3D = null
+        for child in get_children():
+            if child is MeshInstance3D:
+                mesh_node = child
+                break
 
-    # Apply dark emissive material to body
-    if mesh_node:
-        _body_material = StandardMaterial3D.new()
-        _body_material.albedo_color = Color(0.08, 0.08, 0.1)
-        _body_material.emission_enabled = true
-        _body_material.emission = accent
-        _body_material.emission_energy_multiplier = _base_emission_energy
-        mesh_node.material_override = _body_material
+        # Apply dark emissive material to body
+        if mesh_node:
+            _body_material = StandardMaterial3D.new()
+            _body_material.albedo_color = theme.body_albedo
+            _body_material.emission_enabled = true
+            _body_material.emission = accent
+            _body_material.emission_energy_multiplier = _base_emission_energy
+            mesh_node.material_override = _body_material
 
-    # Add glowing eyes
-    _add_eye(Vector3(-0.12, 1.3, -0.41), accent)
-    _add_eye(Vector3(0.12, 1.3, -0.41), accent)
+        # Add glowing eyes
+        _add_eye(Vector3(-0.12, 1.3, -0.41), accent)
+        _add_eye(Vector3(0.12, 1.3, -0.41), accent)
 
     # Random size variation (visual only)
     var scale_factor = randf_range(0.8, 1.2)
@@ -67,18 +92,48 @@ func _add_eye(offset: Vector3, _accent: Color) -> void:
     var mat = StandardMaterial3D.new()
     mat.albedo_color = Color.BLACK
     mat.emission_enabled = true
-    mat.emission = Color(1.0, 0.1, 0.1)
+    mat.emission = ThemeManager.active_theme.eye_color
     mat.emission_energy_multiplier = 3.0
     eye.material_override = mat
 
     add_child(eye)
 
 func setup_as_boss(loop: int) -> void:
+    var theme := ThemeManager.active_theme
+
+    # Check for boss scene override
+    var boss_scene := ThemeManager.get_monster_scene("boss")
+    if boss_scene:
+        # Remove existing visual children added by _setup_visuals
+        for child in get_children():
+            if child is Node3D and child != _health_bar_node and child != ecs_entity:
+                if child is MeshInstance3D or child.name == "VisualRoot":
+                    child.queue_free()
+        var visual_root := boss_scene.instantiate() as Node3D
+        visual_root.name = "VisualRoot"
+        add_child(visual_root)
+        var body_mesh := visual_root.get_node_or_null("BodyMesh") as MeshInstance3D
+        if body_mesh:
+            _body_material = StandardMaterial3D.new()
+            _body_material.albedo_color = theme.boss_albedo
+            _body_material.emission_enabled = true
+            _body_material.emission = theme.boss_emission
+            _body_material.emission_energy_multiplier = 2.0
+            body_mesh.material_override = _body_material
+        var eye_mesh := visual_root.get_node_or_null("EyeMesh") as MeshInstance3D
+        if eye_mesh:
+            var eye_mat = StandardMaterial3D.new()
+            eye_mat.albedo_color = Color.BLACK
+            eye_mat.emission_enabled = true
+            eye_mat.emission = theme.eye_color
+            eye_mat.emission_energy_multiplier = 3.0
+            eye_mesh.material_override = eye_mat
+
     scale = Vector3(2.0, 2.0, 2.0)
 
     if _body_material:
-        _body_material.albedo_color = Color(0.2, 0.02, 0.02)
-        _body_material.emission = Color(1.0, 0.15, 0.1)
+        _body_material.albedo_color = theme.boss_albedo
+        _body_material.emission = theme.boss_emission
         _body_material.emission_energy_multiplier = 2.0
 
     var health := ecs_entity.get_component(C_Health) as C_Health
@@ -123,31 +178,33 @@ func _physics_process(delta: float) -> void:
     move_and_slide()
 
 func _setup_health_bar() -> void:
+    var theme := ThemeManager.active_theme
+
     _health_bar_node = Node3D.new()
     _health_bar_node.position = Vector3(0, 1.2, 0)
     _health_bar_node.visible = false
     add_child(_health_bar_node)
 
-    # Background bar (dark gray)
+    # Background bar
     var bg = MeshInstance3D.new()
     var bg_mesh = BoxMesh.new()
     bg_mesh.size = Vector3(1.0, 0.05, 0.02)
     bg.mesh = bg_mesh
     var bg_mat = StandardMaterial3D.new()
-    bg_mat.albedo_color = Color(0.15, 0.15, 0.15)
+    bg_mat.albedo_color = theme.health_bar_background
     bg.material_override = bg_mat
     _health_bar_node.add_child(bg)
 
-    # Foreground bar (green, scales with HP)
+    # Foreground bar (scales with HP)
     _health_bar_fg = MeshInstance3D.new()
     var fg_mesh = BoxMesh.new()
     fg_mesh.size = Vector3(1.0, 0.05, 0.02)
     _health_bar_fg.mesh = fg_mesh
     _health_bar_fg.position = Vector3(0, 0, 0.01)
     var fg_mat = StandardMaterial3D.new()
-    fg_mat.albedo_color = Color(0.0, 1.0, 0.3)
+    fg_mat.albedo_color = theme.health_bar_foreground
     fg_mat.emission_enabled = true
-    fg_mat.emission = Color(0.0, 1.0, 0.3)
+    fg_mat.emission = theme.health_bar_foreground
     fg_mat.emission_energy_multiplier = 1.5
     _health_bar_fg.material_override = fg_mat
     _health_bar_node.add_child(_health_bar_fg)
@@ -173,8 +230,9 @@ func _process(_delta: float) -> void:
     _health_bar_fg.scale.x = ratio
     _health_bar_fg.position.x = -(1.0 - ratio) * 0.5
 
-    # Color: green at full → red at low
-    var bar_color = Color(1.0 - ratio, ratio, 0.1)
+    # Color: foreground at full → low_color at low
+    var theme := ThemeManager.active_theme
+    var bar_color = theme.health_bar_foreground.lerp(theme.health_bar_low_color, 1.0 - ratio)
     var fg_mat = _health_bar_fg.material_override as StandardMaterial3D
     fg_mat.albedo_color = bar_color
     fg_mat.emission = bar_color

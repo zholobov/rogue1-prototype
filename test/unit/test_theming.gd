@@ -191,3 +191,18 @@ func test_level_builder_uses_theme_floor_color():
     assert_not_null(theme.wall_albedo)
     assert_not_null(theme.ceiling_albedo)
     assert_not_null(theme.corridor_floor_albedo)
+
+# --- Monster theming ---
+func test_theme_data_monster_colors_accessible():
+    var theme = ThemeManager.active_theme
+    assert_not_null(theme.body_albedo)
+    assert_not_null(theme.boss_albedo)
+    assert_not_null(theme.eye_color)
+    assert_not_null(theme.health_bar_foreground)
+    assert_not_null(theme.health_bar_background)
+    assert_not_null(theme.health_bar_low_color)
+
+func test_theme_get_monster_scene_basic_initially_null():
+    # Neon theme starts with no scene overrides (procedural)
+    var scene = ThemeManager.get_monster_scene("basic")
+    assert_null(scene, "Neon should use procedural monsters initially")
