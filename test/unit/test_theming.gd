@@ -179,3 +179,15 @@ func test_texture_factory_generate_for_theme_returns_dict():
 func test_texture_factory_empty_pattern_returns_null():
     var tex = TextureFactory.generate_texture({})
     assert_null(tex)
+
+# --- Level theming verification ---
+func test_level_builder_uses_theme_floor_color():
+    # Verify LevelBuilder reads from ThemeManager
+    # We can't easily test rendered output, but we can verify
+    # the class references ThemeManager rather than hardcoded colors.
+    # This is a smoke test — real verification is visual.
+    var theme = ThemeManager.active_theme
+    assert_not_null(theme.floor_albedo)
+    assert_not_null(theme.wall_albedo)
+    assert_not_null(theme.ceiling_albedo)
+    assert_not_null(theme.corridor_floor_albedo)

@@ -12,21 +12,23 @@ var _wall_material: StandardMaterial3D
 var _ceiling_material: StandardMaterial3D
 
 func _init() -> void:
+	var theme = ThemeManager.active_theme
+
 	_floor_material_room = StandardMaterial3D.new()
-	_floor_material_room.albedo_color = Color(0.45, 0.42, 0.48)
-	_floor_material_room.roughness = 0.9
+	_floor_material_room.albedo_color = theme.floor_albedo
+	_floor_material_room.roughness = theme.floor_roughness
 
 	_floor_material_corridor = StandardMaterial3D.new()
-	_floor_material_corridor.albedo_color = Color(0.38, 0.40, 0.45)
-	_floor_material_corridor.roughness = 0.9
+	_floor_material_corridor.albedo_color = theme.corridor_floor_albedo
+	_floor_material_corridor.roughness = theme.corridor_floor_roughness
 
 	_wall_material = StandardMaterial3D.new()
-	_wall_material.albedo_color = Color(0.65, 0.62, 0.68)
-	_wall_material.roughness = 0.85
+	_wall_material.albedo_color = theme.wall_albedo
+	_wall_material.roughness = theme.wall_roughness
 
 	_ceiling_material = StandardMaterial3D.new()
-	_ceiling_material.albedo_color = Color(0.50, 0.50, 0.55)
-	_ceiling_material.roughness = 0.95
+	_ceiling_material.albedo_color = theme.ceiling_albedo
+	_ceiling_material.roughness = theme.ceiling_roughness
 
 func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 	var root = Node3D.new()
@@ -52,7 +54,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				_add_ceiling(root, world_pos, tile_size)
 
 				# Edge strips where walkable meets wall
-				var accent_color = NeonPalette.random_color()
+				var accent_color = ThemeManager.active_theme.get_random_palette_color()
 				_add_edge_strips(root, grid, x, y, width, height, world_pos, tile_size, accent_color)
 
 				# Floor glow overlay for rooms
@@ -62,20 +64,20 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				if tile.can_spawn:
 					_add_spawn_point(root, world_pos, tile_size)
 
-				# Neon lights every 2x2 tiles
-				if x % 2 == 1 and y % 2 == 1:
+				# Point lights at theme-defined spacing
+				if x % ThemeManager.active_theme.point_light_spacing == 1 and y % ThemeManager.active_theme.point_light_spacing == 1:
 					_add_light(root, world_pos, tile_size, light_index)
 					light_index += 1
 			else:
 				if tile_name == "wall":
 					_add_wall_block(root, world_pos, tile_size)
 
-	# Dim directional light — neon should dominate
+	# Directional light from theme
 	var dir_light = DirectionalLight3D.new()
 	dir_light.transform = Transform3D(Basis(), Vector3(0, 10, 0))
 	dir_light.rotation_degrees = Vector3(-45, 30, 0)
-	dir_light.light_energy = 0.5
-	dir_light.light_color = Color(0.6, 0.65, 0.8)
+	dir_light.light_energy = ThemeManager.active_theme.directional_light_energy
+	dir_light.light_color = ThemeManager.active_theme.directional_light_color
 	root.add_child(dir_light)
 
 	return root
@@ -136,12 +138,14 @@ func _add_spawn_point(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	parent.add_child(marker)
 
 func _add_light(parent: Node3D, pos: Vector3, tile_size: float, index: int) -> void:
+	var theme = ThemeManager.active_theme
 	var light = OmniLight3D.new()
 	light.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT - 0.5, tile_size / 2.0)
-	light.omni_range = tile_size * 1.5
-	light.light_energy = 0.8
-	light.omni_attenuation = 2.0
-	light.light_color = NeonPalette.ALL[index % NeonPalette.ALL.size()]
+	light.omni_range = tile_size * theme.point_light_range_mult
+	light.light_energy = theme.point_light_energy
+	light.omni_attenuation = theme.point_light_attenuation
+	var palette = theme.get_palette_array()
+	light.light_color = palette[index % palette.size()]
 	parent.add_child(light)
 
 func _add_edge_strips(parent: Node3D, grid: Array, x: int, y: int, width: int, height: int, pos: Vector3, tile_size: float, accent: Color) -> void:
@@ -183,7 +187,7 @@ func _place_strip(parent: Node3D, pos: Vector3, tile_size: float, dir: Vector2i,
 	mat.albedo_color = Color.BLACK
 	mat.emission_enabled = true
 	mat.emission = color
-	mat.emission_energy_multiplier = randf_range(2.0, 3.0)
+	mat.emission_energy_multiplier = randf_range(ThemeManager.active_theme.accent_emission_energy * 0.67, ThemeManager.active_theme.accent_emission_energy)
 	strip.material_override = mat
 
 	parent.add_child(strip)

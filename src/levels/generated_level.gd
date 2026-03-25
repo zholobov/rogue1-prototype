@@ -13,19 +13,18 @@ var _is_boss_level: bool = false
 func _ready():
     print("[GeneratedLevel] _ready() started")
 
-    # Neon dungeon environment
+    var theme = ThemeManager.active_theme
     var env = Environment.new()
     env.background_mode = Environment.BG_COLOR
-    env.background_color = Color(0.02, 0.02, 0.04)
+    env.background_color = theme.background_color
     env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-    env.ambient_light_color = Color(0.15, 0.15, 0.25)
-    env.ambient_light_energy = 0.8
-    # Depth fog (do NOT use volumetric — Forward+ only)
+    env.ambient_light_color = theme.ambient_color
+    env.ambient_light_energy = theme.ambient_energy
     env.fog_enabled = true
-    env.fog_light_color = Color(0.02, 0.02, 0.06)
-    env.fog_density = 0.02
-    env.fog_depth_begin = 5.0
-    env.fog_depth_end = 40.0
+    env.fog_light_color = theme.fog_color
+    env.fog_density = theme.fog_density
+    env.fog_depth_begin = theme.fog_depth_begin
+    env.fog_depth_end = theme.fog_depth_end
     env.fog_sky_affect = 0.0
     var world_env = WorldEnvironment.new()
     world_env.environment = env
