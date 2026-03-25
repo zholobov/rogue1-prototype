@@ -80,6 +80,12 @@ static func create() -> ThemeData:
     t.ui_accent_color = Color(0.0, 0.83, 1.0)
     t.ui_damage_flash_color = Color(1.0, 0.0, 0.0, 0.3)
 
+    # Monster scenes
+    t.monster_scenes = {
+        "basic": load("res://themes/neon/monster_basic.tscn"),
+        "boss": load("res://themes/neon/monster_boss.tscn"),
+    }
+
     # Textures — neon uses minimal textures
     t.floor_pattern = {}
     t.wall_pattern = {}

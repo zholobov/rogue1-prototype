@@ -202,10 +202,9 @@ func test_theme_data_monster_colors_accessible():
     assert_not_null(theme.health_bar_background)
     assert_not_null(theme.health_bar_low_color)
 
-func test_theme_get_monster_scene_basic_initially_null():
-    # Neon theme starts with no scene overrides (procedural)
+func test_theme_get_monster_scene_basic():
     var scene = ThemeManager.get_monster_scene("basic")
-    assert_null(scene, "Neon should use procedural monsters initially")
+    assert_not_null(scene, "Neon should have a basic monster scene")
 
 # --- VFX theming ---
 func test_neon_theme_element_color_fire():
@@ -284,3 +283,32 @@ func test_stone_theme_textures_generate():
     var textures = TextureFactory.generate_for_theme(stone)
     assert_true(textures.has("floor"), "should generate floor texture")
     assert_true(textures.has("wall"), "should generate wall texture")
+
+# --- Neon Monster Scenes ---
+func test_neon_monster_basic_scene_loads():
+    var scene = load("res://themes/neon/monster_basic.tscn")
+    assert_not_null(scene)
+
+func test_neon_monster_basic_has_body_mesh():
+    var scene = load("res://themes/neon/monster_basic.tscn")
+    var instance = scene.instantiate()
+    assert_not_null(instance.get_node_or_null("BodyMesh"))
+    instance.queue_free()
+
+func test_neon_monster_basic_has_health_bar_anchor():
+    var scene = load("res://themes/neon/monster_basic.tscn")
+    var instance = scene.instantiate()
+    assert_not_null(instance.get_node_or_null("HealthBarAnchor"))
+    instance.queue_free()
+
+func test_neon_monster_boss_scene_loads():
+    var scene = load("res://themes/neon/monster_boss.tscn")
+    assert_not_null(scene)
+
+func test_neon_theme_has_monster_scenes():
+    var neon: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Neon Dungeon":
+            neon = t
+    assert_true(neon.monster_scenes.has("basic"))
+    assert_true(neon.monster_scenes.has("boss"))
