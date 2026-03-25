@@ -243,3 +243,44 @@ func test_neon_theme_rarity_colors():
 func test_neon_palette_file_removed():
     assert_false(FileAccess.file_exists("res://src/effects/neon_palette.gd"),
         "neon_palette.gd should be deleted")
+
+# --- Stone Theme ---
+func test_stone_theme_exists():
+    var found = false
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            found = true
+    assert_true(found, "Stone Dungeon theme should be registered")
+
+func test_stone_theme_palette_is_warm():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    # Primary should be warm gold
+    assert_gt(stone.primary.r, 0.7, "primary should be warm/red-heavy")
+    assert_gt(stone.primary.g, 0.5, "primary should have golden green")
+
+func test_stone_theme_fog_is_closer():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_lt(stone.fog_depth_end, 35.0, "stone fog should be thicker than neon")
+
+func test_stone_theme_has_textures():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_gt(stone.floor_pattern.size(), 0, "stone should define floor texture")
+    assert_gt(stone.wall_pattern.size(), 0, "stone should define wall texture")
+
+func test_stone_theme_textures_generate():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    var textures = TextureFactory.generate_for_theme(stone)
+    assert_true(textures.has("floor"), "should generate floor texture")
+    assert_true(textures.has("wall"), "should generate wall texture")

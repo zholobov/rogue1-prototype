@@ -30,4 +30,5 @@ func get_projectile_scene() -> PackedScene:
 
 func _load_themes() -> void:
     available_themes.append(NeonTheme.create())
+    available_themes.append(StoneTheme.create())
     active_theme = available_themes[0]
