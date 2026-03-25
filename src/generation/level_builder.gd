@@ -85,10 +85,13 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				if tile.can_spawn:
 					_add_spawn_point(root, world_pos, tile_size)
 
-				# Point lights at theme-defined spacing
-				if x % ThemeManager.active_theme.point_light_spacing == 1 and y % ThemeManager.active_theme.point_light_spacing == 1:
-					_add_light(root, world_pos, tile_size, light_index)
-					light_index += 1
+				# Lights: torches for prop themes, floating for others
+				if ThemeManager.active_theme.prop_density > 0.0:
+					pass  # Torch pass happens after main loop
+				else:
+					if x % ThemeManager.active_theme.point_light_spacing == 1 and y % ThemeManager.active_theme.point_light_spacing == 1:
+						_add_light(root, world_pos, tile_size, light_index)
+						light_index += 1
 			else:
 				if tile_name == "wall":
 					_add_wall_block(root, world_pos, tile_size, grid, x, y, width, height)
@@ -110,6 +113,35 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				# X-direction beams in rooms for grid pattern
 				if is_room_tile and x % beam_spacing == 0:
 					_add_ceiling_beam(root, world_pos_beam, tile_size, false)
+
+	# Torch placement (wall-adjacent)
+	if ThemeManager.active_theme.prop_density > 0.0:
+		var torch_candidates: Array = []
+		for y in range(height):
+			for x in range(width):
+				var tile_name = grid[y][x]
+				var tile = rules.get_tile(tile_name)
+				if not tile or not tile.walkable:
+					continue
+				# Check if adjacent to a wall
+				var wall_dir := Vector2i.ZERO
+				for dir in [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]:
+					var nx = x + dir.x
+					var ny = y + dir.y
+					if nx >= 0 and nx < width and ny >= 0 and ny < height:
+						if grid[ny][nx] == "wall":
+							wall_dir = dir
+							break
+				if wall_dir != Vector2i.ZERO:
+					torch_candidates.append({"x": x, "y": y, "dir": wall_dir})
+
+		# Space torches by skipping candidates (global stride — good enough for prototype)
+		var spacing = maxi(ThemeManager.active_theme.point_light_spacing, 1)
+		for i in range(0, torch_candidates.size(), spacing):
+			var c = torch_candidates[i]
+			var world_pos_torch = Vector3(c.x * tile_size, 0, c.y * tile_size)
+			_add_torch(root, world_pos_torch, tile_size, c.dir, light_index)
+			light_index += 1
 
 	# Directional light from theme
 	var dir_light = DirectionalLight3D.new()
@@ -347,6 +379,84 @@ func _add_light(parent: Node3D, pos: Vector3, tile_size: float, index: int) -> v
 	var palette = theme.get_palette_array()
 	light.light_color = palette[index % palette.size()]
 	parent.add_child(light)
+
+func _add_torch(parent: Node3D, pos: Vector3, tile_size: float, wall_dir: Vector2i, index: int) -> void:
+	var theme = ThemeManager.active_theme
+	var torch_root = Node3D.new()
+	torch_root.name = "Torch_%d" % index
+	var base_pos = pos + Vector3(tile_size / 2.0, 0, tile_size / 2.0)
+
+	# Mount position on wall face
+	var mount_y := WALL_HEIGHT * 0.6
+	var mount_pos := base_pos
+	if wall_dir.x != 0:
+		mount_pos.x += wall_dir.x * (tile_size / 2.0 - 0.05)
+	else:
+		mount_pos.z += wall_dir.y * (tile_size / 2.0 - 0.05)
+	mount_pos.y = mount_y
+	torch_root.position = mount_pos
+
+	# Bracket: box on wall
+	var bracket = MeshInstance3D.new()
+	var bracket_mesh = BoxMesh.new()
+	bracket_mesh.size = Vector3(0.1, 0.05, 0.1)
+	bracket.mesh = bracket_mesh
+	var bracket_mat = StandardMaterial3D.new()
+	bracket_mat.albedo_color = Color(0.15, 0.12, 0.08)
+	bracket_mat.roughness = 0.8
+	bracket.material_override = bracket_mat
+	torch_root.add_child(bracket)
+
+	# Arm: angled box
+	var arm = MeshInstance3D.new()
+	var arm_mesh = BoxMesh.new()
+	arm_mesh.size = Vector3(0.03, 0.15, 0.03)
+	arm.mesh = arm_mesh
+	arm.position = Vector3(0, 0.1, 0)
+	arm.material_override = bracket_mat
+	torch_root.add_child(arm)
+
+	# Torch body: cylinder
+	var body = MeshInstance3D.new()
+	var body_mesh = CylinderMesh.new()
+	body_mesh.top_radius = 0.03
+	body_mesh.bottom_radius = 0.03
+	body_mesh.height = 0.2
+	body.mesh = body_mesh
+	body.position = Vector3(0, 0.27, 0)
+	body.material_override = bracket_mat
+	torch_root.add_child(body)
+
+	# Flame: small emissive box
+	var flame = MeshInstance3D.new()
+	var flame_mesh = BoxMesh.new()
+	flame_mesh.size = Vector3(0.06, 0.08, 0.06)
+	flame.mesh = flame_mesh
+	flame.position = Vector3(0, 0.41, 0)
+	var flame_mat = StandardMaterial3D.new()
+	flame_mat.albedo_color = Color(0.1, 0.05, 0.0)
+	flame_mat.emission_enabled = true
+	flame_mat.emission = Color(1.0, 0.6, 0.15)
+	flame_mat.emission_energy_multiplier = 3.0
+	flame.material_override = flame_mat
+	torch_root.add_child(flame)
+
+	# Light at flame position
+	var light = OmniLight3D.new()
+	light.position = Vector3(0, 0.41, 0)
+	light.omni_range = tile_size * theme.point_light_range_mult
+	light.light_energy = theme.point_light_energy
+	light.omni_attenuation = theme.point_light_attenuation
+	light.light_color = theme.point_light_color
+	torch_root.add_child(light)
+
+	# Flicker tween
+	if theme.torch_flicker:
+		var tween = parent.create_tween().set_loops()
+		tween.tween_property(light, "light_energy", theme.point_light_energy * 0.7, randf_range(0.1, 0.3))
+		tween.tween_property(light, "light_energy", theme.point_light_energy, randf_range(0.1, 0.3))
+
+	parent.add_child(torch_root)
 
 func _add_edge_strips(parent: Node3D, grid: Array, x: int, y: int, width: int, height: int, pos: Vector3, tile_size: float, accent: Color) -> void:
 	var dirs = [
