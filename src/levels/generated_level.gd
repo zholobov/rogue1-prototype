@@ -9,6 +9,7 @@ var level_data: Dictionary = {}
 var monsters_remaining: int = 0
 var death_system: S_Death
 var _is_boss_level: bool = false
+var _hud: Control
 
 func _ready():
     print("[GeneratedLevel] _ready() started")
@@ -73,8 +74,15 @@ func _ready():
         print("[GeneratedLevel]   spawn[%d] = %s" % [i, str(level_data.spawn_points[i])])
 
     # HUD
-    var hud = HUDScene.instantiate()
-    add_child(hud)
+    _hud = HUDScene.instantiate()
+    add_child(_hud)
+    _hud.setup_minimap(level_data)
+
+    # Kill feed
+    death_system.actor_died.connect(_hud.on_actor_died)
+
+    # Floating damage numbers
+    DamageEvents.damage_dealt.connect(_on_damage_dealt)
 
     # Spawn monsters at spawn points
     _spawn_monsters()
@@ -132,6 +140,8 @@ func _spawn_boss() -> void:
     boss.setup_as_boss(RunManager.stats.loop if RunManager else 0)
     monsters_remaining += 1
     print("[GeneratedLevel] Boss spawned at center (%s)" % str(boss.position))
+    if _hud:
+        _hud.show_boss_bar(boss.ecs_entity)
 
 func _auto_clear() -> void:
     print("[GeneratedLevel] No monsters — auto-clearing level")
@@ -194,6 +204,11 @@ func _on_actor_died(entity: Entity) -> void:
     elif tag.actor_type == C_ActorTag.ActorType.PLAYER:
         if not Config.god_mode and RunManager:
             RunManager.on_player_died()
+
+func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
+    var ft = DamageNumberFactory.create(element)
+    add_child(ft)
+    ft.show_text(pos, "-%d" % amount)
 
 func _find_in_group(node: Node, group: String) -> Array[Node]:
     var found: Array[Node] = []
