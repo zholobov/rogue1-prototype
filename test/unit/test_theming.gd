@@ -528,3 +528,19 @@ func test_stone_theme_floor_pattern_is_flagstone():
         if t.theme_name == "Stone Dungeon":
             stone = t
     assert_eq(stone.floor_pattern["pattern"], "flagstone")
+
+func test_stone_theme_prop_density_nonzero():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_gt(stone.prop_density, 0.0, "stone should have props enabled")
+    assert_false(stone.accent_use_palette, "stone should use wall trim not accent strips")
+
+func test_neon_theme_prop_density_zero():
+    var neon: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Neon Dungeon":
+            neon = t
+    assert_eq(neon.prop_density, 0.0, "neon should not spawn props")
+    assert_true(neon.accent_use_palette, "neon should use emissive accent strips")
