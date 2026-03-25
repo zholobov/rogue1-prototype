@@ -92,3 +92,43 @@ func test_theme_manager_get_monster_scene_returns_null_for_missing():
 func test_theme_manager_get_palette_returns_active_palette():
     var palette = ThemeManager.get_palette()
     assert_eq(palette, ThemeManager.active_theme.get_palette_array())
+
+# --- Neon Theme values ---
+func test_neon_theme_exists():
+    var found = false
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Neon Dungeon":
+            found = true
+    assert_true(found, "Neon Dungeon theme should be registered")
+
+func test_neon_theme_palette_matches_neon_palette():
+    var neon: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Neon Dungeon":
+            neon = t
+    assert_almost_eq(neon.primary.r, 0.0, 0.01)
+    assert_almost_eq(neon.primary.g, 0.83, 0.01)
+    assert_almost_eq(neon.primary.b, 1.0, 0.01)
+    assert_almost_eq(neon.secondary.r, 1.0, 0.01)
+    assert_almost_eq(neon.secondary.g, 0.0, 0.01)
+    assert_almost_eq(neon.secondary.b, 0.67, 0.01)
+
+func test_neon_theme_environment_matches_current():
+    var neon: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Neon Dungeon":
+            neon = t
+    assert_almost_eq(neon.background_color.r, 0.02, 0.01)
+    assert_almost_eq(neon.background_color.g, 0.02, 0.01)
+    assert_almost_eq(neon.background_color.b, 0.04, 0.01)
+    assert_almost_eq(neon.fog_depth_begin, 5.0, 0.1)
+    assert_almost_eq(neon.fog_depth_end, 40.0, 0.1)
+
+func test_neon_theme_floor_matches_current():
+    var neon: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Neon Dungeon":
+            neon = t
+    assert_almost_eq(neon.floor_albedo.r, 0.45, 0.01)
+    assert_almost_eq(neon.floor_albedo.g, 0.42, 0.01)
+    assert_almost_eq(neon.floor_albedo.b, 0.48, 0.01)

@@ -29,7 +29,5 @@ func get_projectile_scene() -> PackedScene:
     return active_theme.projectile_scene
 
 func _load_themes() -> void:
-    var default_theme = ThemeData.new()
-    default_theme.theme_name = "Default"
-    default_theme.description = "Default theme"
-    available_themes.append(default_theme)
+    available_themes.append(NeonTheme.create())
+    active_theme = available_themes[0]
