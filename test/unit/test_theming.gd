@@ -312,3 +312,32 @@ func test_neon_theme_has_monster_scenes():
             neon = t
     assert_true(neon.monster_scenes.has("basic"))
     assert_true(neon.monster_scenes.has("boss"))
+
+# --- Stone Monster Scenes ---
+func test_stone_monster_basic_scene_loads():
+    var scene = load("res://themes/stone/monster_basic.tscn")
+    assert_not_null(scene)
+
+func test_stone_monster_basic_has_body_mesh():
+    var scene = load("res://themes/stone/monster_basic.tscn")
+    var instance = scene.instantiate()
+    assert_not_null(instance.get_node_or_null("BodyMesh"))
+    instance.queue_free()
+
+func test_stone_monster_basic_has_health_bar_anchor():
+    var scene = load("res://themes/stone/monster_basic.tscn")
+    var instance = scene.instantiate()
+    assert_not_null(instance.get_node_or_null("HealthBarAnchor"))
+    instance.queue_free()
+
+func test_stone_monster_boss_scene_loads():
+    var scene = load("res://themes/stone/monster_boss.tscn")
+    assert_not_null(scene)
+
+func test_stone_theme_has_monster_scenes():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_true(stone.monster_scenes.has("basic"))
+    assert_true(stone.monster_scenes.has("boss"))

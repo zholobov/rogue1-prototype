@@ -107,4 +107,9 @@ static func create() -> ThemeData:
         "height": 128,
     }
 
+    t.monster_scenes = {
+        "basic": load("res://themes/stone/monster_basic.tscn"),
+        "boss": load("res://themes/stone/monster_boss.tscn"),
+    }
+
     return t
