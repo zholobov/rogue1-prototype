@@ -418,3 +418,67 @@ func test_theme_data_has_room_prop_min_max():
     var td = ThemeData.new()
     assert_eq(td.room_prop_min, 1)
     assert_eq(td.room_prop_max, 3)
+
+func test_texture_factory_flagstone_pattern():
+    var params = {
+        "type": "image_gen",
+        "pattern": "flagstone",
+        "color1": Color(0.45, 0.4, 0.35),
+        "color2": Color(0.15, 0.12, 0.1),
+        "width": 64,
+        "height": 64,
+    }
+    var tex = TextureFactory.generate_texture(params)
+    assert_not_null(tex)
+    assert_true(tex is ImageTexture)
+
+func test_texture_factory_cobblestone_pattern():
+    var params = {
+        "type": "image_gen",
+        "pattern": "cobblestone",
+        "color1": Color(0.4, 0.38, 0.35),
+        "color2": Color(0.2, 0.18, 0.15),
+        "width": 64,
+        "height": 64,
+    }
+    var tex = TextureFactory.generate_texture(params)
+    assert_not_null(tex)
+    assert_true(tex is ImageTexture)
+
+func test_texture_factory_ashlar_pattern():
+    var params = {
+        "type": "image_gen",
+        "pattern": "ashlar",
+        "color1": Color(0.4, 0.35, 0.3),
+        "color2": Color(0.15, 0.12, 0.1),
+        "width": 64,
+        "height": 64,
+    }
+    var tex = TextureFactory.generate_texture(params)
+    assert_not_null(tex)
+    assert_true(tex is ImageTexture)
+
+func test_texture_factory_slabs_pattern():
+    var params = {
+        "type": "image_gen",
+        "pattern": "slabs",
+        "color1": Color(0.35, 0.33, 0.3),
+        "color2": Color(0.15, 0.12, 0.1),
+        "width": 64,
+        "height": 64,
+    }
+    var tex = TextureFactory.generate_texture(params)
+    assert_not_null(tex)
+    assert_true(tex is ImageTexture)
+
+func test_texture_factory_generate_for_theme_corridor_floor():
+    var td = ThemeData.new()
+    td.corridor_floor_pattern = {"type": "image_gen", "pattern": "cobblestone", "color1": Color.GRAY, "color2": Color.BLACK, "width": 64, "height": 64}
+    var textures = TextureFactory.generate_for_theme(td)
+    assert_true(textures.has("corridor_floor"))
+
+func test_texture_factory_generate_for_theme_ceiling():
+    var td = ThemeData.new()
+    td.ceiling_pattern = {"type": "image_gen", "pattern": "slabs", "color1": Color.GRAY, "color2": Color.BLACK, "width": 64, "height": 64}
+    var textures = TextureFactory.generate_for_theme(td)
+    assert_true(textures.has("ceiling"))
