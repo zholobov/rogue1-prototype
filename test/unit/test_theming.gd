@@ -132,3 +132,50 @@ func test_neon_theme_floor_matches_current():
     assert_almost_eq(neon.floor_albedo.r, 0.45, 0.01)
     assert_almost_eq(neon.floor_albedo.g, 0.42, 0.01)
     assert_almost_eq(neon.floor_albedo.b, 0.48, 0.01)
+
+# --- TextureFactory ---
+func test_texture_factory_generate_noise_returns_texture():
+    var params = {
+        "type": "noise",
+        "noise_type": "cellular",
+        "width": 64,
+        "height": 64,
+    }
+    var tex = TextureFactory.generate_texture(params)
+    assert_not_null(tex)
+    assert_true(tex is NoiseTexture2D)
+
+func test_texture_factory_generate_gradient_returns_texture():
+    var params = {
+        "type": "gradient",
+        "color_from": Color.RED,
+        "color_to": Color.BLUE,
+        "width": 64,
+    }
+    var tex = TextureFactory.generate_texture(params)
+    assert_not_null(tex)
+    assert_true(tex is GradientTexture2D)
+
+func test_texture_factory_generate_image_returns_texture():
+    var params = {
+        "type": "image_gen",
+        "pattern": "bricks",
+        "color1": Color(0.4, 0.38, 0.35),
+        "color2": Color(0.25, 0.22, 0.20),
+        "width": 64,
+        "height": 64,
+    }
+    var tex = TextureFactory.generate_texture(params)
+    assert_not_null(tex)
+    assert_true(tex is ImageTexture)
+
+func test_texture_factory_generate_for_theme_returns_dict():
+    var td = ThemeData.new()
+    td.floor_pattern = {"type": "noise", "noise_type": "cellular", "width": 64, "height": 64}
+    var textures = TextureFactory.generate_for_theme(td)
+    assert_typeof(textures, TYPE_DICTIONARY)
+    assert_true(textures.has("floor"))
+
+func test_texture_factory_empty_pattern_returns_null():
+    var tex = TextureFactory.generate_texture({})
+    assert_null(tex)
