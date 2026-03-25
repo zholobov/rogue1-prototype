@@ -441,7 +441,7 @@ func _add_wall_detail(parent: Node3D, pos: Vector3, tile_size: float, grid: Arra
 				dmg_pos.x += dir.x * (tile_size / 2.0 - 0.05)
 			else:
 				dmg_pos.z += dir.y * (tile_size / 2.0 - 0.05)
-			dmg_pos.y = randf_range(0.2, 0.8)
+			dmg_pos.y = randf_range(0.3, WALL_HEIGHT - 0.3)
 			dmg.mesh = dmg_mesh
 			dmg.position = dmg_pos
 			var dmg_mat = StandardMaterial3D.new()
