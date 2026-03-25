@@ -61,6 +61,10 @@ static func apply_damage(target_entity: Entity, damage: int, element: String) ->
                     cond_mult = target_ps.condition_duration_mult
                 _apply_element_to_conditions(conditions, element, elem, cond_mult)
 
+    # Emit damage event for floating numbers
+    if parent and DamageEvents:
+        DamageEvents.damage_dealt.emit(parent.global_position, actual_damage, element)
+
 static func _apply_element_to_conditions(conditions: C_Conditions, element: String, elem_data: Dictionary, duration_mult: float = 1.0) -> void:
     # Check for interactions with existing conditions
     for cond in conditions.active.duplicate():
