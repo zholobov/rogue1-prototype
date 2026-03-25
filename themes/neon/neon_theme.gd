@@ -79,6 +79,10 @@ static func create() -> ThemeData:
     t.ui_text_color = Color(1.0, 1.0, 1.0)
     t.ui_accent_color = Color(0.0, 0.83, 1.0)
     t.ui_damage_flash_color = Color(1.0, 0.0, 0.0, 0.3)
+    t.ui_crosshair_color = Color(1.0, 1.0, 1.0)
+    t.ui_minimap_room = Color(0.1, 0.1, 0.2)
+    t.ui_minimap_wall = Color(0.2, 0.3, 0.5)
+    t.ui_kill_feed_color = Color(0.0, 0.83, 1.0)
 
     # Monster scenes
     t.monster_scenes = {

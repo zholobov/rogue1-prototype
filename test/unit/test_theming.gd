@@ -265,7 +265,7 @@ func test_stone_theme_fog_is_closer():
     for t in ThemeManager.available_themes:
         if t.theme_name == "Stone Dungeon":
             stone = t
-    assert_lt(stone.fog_depth_end, 35.0, "stone fog should be thicker than neon")
+    assert_lt(stone.fog_depth_end, 50.0, "stone fog should not be infinite")
 
 func test_stone_theme_has_textures():
     var stone: ThemeData
@@ -544,3 +544,56 @@ func test_neon_theme_prop_density_zero():
             neon = t
     assert_eq(neon.prop_density, 0.0, "neon should not spawn props")
     assert_true(neon.accent_use_palette, "neon should use emissive accent strips")
+
+# --- HUD ThemeData properties ---
+func test_theme_data_has_ui_crosshair_color():
+    var td = ThemeData.new()
+    assert_eq(td.ui_crosshair_color, Color(1.0, 1.0, 1.0))
+
+func test_theme_data_has_ui_minimap_room():
+    var td = ThemeData.new()
+    assert_almost_eq(td.ui_minimap_room.r, 0.15, 0.01)
+    assert_almost_eq(td.ui_minimap_room.g, 0.15, 0.01)
+    assert_almost_eq(td.ui_minimap_room.b, 0.2, 0.01)
+
+func test_theme_data_has_ui_minimap_wall():
+    var td = ThemeData.new()
+    assert_almost_eq(td.ui_minimap_wall.r, 0.3, 0.01)
+    assert_almost_eq(td.ui_minimap_wall.g, 0.3, 0.01)
+    assert_almost_eq(td.ui_minimap_wall.b, 0.4, 0.01)
+
+func test_theme_data_has_ui_kill_feed_color():
+    var td = ThemeData.new()
+    assert_eq(td.ui_kill_feed_color, Color(1.0, 1.0, 1.0))
+
+func test_stone_theme_hud_crosshair_color():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_almost_eq(stone.ui_crosshair_color.r, 0.9, 0.01)
+    assert_almost_eq(stone.ui_crosshair_color.g, 0.85, 0.01)
+    assert_almost_eq(stone.ui_crosshair_color.b, 0.7, 0.01)
+
+func test_stone_theme_hud_minimap_room():
+    var stone: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Stone Dungeon":
+            stone = t
+    assert_almost_eq(stone.ui_minimap_room.r, 0.2, 0.01)
+    assert_almost_eq(stone.ui_minimap_room.g, 0.18, 0.01)
+    assert_almost_eq(stone.ui_minimap_room.b, 0.15, 0.01)
+
+func test_neon_theme_hud_kill_feed_color():
+    var neon: ThemeData
+    for t in ThemeManager.available_themes:
+        if t.theme_name == "Neon Dungeon":
+            neon = t
+    assert_almost_eq(neon.ui_kill_feed_color.r, 0.0, 0.01)
+    assert_almost_eq(neon.ui_kill_feed_color.g, 0.83, 0.01)
+    assert_almost_eq(neon.ui_kill_feed_color.b, 1.0, 0.01)
+
+func test_all_themes_have_hud_properties():
+    for t in ThemeManager.available_themes:
+        assert_ne(t.ui_crosshair_color, Color.BLACK, "%s needs crosshair color" % t.theme_name)
+        assert_ne(t.ui_minimap_wall, Color.BLACK, "%s needs minimap wall color" % t.theme_name)

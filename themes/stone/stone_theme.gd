@@ -80,6 +80,10 @@ static func create() -> ThemeData:
     t.ui_text_color = Color(0.9, 0.8, 0.6)
     t.ui_accent_color = Color(0.85, 0.65, 0.2)
     t.ui_damage_flash_color = Color(0.8, 0.2, 0.0, 0.3)
+    t.ui_crosshair_color = Color(0.9, 0.85, 0.7)
+    t.ui_minimap_room = Color(0.2, 0.18, 0.15)
+    t.ui_minimap_wall = Color(0.4, 0.35, 0.3)
+    t.ui_kill_feed_color = Color(0.9, 0.75, 0.4)
 
     # Textures — high-contrast stone patterns
     t.floor_pattern = {

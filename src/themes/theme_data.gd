@@ -88,6 +88,10 @@ extends Resource
 @export var ui_text_color: Color = Color(1.0, 1.0, 1.0)
 @export var ui_accent_color: Color = Color(0.0, 0.83, 1.0)
 @export var ui_damage_flash_color: Color = Color(1.0, 0.0, 0.0, 0.3)
+@export var ui_crosshair_color: Color = Color(1.0, 1.0, 1.0)
+@export var ui_minimap_room: Color = Color(0.15, 0.15, 0.2)
+@export var ui_minimap_wall: Color = Color(0.3, 0.3, 0.4)
+@export var ui_kill_feed_color: Color = Color(1.0, 1.0, 1.0)
 
 # --- Audio ---
 @export_group("Audio")
