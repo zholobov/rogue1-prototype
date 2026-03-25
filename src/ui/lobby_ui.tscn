@@ -17,9 +17,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
-offset_top = -150.0
+offset_top = -200.0
 offset_right = 150.0
-offset_bottom = 150.0
+offset_bottom = 200.0
 
 [node name="Label" type="Label" parent="VBoxContainer"]
 layout_mode = 2

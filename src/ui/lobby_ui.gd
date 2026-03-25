@@ -42,10 +42,10 @@ func _ready():
 		upgrades_btn.pressed.connect(_on_meta_upgrades)
 		vbox.add_child(upgrades_btn)
 
-		var themes_btn = Button.new()
-		themes_btn.text = "Themes"
-		themes_btn.pressed.connect(_on_themes)
-		vbox.add_child(themes_btn)
+	var themes_btn = Button.new()
+	themes_btn.text = "Themes"
+	themes_btn.pressed.connect(_on_themes)
+	vbox.add_child(themes_btn)
 
 func _on_solo():
 	game_started.emit(true)
