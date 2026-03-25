@@ -29,16 +29,16 @@ static func create() -> ThemeData:
     # Environment — warm, close, thick fog
     t.background_color = Color(0.04, 0.03, 0.02)
     t.ambient_color = Color(0.25, 0.18, 0.1)
-    t.ambient_energy = 0.6
+    t.ambient_energy = 0.9
     t.fog_color = Color(0.06, 0.04, 0.02)
-    t.fog_density = 0.03
-    t.fog_depth_begin = 3.0
-    t.fog_depth_end = 30.0
+    t.fog_density = 0.015
+    t.fog_depth_begin = 5.0
+    t.fog_depth_end = 45.0
     t.directional_light_color = Color(0.9, 0.7, 0.4)
-    t.directional_light_energy = 0.3
+    t.directional_light_energy = 0.4
     t.point_light_color = Color(1.0, 0.75, 0.4)
-    t.point_light_energy = 2.0
-    t.point_light_range_mult = 1.2
+    t.point_light_energy = 3.0
+    t.point_light_range_mult = 1.8
     t.point_light_attenuation = 1.8
     t.point_light_spacing = 3
 
