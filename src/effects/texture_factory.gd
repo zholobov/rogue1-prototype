@@ -1,17 +1,24 @@
 class_name TextureFactory
+extends RefCounted
 
 static var _cache: Dictionary = {}
 
 static func generate_for_theme(theme: ThemeData) -> Dictionary:
-    _cache.clear()
     var result: Dictionary = {}
 
+    var tex: Texture2D
     if theme.floor_pattern.size() > 0:
-        result["floor"] = generate_texture(theme.floor_pattern)
+        tex = generate_texture(theme.floor_pattern)
+        if tex != null:
+            result["floor"] = tex
     if theme.wall_pattern.size() > 0:
-        result["wall"] = generate_texture(theme.wall_pattern)
+        tex = generate_texture(theme.wall_pattern)
+        if tex != null:
+            result["wall"] = tex
     if theme.monster_skin.size() > 0:
-        result["monster"] = generate_texture(theme.monster_skin)
+        tex = generate_texture(theme.monster_skin)
+        if tex != null:
+            result["monster"] = tex
 
     _cache = result
     return result
