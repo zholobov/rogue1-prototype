@@ -1,63 +1,429 @@
 extends Control
 
-@onready var health_label: Label = $MarginContainer/VBoxContainer/HealthLabel
-@onready var peers_label: Label = $MarginContainer/VBoxContainer/PeersLabel
-@onready var weapon_label: Label = $MarginContainer/VBoxContainer/WeaponLabel
-@onready var god_mode_check: CheckBox = $MarginContainer/VBoxContainer/GodModeCheck
-@onready var abilities_label: Label = $MarginContainer/VBoxContainer/AbilitiesLabel
-@onready var damage_flash: ColorRect = $DamageFlash
+# --- Health bar ---
+var _health_container: Control
+var _health_title: Label
+var _health_bar_bg: ColorRect
+var _health_bar_fill: ColorRect
+var _health_label: Label
+
+# --- Weapon panel ---
+var _weapon_container: Control
+var _weapon_panel_bg: ColorRect
+var _weapon_title: Label
+var _weapon_name_label: Label
+var _weapon_element_label: Label
+var _weapon_slots: Array[ColorRect] = []
+var _weapon_slot_labels: Array[Label] = []
+
+# --- Abilities ---
+var _ability_container: HBoxContainer
+var _ability_dash: AbilityIndicator
+var _ability_aoe: AbilityIndicator
+var _ability_life: AbilityIndicator
+
+# --- Crosshair ---
+var _crosshair: CrosshairManager
+
+# --- Kill feed ---
+var _kill_feed_container: VBoxContainer
+
+# --- Boss bar ---
+var _boss_container: Control
+var _boss_name_label: Label
+var _boss_bar_bg: ColorRect
+var _boss_bar_fill: ColorRect
+var _boss_entity: Entity
+
+# --- Minimap ---
+var _minimap: Minimap
+
+# --- Damage flash ---
+var _damage_flash: ColorRect
 
 var _prev_health: int = -1
+var _damage_flash_tween: Tween
 
 func _ready() -> void:
-	god_mode_check.button_pressed = Config.god_mode
-	god_mode_check.toggled.connect(func(on: bool): Config.god_mode = on)
+	_build_damage_flash()
+	_build_health_bar()
+	_build_weapon_panel()
+	_build_ability_indicators()
+	_build_crosshair()
+	_build_kill_feed()
+	_build_boss_bar()
+	_build_minimap()
+	_apply_theme()
+	ThemeManager.theme_changed.connect(_on_theme_changed)
+
+# ========== BUILD ==========
+
+func _build_damage_flash() -> void:
+	_damage_flash = ColorRect.new()
+	_damage_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_damage_flash.color = Color(1, 0, 0, 0)
+	add_child(_damage_flash)
+
+func _build_health_bar() -> void:
+	_health_container = Control.new()
+	_health_container.anchor_left = 0.0
+	_health_container.anchor_top = 1.0
+	_health_container.anchor_right = 0.0
+	_health_container.anchor_bottom = 1.0
+	_health_container.offset_left = 20
+	_health_container.offset_top = -52
+	_health_container.offset_right = 220
+	_health_container.offset_bottom = -16
+	_health_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_health_container)
+
+	_health_title = Label.new()
+	_health_title.text = "HEALTH"
+	_health_title.position = Vector2(0, -16)
+	_health_title.size = Vector2(200, 14)
+	_health_title.add_theme_font_size_override("font_size", 10)
+	_health_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_health_container.add_child(_health_title)
+
+	_health_bar_bg = ColorRect.new()
+	_health_bar_bg.position = Vector2(0, 0)
+	_health_bar_bg.size = Vector2(200, 16)
+	_health_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_health_container.add_child(_health_bar_bg)
+
+	_health_bar_fill = ColorRect.new()
+	_health_bar_fill.position = Vector2(0, 0)
+	_health_bar_fill.size = Vector2(200, 16)
+	_health_bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_health_container.add_child(_health_bar_fill)
+
+	_health_label = Label.new()
+	_health_label.text = "100 / 100"
+	_health_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_health_label.position = Vector2(0, 0)
+	_health_label.size = Vector2(200, 16)
+	_health_label.add_theme_font_size_override("font_size", 11)
+	_health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_health_container.add_child(_health_label)
+
+func _build_weapon_panel() -> void:
+	_weapon_container = Control.new()
+	_weapon_container.anchor_left = 1.0
+	_weapon_container.anchor_top = 1.0
+	_weapon_container.anchor_right = 1.0
+	_weapon_container.anchor_bottom = 1.0
+	_weapon_container.offset_left = -220
+	_weapon_container.offset_top = -62
+	_weapon_container.offset_right = -20
+	_weapon_container.offset_bottom = -16
+	_weapon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_weapon_container)
+
+	_weapon_title = Label.new()
+	_weapon_title.text = "WEAPON"
+	_weapon_title.position = Vector2(0, -16)
+	_weapon_title.size = Vector2(200, 14)
+	_weapon_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_weapon_title.add_theme_font_size_override("font_size", 10)
+	_weapon_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_container.add_child(_weapon_title)
+
+	_weapon_panel_bg = ColorRect.new()
+	_weapon_panel_bg.position = Vector2(0, 0)
+	_weapon_panel_bg.size = Vector2(200, 46)
+	_weapon_panel_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_container.add_child(_weapon_panel_bg)
+
+	for i in range(4):
+		var slot_bg = ColorRect.new()
+		slot_bg.position = Vector2(8 + i * 22, 6)
+		slot_bg.size = Vector2(18, 18)
+		slot_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_weapon_container.add_child(slot_bg)
+		_weapon_slots.append(slot_bg)
+
+		var slot_label = Label.new()
+		slot_label.text = str(i + 1)
+		slot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		slot_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		slot_label.position = Vector2(8 + i * 22, 6)
+		slot_label.size = Vector2(18, 18)
+		slot_label.add_theme_font_size_override("font_size", 9)
+		slot_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_weapon_container.add_child(slot_label)
+		_weapon_slot_labels.append(slot_label)
+
+	_weapon_name_label = Label.new()
+	_weapon_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_weapon_name_label.position = Vector2(96, 4)
+	_weapon_name_label.size = Vector2(96, 18)
+	_weapon_name_label.add_theme_font_size_override("font_size", 12)
+	_weapon_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_container.add_child(_weapon_name_label)
+
+	_weapon_element_label = Label.new()
+	_weapon_element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_weapon_element_label.position = Vector2(96, 24)
+	_weapon_element_label.size = Vector2(96, 16)
+	_weapon_element_label.add_theme_font_size_override("font_size", 10)
+	_weapon_element_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_container.add_child(_weapon_element_label)
+
+func _build_ability_indicators() -> void:
+	_ability_container = HBoxContainer.new()
+	_ability_container.anchor_left = 0.5
+	_ability_container.anchor_top = 1.0
+	_ability_container.anchor_right = 0.5
+	_ability_container.anchor_bottom = 1.0
+	_ability_container.offset_left = -90
+	_ability_container.offset_top = -76
+	_ability_container.offset_right = 90
+	_ability_container.offset_bottom = -16
+	_ability_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	_ability_container.add_theme_constant_override("separation", 12)
+	_ability_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_ability_container)
+
+	_ability_dash = AbilityIndicator.new()
+	_ability_container.add_child(_ability_dash)
+	_ability_dash.setup("DASH", 3.0)
+
+	_ability_aoe = AbilityIndicator.new()
+	_ability_container.add_child(_ability_aoe)
+	_ability_aoe.setup("AOE", 8.0)
+
+	_ability_life = AbilityIndicator.new()
+	_ability_container.add_child(_ability_life)
+	_ability_life.setup("LIFE", 0.0)
+
+func _build_crosshair() -> void:
+	_crosshair = CrosshairManager.new()
+	add_child(_crosshair)
+
+func _build_kill_feed() -> void:
+	_kill_feed_container = VBoxContainer.new()
+	_kill_feed_container.anchor_left = 1.0
+	_kill_feed_container.anchor_top = 0.0
+	_kill_feed_container.anchor_right = 1.0
+	_kill_feed_container.anchor_bottom = 0.0
+	_kill_feed_container.offset_left = -200
+	_kill_feed_container.offset_top = 12
+	_kill_feed_container.offset_right = -16
+	_kill_feed_container.offset_bottom = 100
+	_kill_feed_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_kill_feed_container)
+
+func _build_boss_bar() -> void:
+	_boss_container = Control.new()
+	_boss_container.anchor_left = 0.3
+	_boss_container.anchor_top = 0.0
+	_boss_container.anchor_right = 0.7
+	_boss_container.anchor_bottom = 0.0
+	_boss_container.offset_top = 12
+	_boss_container.offset_bottom = 48
+	_boss_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_container.visible = false
+	add_child(_boss_container)
+
+	_boss_name_label = Label.new()
+	_boss_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_boss_name_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_boss_name_label.offset_bottom = 16
+	_boss_name_label.add_theme_font_size_override("font_size", 11)
+	_boss_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_container.add_child(_boss_name_label)
+
+	_boss_bar_bg = ColorRect.new()
+	_boss_bar_bg.anchor_left = 0.0
+	_boss_bar_bg.anchor_right = 1.0
+	_boss_bar_bg.offset_top = 18
+	_boss_bar_bg.offset_bottom = 34
+	_boss_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_container.add_child(_boss_bar_bg)
+
+	_boss_bar_fill = ColorRect.new()
+	_boss_bar_fill.anchor_left = 0.0
+	_boss_bar_fill.anchor_right = 1.0
+	_boss_bar_fill.offset_top = 18
+	_boss_bar_fill.offset_bottom = 34
+	_boss_bar_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_boss_container.add_child(_boss_bar_fill)
+
+func _build_minimap() -> void:
+	_minimap = Minimap.new()
+	_minimap.position = Vector2(16, 12)
+	add_child(_minimap)
+
+# ========== PUBLIC API ==========
+
+func setup_minimap(level_data: Dictionary) -> void:
+	_minimap.setup(level_data)
+
+func show_boss_bar(boss_entity: Entity) -> void:
+	_boss_entity = boss_entity
+	_boss_container.visible = true
+	_boss_name_label.text = "DUNGEON BOSS"
+
+func on_actor_died(entity: Entity) -> void:
+	var tag := entity.get_component(C_ActorTag) as C_ActorTag
+	if not tag or tag.actor_type != C_ActorTag.ActorType.MONSTER:
+		return
+	var feed_text = "Defeated Boss" if entity.get_component(C_BossAI) else "Defeated Enemy"
+	_add_kill_feed_entry(feed_text)
+
+# ========== PROCESS ==========
 
 func _process(_delta: float) -> void:
-	var peer_count = Net.peers.size() + 1
-	peers_label.text = "Players: %d" % peer_count
-
 	var players = get_tree().get_nodes_in_group("players")
 	for player in players:
 		if player is PlayerEntity:
-			var health = player.get_component(C_Health)
-			if health:
-				health_label.text = "HP: %d/%d" % [health.current_health, health.max_health]
-				# Damage flash detection
-				if _prev_health >= 0 and health.current_health < _prev_health:
-					_trigger_damage_flash()
-				_prev_health = health.current_health
-			var weapon = player.get_component(C_Weapon)
-			if weapon:
-				var elem_text = weapon.element if weapon.element != "" else "none"
-				weapon_label.text = "Weapon: %s [%s]" % [_get_weapon_name(weapon), elem_text]
-			# Ability cooldowns
-			var ability_parts: PackedStringArray = []
-			var dash_comp = player.get_component(C_Dash)
-			if dash_comp:
-				if dash_comp.cooldown_remaining > 0:
-					ability_parts.append("Dash: %.1fs" % dash_comp.cooldown_remaining)
-				else:
-					ability_parts.append("Dash: READY")
-			var blast_comp = player.get_component(C_AoEBlast)
-			if blast_comp:
-				if blast_comp.cooldown_remaining > 0:
-					ability_parts.append("AoE: %.1fs" % blast_comp.cooldown_remaining)
-				else:
-					ability_parts.append("AoE: READY")
-			var lifesteal_comp = player.get_component(C_Lifesteal)
-			if lifesteal_comp:
-				ability_parts.append("Lifesteal: ON")
-			abilities_label.text = " | ".join(ability_parts) if ability_parts.size() > 0 else ""
+			var net_id = player.get_component(C_NetworkIdentity)
+			if net_id and not net_id.is_local:
+				continue
+			_update_health(player)
+			_update_weapon(player)
+			_update_abilities(player)
+			_update_crosshair(player)
 			break
+	_update_boss_bar()
+
+func _update_health(player: PlayerEntity) -> void:
+	var health = player.get_component(C_Health)
+	if not health:
+		return
+	var current = health.current_health
+	var max_hp = health.max_health
+	_health_label.text = "%d / %d" % [current, max_hp]
+
+	var ratio = float(current) / float(maxi(max_hp, 1))
+	_health_bar_fill.size.x = _health_bar_bg.size.x * ratio
+
+	var theme = ThemeManager.active_theme
+	_health_bar_fill.color = theme.health_bar_foreground.lerp(theme.health_bar_low_color, 1.0 - ratio)
+
+	if _prev_health >= 0 and current < _prev_health:
+		_trigger_damage_flash()
+	_prev_health = current
+
+func _update_weapon(player: PlayerEntity) -> void:
+	var weapon = player.get_component(C_Weapon)
+	if not weapon:
+		return
+	var idx = player._current_weapon_index
+	var theme = ThemeManager.active_theme
+
+	for i in range(_weapon_slots.size()):
+		if i == idx:
+			_weapon_slots[i].color = theme.ui_accent_color
+			_weapon_slot_labels[i].add_theme_color_override("font_color", theme.ui_background_color)
+		else:
+			_weapon_slots[i].color = theme.ui_panel_color
+			_weapon_slot_labels[i].add_theme_color_override("font_color", theme.ui_text_color)
+
+	var preset_name = "Custom"
+	if idx < Config.weapon_presets.size():
+		preset_name = Config.weapon_presets[idx].name
+	_weapon_name_label.text = preset_name
+	_weapon_element_label.text = weapon.element if weapon.element != "" else "Standard"
+
+func _update_abilities(player: PlayerEntity) -> void:
+	var dash = player.get_component(C_Dash)
+	if dash:
+		_ability_dash.visible = true
+		_ability_dash.update_state(dash.cooldown_remaining)
+	else:
+		_ability_dash.visible = false
+
+	var aoe = player.get_component(C_AoEBlast)
+	if aoe:
+		_ability_aoe.visible = true
+		_ability_aoe.update_state(aoe.cooldown_remaining)
+	else:
+		_ability_aoe.visible = false
+
+	var lifesteal = player.get_component(C_Lifesteal)
+	if lifesteal:
+		_ability_life.visible = true
+		_ability_life.update_state(0.0, true)
+	else:
+		_ability_life.visible = false
+
+func _update_crosshair(player: PlayerEntity) -> void:
+	var weapon = player.get_component(C_Weapon)
+	if weapon:
+		_crosshair.set_weapon(player._current_weapon_index, weapon.element)
+
+func _update_boss_bar() -> void:
+	if not _boss_container.visible or not _boss_entity:
+		return
+	if not is_instance_valid(_boss_entity):
+		_boss_container.visible = false
+		_boss_entity = null
+		return
+	var health = _boss_entity.get_component(C_Health)
+	if not health or health.current_health <= 0:
+		_boss_container.visible = false
+		_boss_entity = null
+		return
+	var ratio = float(health.current_health) / float(maxi(health.max_health, 1))
+	_boss_bar_fill.anchor_right = ratio
+	var theme = ThemeManager.active_theme
+	_boss_bar_fill.color = theme.health_bar_foreground.lerp(theme.health_bar_low_color, 1.0 - ratio)
+
+# ========== KILL FEED ==========
+
+func _add_kill_feed_entry(entry_text: String) -> void:
+	var theme = ThemeManager.active_theme
+	var label = Label.new()
+	label.text = entry_text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", theme.ui_kill_feed_color)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_kill_feed_container.add_child(label)
+	_kill_feed_container.move_child(label, 0)
+
+	while _kill_feed_container.get_child_count() > 4:
+		var old = _kill_feed_container.get_child(_kill_feed_container.get_child_count() - 1)
+		old.queue_free()
+
+	var tween = create_tween()
+	tween.tween_interval(3.0)
+	tween.tween_property(label, "modulate:a", 0.0, 1.0)
+	tween.tween_callback(label.queue_free)
+
+# ========== DAMAGE FLASH ==========
 
 func _trigger_damage_flash() -> void:
-	damage_flash.color = ThemeManager.active_theme.ui_damage_flash_color
-	var tween = create_tween()
-	tween.tween_property(damage_flash, "color:a", 0.0, 0.15)
+	if _damage_flash_tween:
+		_damage_flash_tween.kill()
+	_damage_flash.color = ThemeManager.active_theme.ui_damage_flash_color
+	_damage_flash_tween = create_tween()
+	_damage_flash_tween.tween_property(_damage_flash, "color:a", 0.0, 0.15)
 
-func _get_weapon_name(weapon: C_Weapon) -> String:
-	for preset in Config.weapon_presets:
-		if preset.damage == weapon.damage and preset.element == weapon.element:
-			return preset.name
-	return "Custom"
+# ========== THEME ==========
+
+func _on_theme_changed(_theme: ThemeData) -> void:
+	_apply_theme()
+
+func _apply_theme() -> void:
+	var theme = ThemeManager.active_theme
+
+	_health_bar_bg.color = theme.health_bar_background
+	_health_label.add_theme_color_override("font_color", theme.ui_text_color)
+	_health_title.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.6))
+
+	_weapon_panel_bg.color = theme.ui_panel_color
+	_weapon_title.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.6))
+	_weapon_name_label.add_theme_color_override("font_color", theme.ui_text_color)
+	_weapon_element_label.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.7))
+
+	_boss_name_label.add_theme_color_override("font_color", theme.ui_accent_color)
+	_boss_bar_bg.color = theme.health_bar_background
+
+	_ability_dash.apply_theme()
+	_ability_aoe.apply_theme()
+	_ability_life.apply_theme()
+	_crosshair.apply_theme()
+	_minimap.apply_theme()
