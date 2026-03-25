@@ -33,11 +33,25 @@ func _init() -> void:
 	var textures = TextureFactory.get_cached()
 	if textures.has("floor"):
 		_floor_material_room.albedo_texture = textures["floor"]
+	if textures.has("corridor_floor"):
+		_floor_material_corridor.albedo_texture = textures["corridor_floor"]
+	elif textures.has("floor"):
 		_floor_material_corridor.albedo_texture = textures["floor"]
 	if textures.has("wall"):
 		_wall_material.albedo_texture = textures["wall"]
+	if textures.has("ceiling"):
+		_ceiling_material.albedo_texture = textures["ceiling"]
+
+## Apply UV scaling at build time via _apply_uv_scaling()
+func _apply_uv_scaling(tile_size: float) -> void:
+	# Target: one texture repeat per ~2 meters
+	_floor_material_room.uv1_scale = Vector3(tile_size / 2.0, tile_size / 2.0, 1.0)
+	_floor_material_corridor.uv1_scale = Vector3(tile_size / 2.0, tile_size / 2.0, 1.0)
+	_wall_material.uv1_scale = Vector3(tile_size / 2.0, WALL_HEIGHT / 2.0, 1.0)
+	_ceiling_material.uv1_scale = Vector3(tile_size / 2.0, tile_size / 2.0, 1.0)
 
 func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
+	_apply_uv_scaling(tile_size)
 	var root = Node3D.new()
 	root.name = "GeneratedLevel"
 
