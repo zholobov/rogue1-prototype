@@ -108,20 +108,72 @@ func _add_floor(parent: Node3D, pos: Vector3, tile_size: float, mat: StandardMat
 	floor_body.position = pos + Vector3(tile_size / 2.0, 0, tile_size / 2.0)
 	floor_body.add_to_group("floor")
 
-	var mesh_inst = MeshInstance3D.new()
-	var box_mesh = BoxMesh.new()
-	box_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
-	mesh_inst.mesh = box_mesh
-	mesh_inst.material_override = mat
-	floor_body.add_child(mesh_inst)
-
+	# Collision stays as single box
 	var col = CollisionShape3D.new()
 	var box_shape = BoxShape3D.new()
 	box_shape.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
 	col.shape = box_shape
 	floor_body.add_child(col)
 
+	if ThemeManager.active_theme.prop_density > 0.0:
+		_add_slab_grid(floor_body, tile_size, mat)
+	else:
+		var mesh_inst = MeshInstance3D.new()
+		var box_mesh = BoxMesh.new()
+		box_mesh.size = Vector3(tile_size, FLOOR_THICKNESS, tile_size)
+		mesh_inst.mesh = box_mesh
+		mesh_inst.material_override = mat
+		floor_body.add_child(mesh_inst)
+
 	parent.add_child(floor_body)
+
+func _add_slab_grid(floor_body: StaticBody3D, tile_size: float, mat: StandardMaterial3D) -> void:
+	var gap := 0.025
+	var slab_size := (tile_size - gap) / 2.0
+	var theme = ThemeManager.active_theme
+
+	for row in range(2):
+		for col_idx in range(2):
+			var y_offset := randf_range(-0.03, 0.03)
+			var local_x := (col_idx - 0.5) * (slab_size + gap)
+			var local_z := (row - 0.5) * (slab_size + gap)
+
+			# Cracked slab: ~10% chance
+			if randf() < 0.1:
+				_add_cracked_slab(floor_body, local_x, local_z, y_offset, slab_size, mat, theme)
+			else:
+				var slab_mat := mat.duplicate() as StandardMaterial3D
+				slab_mat.roughness = mat.roughness + randf_range(-0.05, 0.05)
+				var mesh_inst = MeshInstance3D.new()
+				var box_mesh = BoxMesh.new()
+				box_mesh.size = Vector3(slab_size, FLOOR_THICKNESS, slab_size)
+				mesh_inst.mesh = box_mesh
+				mesh_inst.material_override = slab_mat
+				mesh_inst.position = Vector3(local_x, y_offset, local_z)
+				floor_body.add_child(mesh_inst)
+
+func _add_cracked_slab(floor_body: StaticBody3D, local_x: float, local_z: float, y_offset: float, slab_size: float, mat: StandardMaterial3D, theme: ThemeData) -> void:
+	var crack_gap := 0.03
+	var split_along_x := randf() > 0.5
+	var half_size: float = (slab_size - crack_gap) / 2.0
+
+	for i in range(2):
+		var slab_mat := mat.duplicate() as StandardMaterial3D
+		slab_mat.roughness = mat.roughness + randf_range(-0.05, 0.05)
+		var mesh_inst = MeshInstance3D.new()
+		var box_mesh = BoxMesh.new()
+		var offset_dir := (i * 2.0 - 1.0) * (half_size + crack_gap) / 2.0
+
+		if split_along_x:
+			box_mesh.size = Vector3(half_size, FLOOR_THICKNESS, slab_size)
+			mesh_inst.position = Vector3(local_x + offset_dir, y_offset, local_z)
+		else:
+			box_mesh.size = Vector3(slab_size, FLOOR_THICKNESS, half_size)
+			mesh_inst.position = Vector3(local_x, y_offset, local_z + offset_dir)
+
+		mesh_inst.mesh = box_mesh
+		mesh_inst.material_override = slab_mat
+		floor_body.add_child(mesh_inst)
 
 func _add_ceiling(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var ceiling = MeshInstance3D.new()
