@@ -52,7 +52,7 @@ func _process(_delta: float) -> void:
 			break
 
 func _trigger_damage_flash() -> void:
-	damage_flash.color = Color(1.0, 0.0, 0.0, 0.3)
+	damage_flash.color = ThemeManager.active_theme.ui_damage_flash_color
 	var tween = create_tween()
 	tween.tween_property(damage_flash, "color:a", 0.0, 0.15)
 

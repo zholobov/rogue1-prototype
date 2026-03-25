@@ -9,7 +9,7 @@ func _ready() -> void:
 
 func _build_ui() -> void:
     var bg = ColorRect.new()
-    bg.color = Color(0.04, 0.04, 0.08)
+    bg.color = ThemeManager.active_theme.ui_background_color
     bg.set_anchors_preset(PRESET_FULL_RECT)
     add_child(bg)
 

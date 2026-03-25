@@ -228,3 +228,18 @@ func test_neon_theme_aoe_blast_color():
     var theme = ThemeManager.active_theme
     assert_almost_eq(theme.aoe_blast_color.r, 1.0, 0.01)
     assert_almost_eq(theme.aoe_blast_color.g, 0.6, 0.01)
+
+# --- UI theming ---
+func test_neon_theme_ui_background():
+    var theme = ThemeManager.active_theme
+    assert_almost_eq(theme.ui_background_color.r, 0.05, 0.01)
+
+func test_neon_theme_rarity_colors():
+    var theme = ThemeManager.active_theme
+    assert_true(theme.rarity_colors.has("common"))
+    assert_true(theme.rarity_colors.has("rare"))
+    assert_true(theme.rarity_colors.has("epic"))
+
+func test_neon_palette_file_removed():
+    assert_false(FileAccess.file_exists("res://src/effects/neon_palette.gd"),
+        "neon_palette.gd should be deleted")

@@ -12,6 +12,13 @@ signal meta_upgrades_pressed()
 @onready var player_list: ItemList = $VBoxContainer/PlayerList
 
 func _ready():
+	var bg = ColorRect.new()
+	bg.color = ThemeManager.active_theme.ui_background_color
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bg)
+	move_child(bg, 0)  # behind everything
+
 	solo_button.pressed.connect(_on_solo)
 	host_button.pressed.connect(_on_host)
 	join_button.pressed.connect(_on_join)

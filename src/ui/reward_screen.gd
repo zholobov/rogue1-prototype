@@ -12,7 +12,7 @@ func _ready() -> void:
 
 func _build_ui() -> void:
     var bg = ColorRect.new()
-    bg.color = Color(0.05, 0.05, 0.1)
+    bg.color = ThemeManager.active_theme.ui_background_color
     bg.set_anchors_preset(PRESET_FULL_RECT)
     add_child(bg)
 
@@ -44,11 +44,7 @@ func _build_ui() -> void:
     hbox.set("theme_override_constants/separation", 20)
     root_vbox.add_child(hbox)
 
-    var rarity_colors = {
-        "common": Color(0.8, 0.8, 0.8),
-        "rare": Color(0.3, 0.5, 1.0),
-        "epic": Color(0.7, 0.2, 1.0),
-    }
+    var rarity_colors = ThemeManager.active_theme.rarity_colors
 
     for i in range(_upgrades.size()):
         var upgrade = _upgrades[i]
