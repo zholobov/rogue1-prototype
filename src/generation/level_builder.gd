@@ -479,7 +479,7 @@ func _add_torch(parent: Node3D, pos: Vector3, tile_size: float, wall_dir: Vector
 
 	# Mount position on wall face
 	var mount_y := WALL_HEIGHT * 0.6
-	var mount_pos := base_pos
+	var mount_pos: Vector3 = base_pos
 	if wall_dir.x != 0:
 		mount_pos.x += wall_dir.x * (tile_size / 2.0 - 0.05)
 	else:
