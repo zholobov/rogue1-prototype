@@ -10,7 +10,7 @@ func _init() -> void:
     pixel_size = 0.01
 
 func show_text(pos: Vector3, value: String) -> void:
-    global_position = pos + Vector3(0, 1.5, 0)
+    global_position = pos + Vector3(randf_range(-0.3, 0.3), 1.5, 0)
     text = value
     var tween = create_tween()
     tween.set_parallel(true)
