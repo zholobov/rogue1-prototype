@@ -65,3 +65,30 @@ func test_theme_data_get_element_color_unknown():
     td.element_colors = {"fire": Color.RED}
     var c = td.get_element_color("unknown")
     assert_eq(c, Color.WHITE, "unknown elements default to white")
+
+# --- ThemeManager ---
+func test_theme_manager_has_active_theme():
+    assert_not_null(ThemeManager)
+    assert_not_null(ThemeManager.active_theme)
+
+func test_theme_manager_available_themes_not_empty():
+    assert_gt(ThemeManager.available_themes.size(), 0)
+
+func test_theme_manager_set_theme_emits_signal():
+    var theme_name = ThemeManager.available_themes[0].theme_name
+    watch_signals(ThemeManager)
+    ThemeManager.set_theme(theme_name)
+    assert_signal_emitted(ThemeManager, "theme_changed")
+
+func test_theme_manager_set_theme_changes_active():
+    var first = ThemeManager.available_themes[0]
+    ThemeManager.set_theme(first.theme_name)
+    assert_eq(ThemeManager.active_theme.theme_name, first.theme_name)
+
+func test_theme_manager_get_monster_scene_returns_null_for_missing():
+    var scene = ThemeManager.get_monster_scene("nonexistent_type")
+    assert_null(scene)
+
+func test_theme_manager_get_palette_returns_active_palette():
+    var palette = ThemeManager.get_palette()
+    assert_eq(palette, ThemeManager.active_theme.get_palette_array())
