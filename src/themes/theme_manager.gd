@@ -9,11 +9,13 @@ func _ready() -> void:
     _load_themes()
     if available_themes.size() > 0:
         active_theme = available_themes[0]
+        TextureFactory.generate_for_theme(active_theme)
 
 func set_theme(theme_name_to_set: String) -> void:
     for theme in available_themes:
         if theme.theme_name == theme_name_to_set:
             active_theme = theme
+            TextureFactory.generate_for_theme(theme)
             theme_changed.emit(theme)
             return
 

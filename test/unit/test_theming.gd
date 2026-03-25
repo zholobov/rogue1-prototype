@@ -347,3 +347,39 @@ func test_theme_selector_instantiates():
     var selector = preload("res://src/ui/theme_selector.gd").new()
     assert_not_null(selector)
     selector.queue_free()
+
+# --- Integration ---
+func test_switch_to_stone_and_back():
+    ThemeManager.set_theme("Stone Dungeon")
+    assert_eq(ThemeManager.active_theme.theme_name, "Stone Dungeon")
+    ThemeManager.set_theme("Neon Dungeon")
+    assert_eq(ThemeManager.active_theme.theme_name, "Neon Dungeon")
+
+func test_all_themes_have_required_fields():
+    for t in ThemeManager.available_themes:
+        assert_ne(t.theme_name, "", "%s needs a name" % t)
+        assert_ne(t.description, "", "%s needs a description" % t)
+        assert_gt(t.get_palette_array().size(), 0, "%s needs palette colors" % t.theme_name)
+        assert_gt(t.fog_depth_end, t.fog_depth_begin, "%s fog end > begin" % t.theme_name)
+
+func test_all_themes_have_monster_scenes():
+    for t in ThemeManager.available_themes:
+        assert_true(t.monster_scenes.has("basic"), "%s needs basic monster scene" % t.theme_name)
+        assert_true(t.monster_scenes.has("boss"), "%s needs boss monster scene" % t.theme_name)
+
+func test_texture_cache_updates_on_theme_switch():
+    ThemeManager.set_theme("Stone Dungeon")
+    var cache = TextureFactory.get_cached()
+    if ThemeManager.active_theme.floor_pattern.size() > 0:
+        assert_true(cache.has("floor"), "stone theme should have cached floor texture")
+    ThemeManager.set_theme("Neon Dungeon")
+
+func test_theme_changed_signal_carries_theme():
+    var result := [null]
+    var callback = func(t): result[0] = t
+    ThemeManager.theme_changed.connect(callback)
+    ThemeManager.set_theme("Stone Dungeon")
+    assert_not_null(result[0])
+    assert_eq(result[0].theme_name, "Stone Dungeon")
+    ThemeManager.theme_changed.disconnect(callback)
+    ThemeManager.set_theme("Neon Dungeon")

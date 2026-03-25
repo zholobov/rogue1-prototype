@@ -30,6 +30,13 @@ func _init() -> void:
 	_ceiling_material.albedo_color = theme.ceiling_albedo
 	_ceiling_material.roughness = theme.ceiling_roughness
 
+	var textures = TextureFactory.get_cached()
+	if textures.has("floor"):
+		_floor_material_room.albedo_texture = textures["floor"]
+		_floor_material_corridor.albedo_texture = textures["floor"]
+	if textures.has("wall"):
+		_wall_material.albedo_texture = textures["wall"]
+
 func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 	var root = Node3D.new()
 	root.name = "GeneratedLevel"
