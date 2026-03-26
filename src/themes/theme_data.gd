@@ -125,6 +125,8 @@ extends Resource
 @export var wall_style: String = "default"
 @export var sky_config: Dictionary = {}
 @export var light_source_style: String = "floating"  # "floating", "torch", "mushroom", "crystal"
+@export var floor_style: String = "plain"  # "plain", "cracked_slab"
+@export var beam_style: String = "default"  # "default", "ornate", "none"
 
 # --- Helper methods ---
 

@@ -132,6 +132,8 @@ static func create() -> ThemeData:
     t.prop_density = 1.0
     t.torch_flicker = true
     t.light_source_style = "torch"
+    t.floor_style = "cracked_slab"
+    t.beam_style = "default"
     t.ceiling_beam_spacing = 2
     t.pillar_chance = 0.2
     t.rubble_chance = 0.15

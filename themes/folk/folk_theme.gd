@@ -132,6 +132,8 @@ static func _create_dark_forest() -> ThemeData:
     # Props (section 5)
     t.prop_density = 0.5
     t.torch_flicker = true
+    t.floor_style = "plain"
+    t.beam_style = "none"
     t.ceiling_beam_spacing = 4  # unused, no ceiling, set for compat
     t.pillar_chance = 0.3
     t.rubble_chance = 0.4
@@ -267,6 +269,8 @@ static func _create_golden_palace() -> ThemeData:
     # Props (section 6)
     t.prop_density = 0.5
     t.torch_flicker = true
+    t.floor_style = "plain"
+    t.beam_style = "ornate"
     t.ceiling_beam_spacing = 3
     t.pillar_chance = 0.35
     t.rubble_chance = 0.2
@@ -402,6 +406,8 @@ static func _create_winter_realm() -> ThemeData:
     # Props (section 7)
     t.prop_density = 0.35
     t.torch_flicker = false     # steady frozen light
+    t.floor_style = "plain"
+    t.beam_style = "none"
     t.ceiling_beam_spacing = 4  # unused, no ceiling
     t.pillar_chance = 0.25
     t.rubble_chance = 0.3

@@ -99,7 +99,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 
 	# Ceiling beams
 	var beam_spacing = ThemeManager.active_theme.ceiling_beam_spacing
-	if ThemeManager.active_theme.has_ceiling and ThemeManager.active_theme.prop_density > 0.0 and beam_spacing > 0:
+	if ThemeManager.active_theme.has_ceiling and ThemeManager.active_theme.beam_style != "none" and beam_spacing > 0:
 		for y in range(height):
 			for x in range(width):
 				var tile_name = grid[y][x]
@@ -265,7 +265,7 @@ func _add_floor(parent: Node3D, pos: Vector3, tile_size: float, mat: StandardMat
 	col.shape = box_shape
 	floor_body.add_child(col)
 
-	if ThemeManager.active_theme.prop_density > 0.0 and ThemeManager.active_theme.wall_style == "default":
+	if ThemeManager.active_theme.floor_style == "cracked_slab":
 		_add_slab_grid(floor_body, tile_size, mat)
 	else:
 		var mesh_inst = MeshInstance3D.new()
@@ -494,9 +494,9 @@ func _add_forest_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(int(pos.x), int(pos.z)))
 	var moss_mat = StandardMaterial3D.new()
-	moss_mat.albedo_color = Color(0.15, 0.3, 0.1)
+	moss_mat.albedo_color = theme.secondary.darkened(0.4)
 	moss_mat.emission_enabled = true
-	moss_mat.emission = Color(0.2, 0.5, 0.15)
+	moss_mat.emission = theme.secondary
 	moss_mat.emission_energy_multiplier = 1.0
 	var dark_bark = StandardMaterial3D.new()
 	dark_bark.albedo_color = theme.wall_albedo.darkened(0.25)
@@ -634,9 +634,9 @@ func _add_palace_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	trim_mesh.size = Vector3(tile_size * 0.7, 0.04, 0.02)
 	trim.mesh = trim_mesh
 	var gold_mat = StandardMaterial3D.new()
-	gold_mat.albedo_color = Color(0.6, 0.45, 0.1)
+	gold_mat.albedo_color = theme.primary.darkened(0.3)
 	gold_mat.emission_enabled = true
-	gold_mat.emission = Color(0.85, 0.65, 0.2)
+	gold_mat.emission = theme.primary
 	gold_mat.emission_energy_multiplier = 2.0
 	trim.material_override = gold_mat
 	trim.position = Vector3(cx, WALL_HEIGHT - 0.15, pos.z + 0.01)
@@ -677,12 +677,12 @@ func _add_ice_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var rng = RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(int(pos.x), int(pos.z)))
 	var frost_mat = StandardMaterial3D.new()
-	frost_mat.albedo_color = Color(0.7, 0.85, 1.0)
+	frost_mat.albedo_color = theme.secondary
 	frost_mat.emission_enabled = true
-	frost_mat.emission = Color(0.7, 0.88, 1.0)
+	frost_mat.emission = theme.secondary
 	frost_mat.emission_energy_multiplier = 2.0
 	var snow_mat = StandardMaterial3D.new()
-	snow_mat.albedo_color = Color(0.85, 0.88, 0.92)
+	snow_mat.albedo_color = theme.secondary.lightened(0.2)
 	snow_mat.roughness = 0.8
 	# Solid ice base block — fills entire tile like a default wall
 	var base = MeshInstance3D.new()
@@ -761,7 +761,7 @@ func _add_ice_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 		parent.add_child(sparkle)
 	# Icicles from top (3)
 	var icicle_mat = StandardMaterial3D.new()
-	icicle_mat.albedo_color = Color(0.55, 0.7, 0.9)
+	icicle_mat.albedo_color = theme.tertiary.lightened(0.3)
 	icicle_mat.roughness = 0.15
 	for i in range(3):
 		var icicle = MeshInstance3D.new()
@@ -817,7 +817,7 @@ func _add_torch(parent: Node3D, pos: Vector3, tile_size: float, wall_dir: Vector
 	bracket_mesh.size = Vector3(0.1, 0.05, 0.1)
 	bracket.mesh = bracket_mesh
 	var bracket_mat = StandardMaterial3D.new()
-	bracket_mat.albedo_color = Color(0.15, 0.12, 0.08)
+	bracket_mat.albedo_color = theme.wall_albedo.darkened(0.4)
 	bracket_mat.roughness = 0.8
 	bracket.material_override = bracket_mat
 	torch_root.add_child(bracket)
@@ -849,9 +849,9 @@ func _add_torch(parent: Node3D, pos: Vector3, tile_size: float, wall_dir: Vector
 	flame.mesh = flame_mesh
 	flame.position = Vector3(0, 0.41, 0)
 	var flame_mat = StandardMaterial3D.new()
-	flame_mat.albedo_color = Color(0.1, 0.05, 0.0)
+	flame_mat.albedo_color = theme.point_light_color.darkened(0.8)
 	flame_mat.emission_enabled = true
-	flame_mat.emission = Color(1.0, 0.6, 0.15)
+	flame_mat.emission = theme.point_light_color
 	flame_mat.emission_energy_multiplier = 3.0
 	flame.material_override = flame_mat
 	torch_root.add_child(flame)
@@ -893,7 +893,7 @@ func _add_mushroom_light(parent: Node3D, pos: Vector3, tile_size: float, wall_di
 	stem_mesh.height = 0.3
 	stem.mesh = stem_mesh
 	var stem_mat = StandardMaterial3D.new()
-	stem_mat.albedo_color = Color(0.25, 0.2, 0.15)
+	stem_mat.albedo_color = theme.wall_albedo.darkened(0.1)
 	stem_mat.roughness = 0.9
 	stem.material_override = stem_mat
 	stem.position = Vector3(0, 0.15, 0)
@@ -905,7 +905,7 @@ func _add_mushroom_light(parent: Node3D, pos: Vector3, tile_size: float, wall_di
 	cap_mesh.height = 0.12
 	cap.mesh = cap_mesh
 	var cap_mat = StandardMaterial3D.new()
-	cap_mat.albedo_color = Color(0.1, 0.2, 0.08)
+	cap_mat.albedo_color = theme.secondary.darkened(0.5)
 	cap_mat.emission_enabled = true
 	cap_mat.emission = theme.point_light_color
 	cap_mat.emission_energy_multiplier = 2.5
@@ -944,7 +944,7 @@ func _add_crystal_light(parent: Node3D, pos: Vector3, tile_size: float, wall_dir
 	crystal_mesh.size = Vector3(0.1, 0.5, 0.08)
 	crystal.mesh = crystal_mesh
 	var crystal_mat = StandardMaterial3D.new()
-	crystal_mat.albedo_color = Color(0.3, 0.5, 0.8)
+	crystal_mat.albedo_color = theme.tertiary
 	crystal_mat.roughness = 0.15
 	crystal_mat.emission_enabled = true
 	crystal_mat.emission = theme.point_light_color
@@ -1033,6 +1033,7 @@ func _place_wall_trim(parent: Node3D, pos: Vector3, tile_size: float, dir: Vecto
 	parent.add_child(trim)
 
 func _add_floor_glow(parent: Node3D, pos: Vector3, tile_size: float, color: Color) -> void:
+	var theme = ThemeManager.active_theme
 	var glow = MeshInstance3D.new()
 	var mesh = BoxMesh.new()
 	mesh.size = Vector3(tile_size, 0.01, tile_size)
@@ -1043,7 +1044,7 @@ func _add_floor_glow(parent: Node3D, pos: Vector3, tile_size: float, color: Colo
 	mat.albedo_color = Color(0.0, 0.0, 0.0, 0.0)
 	mat.emission_enabled = true
 	mat.emission = color
-	mat.emission_energy_multiplier = 0.3
+	mat.emission_energy_multiplier = theme.accent_emission_energy * 0.2
 	glow.material_override = mat
 
 	parent.add_child(glow)
@@ -1120,8 +1121,9 @@ func _add_pillar(parent: Node3D, pos: Vector3) -> void:
 	parent.add_child(capital)
 
 func _add_barrel(parent: Node3D, pos: Vector3) -> void:
+	var theme = ThemeManager.active_theme
 	var barrel_mat = StandardMaterial3D.new()
-	barrel_mat.albedo_color = Color(0.35, 0.22, 0.1)
+	barrel_mat.albedo_color = theme.floor_albedo.darkened(0.2)
 	barrel_mat.roughness = 0.9
 
 	# Body
@@ -1144,14 +1146,15 @@ func _add_barrel(parent: Node3D, pos: Vector3) -> void:
 	rim.mesh = rim_mesh
 	rim.position = pos + Vector3(0, 0.41, 0)
 	var rim_mat = StandardMaterial3D.new()
-	rim_mat.albedo_color = Color(0.2, 0.15, 0.08)
+	rim_mat.albedo_color = theme.wall_albedo.darkened(0.3)
 	rim_mat.roughness = 0.7
 	rim.material_override = rim_mat
 	parent.add_child(rim)
 
 func _add_crate(parent: Node3D, pos: Vector3) -> void:
+	var theme = ThemeManager.active_theme
 	var crate_mat = StandardMaterial3D.new()
-	crate_mat.albedo_color = Color(0.3, 0.2, 0.1)
+	crate_mat.albedo_color = theme.floor_albedo.darkened(0.15)
 	crate_mat.roughness = 0.95
 
 	# Box body
@@ -1165,7 +1168,7 @@ func _add_crate(parent: Node3D, pos: Vector3) -> void:
 
 	# Cross strip
 	var strip_mat = StandardMaterial3D.new()
-	strip_mat.albedo_color = Color(0.2, 0.12, 0.06)
+	strip_mat.albedo_color = theme.wall_albedo.darkened(0.35)
 	strip_mat.roughness = 0.8
 
 	var h_strip = MeshInstance3D.new()
@@ -1185,8 +1188,9 @@ func _add_crate(parent: Node3D, pos: Vector3) -> void:
 	parent.add_child(v_strip)
 
 func _add_chain(parent: Node3D, pos: Vector3) -> void:
+	var theme = ThemeManager.active_theme
 	var chain_mat = StandardMaterial3D.new()
-	chain_mat.albedo_color = Color(0.25, 0.22, 0.2)
+	chain_mat.albedo_color = theme.wall_albedo.darkened(0.2)
 	chain_mat.roughness = 0.6
 
 	var num_links = randi_range(5, 8)
