@@ -61,6 +61,7 @@ func _ready():
     weapon_system = S_Weapon.new()
     weapon_system.projectile_requested.connect(_on_projectile_requested)
     ECS.world.add_system(weapon_system)
+    ECS.world.add_system(S_WeaponVisual.new())
     print("[GeneratedLevel] Systems registered")
 
     # Generate level
@@ -154,7 +155,12 @@ func _physics_process(delta: float) -> void:
 func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
     var projectile = ProjectileScene.instantiate()
     var camera = owner_body.get_node("Camera3D") as Camera3D
-    var spawn_pos = camera.global_position + (-camera.global_transform.basis.z * 1.0)
+    var muzzle = owner_body.get_node_or_null("Camera3D/WeaponViewmodel/MuzzlePoint")
+    var spawn_pos: Vector3
+    if muzzle:
+        spawn_pos = muzzle.global_position
+    else:
+        spawn_pos = camera.global_position + (-camera.global_transform.basis.z * 1.0)
     projectile.global_position = spawn_pos
     add_child(projectile)
     projectile.setup(

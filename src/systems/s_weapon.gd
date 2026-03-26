@@ -24,3 +24,6 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
             var body = entity.get_parent()
             if body:
                 projectile_requested.emit(body, weapon)
+            var wv = entity.get_component(C_WeaponVisual)
+            if wv:
+                wv.just_fired = true

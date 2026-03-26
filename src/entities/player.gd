@@ -25,6 +25,7 @@ func _ready():
     ecs_entity.add_component(C_Weapon.new())
     ecs_entity.add_component(C_ActorTag.new())
     ecs_entity.add_component(C_PlayerStats.new())
+    ecs_entity.add_component(C_WeaponVisual.new())
 
     var tag := ecs_entity.get_component(C_ActorTag) as C_ActorTag
     tag.actor_type = C_ActorTag.ActorType.PLAYER
@@ -46,6 +47,12 @@ func setup(peer_id: int, is_local: bool) -> void:
     if is_local:
         camera.make_current()
         Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+    var wv := get_component(C_WeaponVisual) as C_WeaponVisual
+    if wv:
+        wv.show_viewmodel = is_local
+        wv.weapon_index = _current_weapon_index
+        wv.element = get_component(C_Weapon).element if get_component(C_Weapon) else ""
 
 func _input(event: InputEvent) -> void:
     var net_id := get_component(C_NetworkIdentity) as C_NetworkIdentity
@@ -79,6 +86,11 @@ func _equip_weapon(index: int) -> void:
     weapon.projectile_speed = preset.speed * (1.0 + (ps.proj_speed_bonus if ps else 0.0))
     weapon.element = preset.element
     weapon.cooldown_remaining = 0.0
+
+    var wv := get_component(C_WeaponVisual) as C_WeaponVisual
+    if wv:
+        wv.weapon_index = index
+        wv.element = weapon.element
 
 func _physics_process(delta: float) -> void:
     var net_id := get_component(C_NetworkIdentity) as C_NetworkIdentity
