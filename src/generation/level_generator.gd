@@ -47,6 +47,11 @@ func generate_grid(rules: TileRules, width: int, height: int, seed_val: int, mod
     _remove_tiny_rooms(grid)
     _prune_dead_ends(grid)
     _seal_empty_borders(grid)
+    # Validate: post-processing can break connectivity. Re-connect if needed.
+    for i in range(3):
+        if _count_walkable_clusters(grid) <= 1:
+            break
+        _ensure_connectivity(grid)
     return grid
 
 func _generate_room_seeds(rng: RandomNumberGenerator, width: int, height: int, modifier: String) -> Dictionary:
@@ -104,6 +109,33 @@ func _generate_room_seeds(rng: RandomNumberGenerator, width: int, height: int, m
         pinned[Vector2i(x, y)] = "spawn"
 
     return pinned
+
+func _count_walkable_clusters(grid: Array) -> int:
+    var height = grid.size()
+    var width = grid[0].size() if height > 0 else 0
+    var visited: Dictionary = {}
+    var count := 0
+    for y in range(height):
+        for x in range(width):
+            var key = Vector2i(x, y)
+            if visited.has(key) or not _is_walkable(grid[y][x]):
+                continue
+            count += 1
+            var stack: Array = [key]
+            while not stack.is_empty():
+                var cell = stack.pop_back()
+                if visited.has(cell):
+                    continue
+                if cell.x < 0 or cell.x >= width or cell.y < 0 or cell.y >= height:
+                    continue
+                if not _is_walkable(grid[cell.y][cell.x]):
+                    continue
+                visited[cell] = true
+                stack.append(Vector2i(cell.x + 1, cell.y))
+                stack.append(Vector2i(cell.x - 1, cell.y))
+                stack.append(Vector2i(cell.x, cell.y + 1))
+                stack.append(Vector2i(cell.x, cell.y - 1))
+    return count
 
 func _ensure_connectivity(grid: Array) -> void:
     var height = grid.size()
