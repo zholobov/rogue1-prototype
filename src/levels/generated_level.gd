@@ -200,12 +200,14 @@ func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
 		return
 	var muzzle = owner_body.get_node_or_null("Camera3D/WeaponViewmodel/MuzzlePoint")
 	var spawn_pos: Vector3
-	if muzzle:
+	if muzzle and muzzle.is_inside_tree():
 		spawn_pos = muzzle.global_position
-	else:
+	elif camera.is_inside_tree():
 		spawn_pos = camera.global_position + (-camera.global_transform.basis.z * 1.0)
-	projectile.global_position = spawn_pos
+	else:
+		return
 	add_child(projectile)
+	projectile.global_position = spawn_pos
 	projectile.setup(
 		-camera.global_transform.basis.z,
 		weapon.projectile_speed,
