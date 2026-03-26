@@ -62,18 +62,19 @@ func _build_ui() -> void:
     back_btn.pressed.connect(func(): back_pressed.emit())
     top_bar.add_child(back_btn)
 
-    # Main split: left panel + right panel
-    var hsplit = HSplitContainer.new()
-    hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    hsplit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    hsplit.split_offset = 260
-    root_vbox.add_child(hsplit)
+    # Main layout: left panel (fixed width) + right panel (expand)
+    var hbox_main = HBoxContainer.new()
+    hbox_main.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    hbox_main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    hbox_main.add_theme_constant_override("separation", 8)
+    root_vbox.add_child(hbox_main)
 
-    # Left panel: config editor + buttons
+    # Left panel: config editor + buttons (fixed 250px)
     var left_vbox = VBoxContainer.new()
-    left_vbox.custom_minimum_size.x = 240
+    left_vbox.custom_minimum_size.x = 250
+    left_vbox.size_flags_horizontal = 0  # Don't expand
     left_vbox.add_theme_constant_override("separation", 4)
-    hsplit.add_child(left_vbox)
+    hbox_main.add_child(left_vbox)
 
     _config_editor = ConfigEditor.new()
     _config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -117,16 +118,17 @@ func _build_ui() -> void:
     paste_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     clipboard_row.add_child(paste_btn)
 
-    # Right panel: visualization area
+    # Right panel: visualization area (fills remaining space)
     var right_panel = VBoxContainer.new()
     right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
     right_panel.add_theme_constant_override("separation", 4)
-    hsplit.add_child(right_panel)
+    hbox_main.add_child(right_panel)
 
     _grid_preview = GridPreview.new()
     _grid_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _grid_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _grid_preview.custom_minimum_size = Vector2(200, 200)
     right_panel.add_child(_grid_preview)
 
     _error_label = Label.new()
