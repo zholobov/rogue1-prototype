@@ -38,11 +38,13 @@ func _setup_visuals() -> void:
     # Scene override: if theme provides a monster scene, use it instead of procedural
     var scene_override := ThemeManager.get_monster_scene(visual_variant)
     if scene_override:
-        # Hide the original mesh from the .tscn
-        var orig_mesh := get_node_or_null("MeshInstance3D") as MeshInstance3D
-        if orig_mesh:
-            orig_mesh.visible = false
+        # Hide ALL original meshes from the base monster.tscn
+        for child in get_children():
+            if child is MeshInstance3D:
+                child.visible = false
+                child.queue_free()
         var visual_root := scene_override.instantiate() as Node3D
+        visual_root.name = "VisualRoot"
         add_child(visual_root)
         # Apply body material to BodyMesh child
         var body_mesh := visual_root.get_node_or_null("BodyMesh") as MeshInstance3D
