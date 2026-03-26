@@ -56,10 +56,24 @@ func _ready():
 		upgrades_btn.pressed.connect(_on_meta_upgrades)
 		left.add_child(upgrades_btn)
 
-	var themes_btn = Button.new()
-	themes_btn.text = "Themes"
-	themes_btn.pressed.connect(_on_themes)
-	left.add_child(themes_btn)
+	var theme_row = HBoxContainer.new()
+	theme_row.add_theme_constant_override("separation", 8)
+	left.add_child(theme_row)
+	var theme_label = Label.new()
+	theme_label.text = "Theme:"
+	theme_label.add_theme_font_size_override("font_size", 12)
+	theme_row.add_child(theme_label)
+	var theme_option = OptionButton.new()
+	theme_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var available = ThemeManager.available_themes
+	var current_idx = 0
+	for i in range(available.size()):
+		theme_option.add_item(available[i].theme_name)
+		if available[i] == ThemeManager.active_theme:
+			current_idx = i
+	theme_option.selected = current_idx
+	theme_option.item_selected.connect(_on_theme_selected.bind(available))
+	theme_row.add_child(theme_option)
 
 	var playground_btn = Button.new()
 	playground_btn.text = "Level Playground"
@@ -109,6 +123,10 @@ func _on_meta_upgrades():
 
 func _on_themes():
 	themes_pressed.emit()
+
+func _on_theme_selected(index: int, themes: Array):
+	if index >= 0 and index < themes.size():
+		ThemeManager.set_theme(themes[index].theme_name)
 
 func _on_playground():
 	playground_pressed.emit()
