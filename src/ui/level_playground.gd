@@ -173,68 +173,40 @@ func _build_ui() -> void:
     _on_generate()
 
 func _build_sections() -> Array:
-    var theme = ThemeManager.active_theme
+    # Auto-discover all Config properties from @export annotations
+    var sections = ConfigSectionBuilder.from_object(Config)
+
+    # Add tile weights (derived from TileRules, not a Config property)
     var modifier = Config.current_modifier if Config.current_modifier != "" else "normal"
     var weights = TileRules.get_profile_weights(modifier)
+    sections.append({
+        "title": "Tile Weights",
+        "properties": [
+            {"label": "Room", "key": "w_room", "type": "float", "value": weights.room, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
+            {"label": "Spawn", "key": "w_spawn", "type": "float", "value": weights.spawn, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
+            {"label": "Corridor", "key": "w_cor", "type": "float", "value": weights.cor, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
+            {"label": "Door", "key": "w_door", "type": "float", "value": weights.door, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
+            {"label": "Wall", "key": "w_wall", "type": "float", "value": weights.wall, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
+            {"label": "Empty", "key": "w_empty", "type": "float", "value": weights.empty, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
+        ]
+    })
 
-    return [
-        {
-            "title": "Grid",
-            "properties": [
-                {"label": "Width", "key": "level_grid_width", "type": "int", "value": Config.level_grid_width, "min_value": 4, "max_value": 32, "step": 1, "options": []},
-                {"label": "Height", "key": "level_grid_height", "type": "int", "value": Config.level_grid_height, "min_value": 4, "max_value": 32, "step": 1, "options": []},
-                {"label": "Seed (0=random)", "key": "level_seed", "type": "int", "value": Config.level_seed, "min_value": 0, "max_value": 999999, "step": 1, "options": []},
-                {"label": "Tile Size", "key": "level_tile_size", "type": "float", "value": Config.level_tile_size, "min_value": 1.0, "max_value": 10.0, "step": 0.5, "options": []},
-            ]
-        },
-        {
-            "title": "Modifier",
-            "properties": [
-                {"label": "Preset", "key": "current_modifier", "type": "string_enum", "value": modifier, "min_value": 0, "max_value": 0, "step": 0, "options": PackedStringArray(["normal", "dense", "large", "dark", "horde", "boss"])},
-            ]
-        },
-        {
-            "title": "Tile Weights",
-            "properties": [
-                {"label": "Room", "key": "w_room", "type": "float", "value": weights.room, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
-                {"label": "Spawn", "key": "w_spawn", "type": "float", "value": weights.spawn, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
-                {"label": "Corridor", "key": "w_cor", "type": "float", "value": weights.cor, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
-                {"label": "Door", "key": "w_door", "type": "float", "value": weights.door, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
-                {"label": "Wall", "key": "w_wall", "type": "float", "value": weights.wall, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
-                {"label": "Empty", "key": "w_empty", "type": "float", "value": weights.empty, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
-            ]
-        },
-        {
-            "title": "Monsters",
-            "properties": [
-                {"label": "Per Room", "key": "monsters_per_room", "type": "int", "value": Config.monsters_per_room, "min_value": 0, "max_value": 10, "step": 1, "options": []},
-                {"label": "Max/Level (0=∞)", "key": "max_monsters_per_level", "type": "int", "value": Config.max_monsters_per_level, "min_value": 0, "max_value": 50, "step": 1, "options": []},
-                {"label": "HP Mult", "key": "monster_hp_mult", "type": "float", "value": Config.monster_hp_mult, "min_value": 0.1, "max_value": 10.0, "step": 0.1, "options": []},
-                {"label": "Damage Mult", "key": "monster_damage_mult", "type": "float", "value": Config.monster_damage_mult, "min_value": 0.1, "max_value": 10.0, "step": 0.1, "options": []},
-                {"label": "Weapon Chance", "key": "monster_weapon_chance", "type": "float", "value": Config.monster_weapon_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
-                {"label": "Ranged Cooldown", "key": "monster_ranged_cooldown", "type": "float", "value": Config.monster_ranged_cooldown, "min_value": 0.5, "max_value": 10.0, "step": 0.5, "options": []},
-                {"label": "Ranged Damage", "key": "monster_ranged_damage", "type": "int", "value": Config.monster_ranged_damage, "min_value": 1, "max_value": 50, "step": 1, "options": []},
-            ]
-        },
-        {
-            "title": "Lighting",
-            "properties": [
-                {"label": "Range Mult", "key": "light_range_mult", "type": "float", "value": Config.light_range_mult, "min_value": 0.1, "max_value": 5.0, "step": 0.1, "options": []},
-                {"label": "Spacing", "key": "point_light_spacing", "type": "int", "value": theme.point_light_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
-            ]
-        },
-        {
-            "title": "Props",
-            "properties": [
-                {"label": "Density", "key": "prop_density", "type": "float", "value": theme.prop_density, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
-                {"label": "Pillar Chance", "key": "pillar_chance", "type": "float", "value": theme.pillar_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
-                {"label": "Rubble Chance", "key": "rubble_chance", "type": "float", "value": theme.rubble_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
-                {"label": "Beam Spacing", "key": "ceiling_beam_spacing", "type": "int", "value": theme.ceiling_beam_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
-                {"label": "Prop Min", "key": "room_prop_min", "type": "int", "value": theme.room_prop_min, "min_value": 0, "max_value": 5, "step": 1, "options": []},
-                {"label": "Prop Max", "key": "room_prop_max", "type": "int", "value": theme.room_prop_max, "min_value": 0, "max_value": 10, "step": 1, "options": []},
-            ]
-        },
-    ]
+    # Add theme visual props (from ThemeData, not Config)
+    var theme = ThemeManager.active_theme
+    sections.append({
+        "title": "Theme Props",
+        "properties": [
+            {"label": "Prop Density", "key": "prop_density", "type": "float", "value": theme.prop_density, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
+            {"label": "Pillar Chance", "key": "pillar_chance", "type": "float", "value": theme.pillar_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
+            {"label": "Rubble Chance", "key": "rubble_chance", "type": "float", "value": theme.rubble_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
+            {"label": "Beam Spacing", "key": "ceiling_beam_spacing", "type": "int", "value": theme.ceiling_beam_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
+            {"label": "Light Spacing", "key": "point_light_spacing", "type": "int", "value": theme.point_light_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
+            {"label": "Prop Min", "key": "room_prop_min", "type": "int", "value": theme.room_prop_min, "min_value": 0, "max_value": 5, "step": 1, "options": []},
+            {"label": "Prop Max", "key": "room_prop_max", "type": "int", "value": theme.room_prop_max, "min_value": 0, "max_value": 10, "step": 1, "options": []},
+        ]
+    })
+
+    return sections
 
 func _on_property_changed(key: String, value: Variant) -> void:
     if not _stale:
