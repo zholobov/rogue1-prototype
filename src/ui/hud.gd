@@ -43,6 +43,12 @@ var _minimap: Minimap
 # --- FPS counter ---
 var _fps_label: Label
 
+# --- Config panel ---
+var _config_panel: PanelContainer
+var _config_editor: ConfigEditor
+var _config_visible: bool = false
+var _config_keys: Dictionary = {}  # cached set of valid Config property names
+
 # --- Damage flash ---
 var _damage_flash: ColorRect
 
@@ -59,6 +65,7 @@ func _ready() -> void:
 	_build_boss_bar()
 	_build_minimap()
 	_build_fps_counter()
+	_build_config_panel()
 	_apply_theme()
 	ThemeManager.theme_changed.connect(_on_theme_changed)
 
@@ -277,6 +284,92 @@ func _build_fps_counter() -> void:
 	_fps_label.add_theme_font_size_override("font_size", 11)
 	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fps_label)
+
+func _build_config_panel() -> void:
+	# Semi-transparent panel on the right side, toggled with Tab
+	_config_panel = PanelContainer.new()
+	_config_panel.anchor_left = 1.0
+	_config_panel.anchor_top = 0.0
+	_config_panel.anchor_right = 1.0
+	_config_panel.anchor_bottom = 1.0
+	_config_panel.offset_left = -300
+	_config_panel.offset_top = 10
+	_config_panel.offset_right = -10
+	_config_panel.offset_bottom = -10
+	_config_panel.visible = false
+	_config_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.1, 0.85)
+	style.set_corner_radius_all(4)
+	_config_panel.add_theme_stylebox_override("panel", style)
+	add_child(_config_panel)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	_config_panel.add_child(vbox)
+
+	var header = Label.new()
+	header.text = "CONFIG [Tab to close]"
+	header.add_theme_font_size_override("font_size", 12)
+	header.add_theme_color_override("font_color", ThemeManager.active_theme.ui_accent_color)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(header)
+
+	# Cache valid Config property names for fast lookup
+	for prop in Config.get_property_list():
+		if prop.usage & PROPERTY_USAGE_EDITOR:
+			_config_keys[prop.name] = true
+
+	_config_editor = ConfigEditor.new()
+	_config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var sections = ConfigSectionBuilder.from_object(Config)
+	_config_editor.setup(sections)
+	_config_editor.property_changed.connect(_on_config_changed)
+	vbox.add_child(_config_editor)
+
+	var btn_row = HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 4)
+	vbox.add_child(btn_row)
+
+	var copy_btn = Button.new()
+	copy_btn.text = "Copy"
+	copy_btn.add_theme_font_size_override("font_size", 10)
+	copy_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy_btn.pressed.connect(func(): _config_editor.copy_to_clipboard())
+	btn_row.add_child(copy_btn)
+
+	var paste_btn = Button.new()
+	paste_btn.text = "Paste"
+	paste_btn.add_theme_font_size_override("font_size", 10)
+	paste_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	paste_btn.pressed.connect(func():
+		_config_editor.paste_from_clipboard()
+	)
+	btn_row.add_child(paste_btn)
+
+	var reset_btn = Button.new()
+	reset_btn.text = "Reset"
+	reset_btn.add_theme_font_size_override("font_size", 10)
+	reset_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	reset_btn.pressed.connect(func(): _config_editor.reset_all())
+	btn_row.add_child(reset_btn)
+
+func _on_config_changed(key: String, value: Variant) -> void:
+	if _config_keys.has(key):
+		Config.set(key, value)
+
+func _toggle_config_panel() -> void:
+	_config_visible = not _config_visible
+	_config_panel.visible = _config_visible
+	if _config_visible:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+		_toggle_config_panel()
+		get_viewport().set_input_as_handled()
 
 # ========== PUBLIC API ==========
 
