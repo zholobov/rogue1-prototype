@@ -151,8 +151,9 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 					_add_torch(root, world_pos_torch, tile_size, c.dir, light_index)
 			light_index += 1
 
-	# Props (pillars, rubble, room props)
-	if ThemeManager.active_theme.prop_density > 0.0:
+	# Props (pillars, rubble, room props) — only for default wall style (stone dungeon)
+	# Folk biomes get their detail from styled wall builders, not generic stone props
+	if ThemeManager.active_theme.prop_density > 0.0 and ThemeManager.active_theme.wall_style == "default":
 		var room_spawn_positions: Array[Vector3] = []
 		for child in root.get_children():
 			if child.is_in_group("spawn_point"):
@@ -264,7 +265,7 @@ func _add_floor(parent: Node3D, pos: Vector3, tile_size: float, mat: StandardMat
 	col.shape = box_shape
 	floor_body.add_child(col)
 
-	if ThemeManager.active_theme.prop_density > 0.0:
+	if ThemeManager.active_theme.prop_density > 0.0 and ThemeManager.active_theme.wall_style == "default":
 		_add_slab_grid(floor_body, tile_size, mat)
 	else:
 		var mesh_inst = MeshInstance3D.new()
