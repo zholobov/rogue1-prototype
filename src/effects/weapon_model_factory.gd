@@ -27,7 +27,7 @@ static func create_world_model(weapon_index: int, element: String) -> Node3D:
         3: root = _build_water_gun_world()
         _: return null
     root.name = "WeaponWorldModel"
-    root.scale = Vector3(0.6, 0.6, 0.6)
+    root.scale = Vector3(1.2, 1.2, 1.2)
     _apply_element_glow(root, element)
     return root
 
