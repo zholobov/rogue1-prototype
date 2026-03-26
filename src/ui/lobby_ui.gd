@@ -5,13 +5,13 @@ signal meta_upgrades_pressed()
 signal themes_pressed()
 signal playground_pressed()
 
-@onready var lobby_input: LineEdit = $VBoxContainer/LobbyInput
-@onready var solo_button: Button = $VBoxContainer/SoloButton
-@onready var host_button: Button = $VBoxContainer/HostButton
-@onready var join_button: Button = $VBoxContainer/JoinButton
-@onready var start_button: Button = $VBoxContainer/StartButton
-@onready var status_label: Label = $VBoxContainer/StatusLabel
-@onready var player_list: ItemList = $VBoxContainer/PlayerList
+@onready var lobby_input: LineEdit = $MarginContainer/RootVBox/Columns/RightColumn/LobbyInput
+@onready var solo_button: Button = $MarginContainer/RootVBox/Columns/LeftColumn/SoloButton
+@onready var host_button: Button = $MarginContainer/RootVBox/Columns/RightColumn/HostButton
+@onready var join_button: Button = $MarginContainer/RootVBox/Columns/RightColumn/JoinButton
+@onready var start_button: Button = $MarginContainer/RootVBox/Columns/RightColumn/StartButton
+@onready var status_label: Label = $MarginContainer/RootVBox/Columns/RightColumn/StatusLabel
+@onready var player_list: ItemList = $MarginContainer/RootVBox/Columns/RightColumn/PlayerList
 
 func _ready():
 	var bg = ColorRect.new()
@@ -19,7 +19,7 @@ func _ready():
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
-	move_child(bg, 0)  # behind everything
+	move_child(bg, 0)
 
 	solo_button.pressed.connect(_on_solo)
 	host_button.pressed.connect(_on_host)
@@ -30,28 +30,41 @@ func _ready():
 	Net.player_disconnected.connect(_on_player_disconnected)
 	Net.connection_established.connect(_on_connected)
 
-	# Meta-progression display
-	var vbox = $VBoxContainer
+	# Style headers
+	var theme = ThemeManager.active_theme
+	for header in [
+		$MarginContainer/RootVBox/Title,
+		$MarginContainer/RootVBox/Columns/LeftColumn/SoloHeader,
+		$MarginContainer/RootVBox/Columns/LeftColumn/FeaturesHeader,
+		$MarginContainer/RootVBox/Columns/RightColumn/MultiplayerHeader,
+	]:
+		header.add_theme_color_override("font_color", theme.ui_accent_color)
+
+	$MarginContainer/RootVBox/Title.add_theme_font_size_override("font_size", 20)
+
+	# Left column: solo features
+	var left = $MarginContainer/RootVBox/Columns/LeftColumn
 	if MetaSave:
 		var meta_label = Label.new()
 		meta_label.text = "Meta-Currency: %d | Best Loop: %d" % [MetaSave.meta_currency, MetaSave.best_loop]
 		meta_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vbox.add_child(meta_label)
+		meta_label.add_theme_font_size_override("font_size", 11)
+		left.add_child(meta_label)
 
 		var upgrades_btn = Button.new()
 		upgrades_btn.text = "Permanent Upgrades"
 		upgrades_btn.pressed.connect(_on_meta_upgrades)
-		vbox.add_child(upgrades_btn)
+		left.add_child(upgrades_btn)
 
 	var themes_btn = Button.new()
 	themes_btn.text = "Themes"
 	themes_btn.pressed.connect(_on_themes)
-	vbox.add_child(themes_btn)
+	left.add_child(themes_btn)
 
 	var playground_btn = Button.new()
 	playground_btn.text = "Level Playground"
 	playground_btn.pressed.connect(_on_playground)
-	vbox.add_child(playground_btn)
+	left.add_child(playground_btn)
 
 func _on_solo():
 	game_started.emit(true)
