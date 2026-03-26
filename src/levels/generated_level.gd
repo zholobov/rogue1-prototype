@@ -207,14 +207,16 @@ func _on_actor_died(entity: Entity) -> void:
         if health and RunManager:
             RunManager.register_kill(health.max_health)
 
-        # Boss death = immediate level clear
-        if entity.get_component(C_BossAI):
+        monsters_remaining -= 1
+
+        # Boss death = immediate level clear (only actual boss, not armed regular monsters)
+        var boss_ai = entity.get_component(C_BossAI)
+        if boss_ai and boss_ai.is_boss:
             print("[GeneratedLevel] Boss defeated!")
             if RunManager:
                 RunManager.on_level_cleared()
             return
 
-        monsters_remaining -= 1
         if monsters_remaining <= 0 and not _is_boss_level:
             print("[GeneratedLevel] All monsters defeated!")
             if RunManager:

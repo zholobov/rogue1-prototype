@@ -157,6 +157,7 @@ func setup_as_boss(loop: int) -> void:
     var boss_ai := ecs_entity.get_component(C_BossAI) as C_BossAI
     if boss_ai:
         boss_ai.projectile_damage = 15 + (5 * loop)
+        boss_ai.is_boss = true
 
     if _health_bar_node:
         _health_bar_node.position = Vector3(0, 2.4, 0)
