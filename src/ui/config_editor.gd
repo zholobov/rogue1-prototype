@@ -27,7 +27,7 @@ func setup(sections: Array) -> void:
         _build_section(section)
 
     _apply_theme()
-    if ThemeManager:
+    if ThemeManager and not ThemeManager.theme_changed.is_connected(_on_theme_changed):
         ThemeManager.theme_changed.connect(_on_theme_changed)
 
 func get_values() -> Dictionary:
