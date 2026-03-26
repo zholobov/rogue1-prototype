@@ -171,18 +171,6 @@ func _build_ui() -> void:
 
     # Auto-generate on open
     _on_generate()
-    # Deferred size check
-    call_deferred("_debug_layout", left_vbox)
-
-func _debug_layout(left: VBoxContainer) -> void:
-    print("[Layout] self.size=", size, " pos=", position)
-    print("[Layout] left.size=", left.size, " pos=", left.position)
-    print("[Layout] config_editor.size=", _config_editor.size, " children=", _config_editor.get_child_count())
-    if _config_editor.get_child_count() > 0:
-        var root = _config_editor.get_child(0)
-        print("[Layout] config_editor.child[0].size=", root.size, " children=", root.get_child_count())
-    print("[Layout] right.size=", _right_panel.size)
-    print("[Layout] grid.size=", _grid_preview.size)
 
 func _build_sections() -> Array:
     var theme = ThemeManager.active_theme
