@@ -74,7 +74,7 @@ func _build_ui() -> void:
     var left_vbox = VBoxContainer.new()
     left_vbox.custom_minimum_size.x = 220
     left_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    left_vbox.stretch_ratio = 1.0  # Left gets 1 part, right gets 3 parts
+    left_vbox.size_flags_stretch_ratio = 1.0  # Left gets 1 part, right gets 3 parts
     left_vbox.add_theme_constant_override("separation", 4)
     hbox_main.add_child(left_vbox)
 
@@ -124,7 +124,7 @@ func _build_ui() -> void:
     _right_panel = VBoxContainer.new()
     _right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _right_panel.stretch_ratio = 3.0  # Take 3x more space than left panel
+    _right_panel.size_flags_stretch_ratio = 3.0  # Take 3x more space than left panel
     _right_panel.add_theme_constant_override("separation", 4)
     hbox_main.add_child(_right_panel)
 
