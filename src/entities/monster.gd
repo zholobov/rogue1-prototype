@@ -38,11 +38,14 @@ func _setup_visuals() -> void:
     # Scene override: if theme provides a monster scene, use it instead of procedural
     var scene_override := ThemeManager.get_monster_scene(visual_variant)
     if scene_override:
-        # Hide ALL original meshes from the base monster.tscn
+        # Remove ALL original meshes from the base monster.tscn immediately
+        var to_remove: Array[Node] = []
         for child in get_children():
             if child is MeshInstance3D:
-                child.visible = false
-                child.queue_free()
+                to_remove.append(child)
+        for child in to_remove:
+            remove_child(child)
+            child.free()
         var visual_root := scene_override.instantiate() as Node3D
         visual_root.name = "VisualRoot"
         add_child(visual_root)
@@ -111,11 +114,15 @@ func setup_as_boss(loop: int) -> void:
     # Check for boss scene override
     var boss_scene := ThemeManager.get_monster_scene("boss")
     if boss_scene:
-        # Remove existing visual children added by _setup_visuals
+        # Remove ALL visual children added by _setup_visuals immediately
+        var to_remove: Array[Node] = []
         for child in get_children():
             if child is Node3D and child != _health_bar_node and child != ecs_entity:
                 if child is MeshInstance3D or child.name == "VisualRoot":
-                    child.queue_free()
+                    to_remove.append(child)
+        for child in to_remove:
+            remove_child(child)
+            child.free()
         var visual_root := boss_scene.instantiate() as Node3D
         visual_root.name = "VisualRoot"
         add_child(visual_root)
