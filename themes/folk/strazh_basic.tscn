@@ -1,0 +1,151 @@
+[gd_scene load_steps=34 format=3]
+
+[sub_resource type="StandardMaterial3D" id="1"]
+albedo_color = Color(0.55, 0.3, 0.08, 1)
+emission_enabled = true
+emission = Color(0.4, 0.25, 0.05, 1)
+emission_energy_multiplier = 1.0
+
+[sub_resource type="StandardMaterial3D" id="2"]
+albedo_color = Color(0, 0, 0, 1)
+emission_enabled = true
+emission = Color(0.8, 0.13, 0.0, 1)
+emission_energy_multiplier = 3.5
+
+[sub_resource type="StandardMaterial3D" id="3"]
+albedo_color = Color(0.6, 0.45, 0.1, 1)
+emission_enabled = true
+emission = Color(0.85, 0.65, 0.2, 1)
+emission_energy_multiplier = 2.0
+
+[sub_resource type="StandardMaterial3D" id="4"]
+albedo_color = Color(0.22, 0.14, 0.06, 1)
+emission_enabled = false
+
+[sub_resource type="StandardMaterial3D" id="5"]
+albedo_color = Color(0.55, 0.55, 0.58, 1)
+emission_enabled = false
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="6"]
+size = Vector3(0.8, 1.0, 0.6)
+
+[sub_resource type="BoxMesh" id="7"]
+size = Vector3(0.52, 0.42, 0.46)
+
+[sub_resource type="BoxMesh" id="8"]
+size = Vector3(0.62, 0.06, 0.48)
+
+[sub_resource type="BoxMesh" id="9"]
+size = Vector3(0.56, 0.06, 0.08)
+
+[sub_resource type="BoxMesh" id="10"]
+size = Vector3(0.22, 0.85, 0.1)
+
+[sub_resource type="SphereMesh" id="11"]
+radius = 0.1
+height = 0.2
+
+[sub_resource type="BoxMesh" id="12"]
+size = Vector3(0.08, 0.75, 0.08)
+
+[sub_resource type="BoxMesh" id="13"]
+size = Vector3(0.35, 0.42, 0.28)
+
+[sub_resource type="BoxMesh" id="14"]
+size = Vector3(0.06, 0.42, 0.3)
+
+[sub_resource type="BoxMesh" id="15"]
+size = Vector3(0.35, 0.42, 0.28)
+
+[sub_resource type="BoxMesh" id="16"]
+size = Vector3(0.06, 0.42, 0.3)
+
+[sub_resource type="BoxMesh" id="17"]
+size = Vector3(0.82, 0.06, 0.62)
+
+[sub_resource type="SphereMesh" id="18"]
+radius = 0.055
+height = 0.11
+
+[sub_resource type="SphereMesh" id="19"]
+radius = 0.055
+height = 0.11
+
+[node name="StrazhBasic" type="Node3D"]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("6")
+material_override = SubResource("1")
+
+[node name="HelmetMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("7")
+material_override = SubResource("4")
+
+[node name="HelmetRim" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+mesh = SubResource("8")
+material_override = SubResource("4")
+
+[node name="VisorMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, -0.26)
+mesh = SubResource("9")
+material_override = SubResource("4")
+
+[node name="ShieldMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 0.55, -0.25)
+mesh = SubResource("10")
+material_override = SubResource("4")
+
+[node name="ShieldOrb" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 0.6, -0.31)
+mesh = SubResource("11")
+material_override = SubResource("3")
+
+[node name="SwordMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.5, -0.18)
+mesh = SubResource("12")
+material_override = SubResource("5")
+
+[node name="LegL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.22, 0)
+mesh = SubResource("13")
+material_override = SubResource("4")
+
+[node name="LegLStrip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.26, -0.15)
+mesh = SubResource("14")
+material_override = SubResource("1")
+
+[node name="LegR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.22, 0)
+mesh = SubResource("15")
+material_override = SubResource("4")
+
+[node name="LegRStrip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.26, -0.15)
+mesh = SubResource("16")
+material_override = SubResource("1")
+
+[node name="GoldBelt" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0)
+mesh = SubResource("17")
+material_override = SubResource("3")
+
+[node name="EyeMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 1.2, -0.25)
+mesh = SubResource("18")
+material_override = SubResource("2")
+
+[node name="EyeR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.2, -0.25)
+mesh = SubResource("19")
+material_override = SubResource("2")
+
+[node name="HealthBarAnchor" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="WeaponMount" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.5, -0.5)
