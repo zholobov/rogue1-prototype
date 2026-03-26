@@ -189,7 +189,14 @@ func _setup_health_bar() -> void:
     var theme := ThemeManager.active_theme
 
     _health_bar_node = Node3D.new()
-    _health_bar_node.position = Vector3(0, 1.2, 0)
+    # Use HealthBarAnchor from scene override if available
+    var anchor_y := 1.2
+    var visual_root = get_node_or_null("VisualRoot")
+    if visual_root:
+        var anchor = visual_root.get_node_or_null("HealthBarAnchor")
+        if anchor:
+            anchor_y = anchor.position.y
+    _health_bar_node.position = Vector3(0, anchor_y, 0)
     _health_bar_node.visible = false
     add_child(_health_bar_node)
 
