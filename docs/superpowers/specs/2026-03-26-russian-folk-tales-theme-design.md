@@ -2,14 +2,14 @@
 
 ## Goal
 
-Create a three-biome theme inspired by Russian folk tales: Dark Forest (Baba Yaga), Golden Palace (Bylina), and Winter Realm (Skazka). Each biome has distinct colors, materials, monsters, and atmosphere. Forest and Winter have open sky (ProceduralSkyMaterial, no ceiling). Golden Palace has ceiling. Monsters and level geometry are triple-detail (~25-40 primitives per monster, rich wall/floor/prop composition).
+Create a three-biome theme inspired by Russian folk tales: Dark Forest (Baba Yaga), Golden Palace (Bylina), and Winter Realm (Skazka). Each biome has distinct colors, materials, monsters, atmosphere, and **distinctive wall geometry built from primitives**. Forest and Winter have open sky (ProceduralSkyMaterial, no ceiling). Golden Palace has ceiling. Monsters are triple-detail (~25-40 primitives). Each biome has **3 monster types** (basic + 2 variants) plus a boss.
 
 ## Scope
 
-- 3 biome ThemeData definitions with full 71-property configurations
-- 6 monster scenes (basic + boss per biome)
-- ThemeData gains `has_ceiling: bool` and `sky_config: Dictionary`
-- LevelBuilder modified to skip ceiling and add sky when `has_ceiling == false`
+- 3 biome ThemeData definitions with full property configurations
+- 18 monster scenes (3 basic types + boss per biome = 4 per biome × 3 biomes)
+- ThemeData gains `has_ceiling: bool`, `sky_config: Dictionary`, `wall_style: String`
+- LevelBuilder modified to skip ceiling and use biome-specific wall geometry
 - GeneratedLevel modified to set up ProceduralSkyMaterial for open-sky biomes
 - Theme factory file + registration in ThemeManager
 
@@ -40,9 +40,33 @@ ProceduralSkyMaterial parameters used when `has_ceiling == false`:
 
 Empty dict = no sky (use existing background_color). Only read by GeneratedLevel when `has_ceiling == false`.
 
+### `wall_style: String = "default"`
+
+Controls which wall geometry builder to use. Options:
+- `"default"` — flat box walls (existing behavior, used by Neon/Stone)
+- `"forest_thicket"` — dense tree trunk cylinders + branch crossbeams + knots + moss + root tangles
+- `"palace_ornate"` — log wall base + pilaster columns with capitals + gold trim + recessed panels + ornament spheres + baseboard
+- `"ice_crystal"` — snow hill base (irregular stacked boxes) + crystal ice spires (tall angular rotated boxes) + frost spheres + icicles
+
+### `monster_scenes: Dictionary`
+
+Expanded from 2 entries to 4:
+```gdscript
+{
+    "basic": PackedScene,    # primary monster type (most common)
+    "variant1": PackedScene, # second monster type
+    "variant2": PackedScene, # third monster type
+    "boss": PackedScene,
+}
+```
+
+Monster spawning in `generated_level.gd` randomly picks from "basic", "variant1", "variant2" for each spawn (weighted: 50% basic, 25% variant1, 25% variant2). For themes with only "basic" and "boss" (Neon, Stone), the fallback is 100% basic.
+
 ---
 
 ## 2. LevelBuilder Changes
+
+### Ceiling
 
 In `build()`, wrap ceiling creation in a check:
 
@@ -51,7 +75,42 @@ if ThemeManager.active_theme.has_ceiling:
     _add_ceiling(...)
 ```
 
-No other changes needed — walls, floors, lights, props all work as before.
+### Wall Geometry
+
+Replace `_add_wall_block()` dispatch based on `wall_style`:
+
+```gdscript
+match ThemeManager.active_theme.wall_style:
+    "forest_thicket": _add_forest_wall(root, x, y, tile_size)
+    "palace_ornate": _add_palace_wall(root, x, y, tile_size)
+    "ice_crystal": _add_ice_wall(root, x, y, tile_size)
+    _: _add_wall_block(root, x, y, tile_size)  # existing default
+```
+
+**`_add_forest_wall()` (~12-16 primitives per wall tile):**
+- 2-3 vertical CylinderMesh "trunks" (varying radius 0.15-0.25, full wall height), bark brown material
+- 1-2 horizontal BoxMesh "branch crossbeams" between trunks, angled slightly
+- 1-2 SphereMesh "knots" on trunk surfaces (r=0.06-0.1)
+- 1-2 small BoxMesh "moss patches" with green emission on trunks
+- 1 flat BoxMesh "root tangle" at base (wide, low, dark brown)
+
+**`_add_palace_wall()` (~18-24 primitives per wall tile):**
+- 1 base wall BoxMesh (full tile width × wall height)
+- 4-5 thin BoxMesh "horizontal log lines" across wall face
+- 1-2 BoxMesh "pilaster columns" (narrow, full height) at tile edges
+- 1-2 BoxMesh "column capitals" (wider box at top of each pilaster)
+- 1-2 BoxMesh "gold trim strips" (thin, gold emissive material) below capitals
+- 1 recessed BoxMesh "ornamental panel" (slightly inset from wall face)
+- 1 SphereMesh "gold ornament" (gold emissive) centered in panel
+- 1 BoxMesh "baseboard" at bottom with gold accent strip
+
+**`_add_ice_wall()` (~14-20 primitives per wall tile):**
+- 2-3 BoxMesh "snow mounds" at base (varying heights 0.3-0.8, wide, white material, low roughness)
+- 2-3 tall BoxMesh "ice crystals" (narrow, tall, slightly rotated, ice blue material, low roughness 0.2)
+- 1-2 SphereMesh "frost sparkles" (tiny, frost-white emission) on crystal surfaces
+- 2-3 CylinderMesh "icicles" hanging from top edge (thin, tapered via scale, translucent blue)
+
+All wall builders receive the same parameters (root node, grid x/y, tile_size) and use `ThemeManager.active_theme` for material colors. Existing themes use `wall_style = "default"` and are completely unchanged.
 
 ---
 
@@ -366,104 +425,37 @@ All 3 biomes share these values:
 
 ## 8. Monster Scene Structures
 
-All monsters use triple detail (~25-40 primitives). Each scene has required nodes: `BodyMesh`, `EyeMesh`, `HealthBarAnchor`, `WeaponMount`.
+All monsters use triple detail (~20-40 primitives). Each scene has required nodes: `BodyMesh`, `EyeMesh`, `HealthBarAnchor`, `WeaponMount`. Each biome has 3 monster types (basic, variant1, variant2) plus a boss.
 
-### 8a. Leshy Basic (~25 primitives)
+### Dark Forest Monsters
 
-```
-LeshyBasic (Node3D)
-├── BodyMesh (BoxMesh 0.7×1.4×0.6) — bark green
-├── HeadMesh (BoxMesh 0.45×0.35×0.4) — at y=0.85
-├── BarkLine1-4 (BoxMesh thin strips on body) — dark texture lines
-├── ArmUpperLeft (BoxMesh 0.3×0.12×0.1, angled) — branch
-├── ArmLowerLeft (BoxMesh 0.25×0.1×0.08, angled) — branch tip
-├── ArmUpperRight + ArmLowerRight — mirrored
-├── LegLeft (BoxMesh 0.15×0.35×0.12) — root
-├── LegRight — mirrored
-├── EyeMesh (SphereMesh r=0.06 at y=0.9) — firebird orange emission
-├── EyeRight (SphereMesh r=0.06)
-├── MossPatch1-3 (BoxMesh thin emissive green patches on body)
-├── Knot1-4 (SphereMesh r=0.04 on trunk) — gnarled bumps
-├── HealthBarAnchor (Marker3D at y=1.2)
-└── WeaponMount (Marker3D at 0.6, 0.5, -0.5)
-```
+**8a. Leshy — Tree Spirit (basic, ~25 primitives):** Trunk body (tall box 0.7×1.4×0.6, bark green). Head box on top with bark line strips. Branch arms (2 angled boxes per arm). Root legs (2 tapered boxes). 2 firebird orange eye spheres. 3 moss patch emissive boxes on body. 4 knot spheres on trunk. HealthBarAnchor y=1.2, WeaponMount (0.6, 0.5, -0.5).
 
-### 8b. Leshy Boss (~35 primitives)
+**8b. Kikimora — Swamp Hag (variant1, ~20 primitives):** Low wide ellipsoid body (box 0.9×0.6×0.7, dark swamp green). 4 spindly leg-arms (thin angled boxes, 2 per side at different angles). 2 short legs. Large bulging eye spheres (firebird orange, r=0.08). Hunched posture (body angled forward). Fast + low profile. HealthBarAnchor y=0.8, WeaponMount (0.5, 0.3, -0.4).
 
-Same as basic plus:
-- 4 antler branches (angled boxes on head)
-- Glowing chest cavity (emissive green box inset)
-- 2 extra root tendrils (trailing boxes)
-- HealthBarAnchor at y=1.8
-- WeaponMount at 0.8, 0.6, -0.6
+**8c. Vodyanoy — Water Toad (variant2, ~22 primitives):** Bulky squat body (wide box 1.1×0.8×0.9, dark teal-green). Broad flat head on top. 2 large bulging eye spheres sitting on top of head. Wide flat arms (stubby boxes). Thick legs. Belly stripe (lighter color box). Wart bumps (4-5 small spheres). Tanky + slow. HealthBarAnchor y=1.0, WeaponMount (0.6, 0.3, -0.5).
 
-### 8c. Zmey Basic (~28 primitives)
+**8d. Leshy Boss (~35 primitives):** Same as Leshy basic plus: 4 antler branches (angled boxes on head), glowing chest cavity (emissive green box inset), 2 extra root tendrils. HealthBarAnchor y=1.8, WeaponMount (0.8, 0.6, -0.6).
 
-```
-ZmeyBasic (Node3D)
-├── BodyMesh (BoxMesh 1.0×0.9×0.8) — bronze
-├── ArmorPlate1-4 (BoxMesh thin horizontal strips) — dark bronze
-├── HeadMesh (BoxMesh 0.4×0.35×0.45) — at y=0.6, z=-0.3
-├── JawMesh (BoxMesh 0.3×0.1×0.2) — extends forward from head
-├── HornLeft (CylinderMesh r=0.05, h=0.2, angled)
-├── HornRight — mirrored
-├── ShieldArmLeft (BoxMesh 0.3×0.35×0.08) — flat shield
-├── ForearmLeft (BoxMesh 0.1×0.25×0.1) — behind shield
-├── ShieldArmRight + ForearmRight — mirrored
-├── LegLeft (BoxMesh 0.18×0.3×0.15) — armored leg
-├── LegRight — mirrored
-├── LegStrip1-2 (BoxMesh dark strips on legs) — armor detail
-├── TailSeg1 (BoxMesh 0.15×0.12×0.2) — tail
-├── TailSeg2 (BoxMesh 0.1×0.08×0.15) — tail tip
-├── EyeMesh (SphereMesh r=0.06) — warrior red emission
-├── EyeRight (SphereMesh r=0.06)
-├── Rivet1-6 (SphereMesh r=0.025, gold emissive) — joint details
-├── HealthBarAnchor (Marker3D at y=1.1)
-└── WeaponMount (Marker3D at 0.7, 0.4, -0.5)
-```
+### Golden Palace Monsters
 
-### 8d. Zmey Boss (~40 primitives)
+**8e. Zmey — Armored Dragon (basic, ~28 primitives):** Wide armored body (box 1.0×0.9×0.8, bronze). 4 armor plate strips (dark horizontal boxes). Head box with jaw extension. 2 horn cylinders. Shield arms (flat wide boxes) + forearm boxes. Armored legs with strips. 2-segment tail. 2 warrior red eye spheres. 6 gold rivet spheres at joints. HealthBarAnchor y=1.1, WeaponMount (0.7, 0.4, -0.5).
 
-Three-headed dragon. Same structure plus:
-- 2 extra heads (HeadMesh2, HeadMesh3) offset left/right
-- 6 total horns, 6 total eyes
-- Glowing gold belly plate (emissive box inset)
-- Wing-like arm plates (wider shields)
-- Spiked tail tip (2 angled boxes)
-- HealthBarAnchor at y=1.7
-- WeaponMount at 0.9, 0.5, -0.6
+**8f. Koschei — The Deathless (variant1, ~24 primitives):** Thin skeletal body (narrow box 0.4×1.3×0.3, bone-brown). Small head box with gold crown (box on top). 3 rib strips across torso. Thin long arms (single boxes). Thin legs. Glowing gold chest gem (emissive sphere). 2 warrior red eyes. Cape box behind body (dark, thin). Ranged caster type. HealthBarAnchor y=1.2, WeaponMount (0.5, 0.6, -0.4).
 
-### 8e. Morozko Basic (~26 primitives)
+**8g. Strazh — Palace Guard (variant2, ~22 primitives):** Stocky armored body (box 0.8×1.0×0.6, dark wood-brown). Helmet head (box with wider top rim). Large shield on left (tall flat box with gold circle ornament). Sword on right (thin tall box, metallic). Armored legs. 2 warrior red eyes under helmet visor. Gold belt accent. HealthBarAnchor y=1.1, WeaponMount (0.7, 0.5, -0.5).
 
-```
-MorozkoBasic (Node3D)
-├── BodyMesh (BoxMesh 0.8×1.2×0.7) — ice blue
-├── FacetLine1-4 (BoxMesh thin diagonal strips) — crystal crack pattern
-├── HeadMesh (BoxMesh 0.35×0.35×0.35, rotated 45° on Y) — diamond shape
-├── CrownSpike1-3 (CylinderMesh r=0.03, h=0.2) — ice crown
-├── ArmUpperLeft (BoxMesh 0.25×0.12×0.08, sharp angle) — ice shard
-├── ArmLowerLeft (BoxMesh 0.2×0.1×0.06) — shard tip
-├── ArmUpperRight + ArmLowerRight — mirrored
-├── LegLeft (BoxMesh 0.14×0.35×0.12) — deep blue
-├── LegRight — mirrored
-├── EyeMesh (SphereMesh r=0.06) — folk red emission (4.0)
-├── EyeRight (SphereMesh r=0.06)
-├── FrostOrb1-3 (SphereMesh r=0.03, frost-white emissive) — orbiting aura
-├── ShoulderCrystal1-2 (BoxMesh small, rotated) — shoulder decoration
-├── HealthBarAnchor (Marker3D at y=1.3)
-└── WeaponMount (Marker3D at 0.6, 0.4, -0.5)
-```
+**8h. Zmey Boss — Three-Headed Dragon (~40 primitives):** Same as Zmey basic plus: 2 extra heads (3 total, offset left/right), 6 horns, 6 eyes. Glowing gold belly plate. Wing-like wider arm plates. Spiked tail tip (2 angled boxes). HealthBarAnchor y=1.7, WeaponMount (0.9, 0.5, -0.6).
 
-### 8f. Morozko Boss (~38 primitives)
+### Winter Realm Monsters
 
-Same structure plus:
-- Full ice crown (6 spike cylinders)
-- Cape (large thin box behind body, deep blue + frost edge emission)
-- Ice gauntlets (larger arm boxes with shard extensions)
-- Floating ice shards (2-3 small rotated boxes)
-- Chest rune (emissive folk-red box inset — contrast piece)
-- HealthBarAnchor at y=1.8
-- WeaponMount at 0.8, 0.5, -0.6
+**8i. Morozko — Frost Spirit (basic, ~26 primitives):** Angular crystal body (box 0.8×1.2×0.7, ice blue, low roughness). 4 diagonal facet line boxes (crystal crack pattern). Diamond head (box rotated 45° on Y). 3 crown spike cylinders. Angular shard arms (2 boxes per arm). Tapered legs (deep blue). 2 folk red eye spheres (high emission 4.0). 3 frost orb spheres. 2 shoulder crystal boxes. HealthBarAnchor y=1.3, WeaponMount (0.6, 0.4, -0.5).
+
+**8j. Snegurochka — Ice Maiden (variant1, ~22 primitives):** Tall slender body (box 0.5×1.3×0.4, pale ice blue). Rounded head (ellipsoid box). Ice veil details (thin boxes on head sides). Graceful arms with ice orb spheres in hands (frost-white emission). Slender legs. 2 folk red eyes. Frost particle spheres near body. Ranged ice type. HealthBarAnchor y=1.2, WeaponMount (0.5, 0.5, -0.4).
+
+**8k. Medved — Ice Bear (variant2, ~26 primitives):** Massive wide body (box 1.2×0.9×1.0, blue-grey). Broad head with rounded ears (2 small spheres). 2 frost armor plate strips across back. Thick powerful legs (4 wide boxes). Icicle claws (4 thin cylinders on front legs, ice blue). 2 folk red eyes. Heavy tank type. HealthBarAnchor y=1.1, WeaponMount (0.7, 0.3, -0.6).
+
+**8l. Morozko Boss (~38 primitives):** Same as Morozko basic plus: full ice crown (6 spike cylinders), cape (large thin box, deep blue + frost edge emission), ice gauntlets, floating ice shards (2-3 rotated boxes), chest rune (emissive folk-red box inset). HealthBarAnchor y=1.8, WeaponMount (0.8, 0.5, -0.6).
 
 ---
 
@@ -471,19 +463,25 @@ Same structure plus:
 
 | File | Responsibility |
 |---|---|
-| `themes/folk/folk_theme.gd` | Factory: creates 3 ThemeData biomes, returns ThemeGroup |
-| `themes/folk/leshy_basic.tscn` | Dark Forest basic monster scene |
-| `themes/folk/leshy_boss.tscn` | Dark Forest boss monster scene |
-| `themes/folk/zmey_basic.tscn` | Golden Palace basic monster scene |
-| `themes/folk/zmey_boss.tscn` | Golden Palace boss monster scene |
-| `themes/folk/morozko_basic.tscn` | Winter Realm basic monster scene |
-| `themes/folk/morozko_boss.tscn` | Winter Realm boss monster scene |
+| `themes/folk/folk_theme.gd` | Factory: creates 3 ThemeData biomes, registers as ThemeGroup |
+| `themes/folk/leshy_basic.tscn` | Dark Forest — Leshy (tree spirit) |
+| `themes/folk/kikimora_basic.tscn` | Dark Forest — Kikimora (swamp hag) |
+| `themes/folk/vodyanoy_basic.tscn` | Dark Forest — Vodyanoy (water toad) |
+| `themes/folk/leshy_boss.tscn` | Dark Forest boss |
+| `themes/folk/zmey_basic.tscn` | Golden Palace — Zmey (dragon) |
+| `themes/folk/koschei_basic.tscn` | Golden Palace — Koschei (deathless) |
+| `themes/folk/strazh_basic.tscn` | Golden Palace — Strazh (guard) |
+| `themes/folk/zmey_boss.tscn` | Golden Palace boss (three-headed) |
+| `themes/folk/morozko_basic.tscn` | Winter Realm — Morozko (frost spirit) |
+| `themes/folk/snegurochka_basic.tscn` | Winter Realm — Snegurochka (ice maiden) |
+| `themes/folk/medved_basic.tscn` | Winter Realm — Medved (ice bear) |
+| `themes/folk/morozko_boss.tscn` | Winter Realm boss |
 
 ## 10. Modified Files
 
 | File | Changes |
 |---|---|
-| `src/themes/theme_data.gd` | Add `has_ceiling: bool = true`, `sky_config: Dictionary = {}` |
+| `src/themes/theme_data.gd` | Add `has_ceiling: bool`, `sky_config: Dictionary`, `wall_style: String` |
 | `src/themes/theme_manager.gd` | Register folk theme group in `_load_themes()` |
-| `src/generation/level_builder.gd` | Skip ceiling when `has_ceiling == false` |
-| `src/levels/generated_level.gd` | Set up ProceduralSkyMaterial for open-sky biomes |
+| `src/generation/level_builder.gd` | Skip ceiling when `has_ceiling == false`; wall style dispatch to forest/palace/ice builders |
+| `src/levels/generated_level.gd` | ProceduralSkyMaterial for open-sky biomes; monster variant spawning (basic/variant1/variant2) |
