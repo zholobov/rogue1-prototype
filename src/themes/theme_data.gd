@@ -3,6 +3,7 @@ extends Resource
 
 # --- Meta ---
 @export var theme_name: String = ""
+@export var biome_name: String = ""
 @export var description: String = ""
 @export var icon: Texture2D
 
