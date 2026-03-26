@@ -190,20 +190,20 @@ static func _create_golden_palace() -> ThemeData:
     t.highlight = Color(0.8, 0.13, 0.0)    # warrior red
     t.danger = Color(0.7, 0.1, 0.1)        # blood red
 
-    # Environment (section 6)
+    # Environment (section 6) — warm bright palace interior
     t.background_color = Color(0.06, 0.04, 0.02)
-    t.ambient_color = Color(0.2, 0.15, 0.08)
-    t.ambient_energy = 0.2
-    t.fog_color = Color(0.1, 0.07, 0.03)
-    t.fog_density = 0.015
-    t.fog_depth_begin = 4.0
-    t.fog_depth_end = 35.0
-    t.directional_light_color = Color(0.4, 0.3, 0.15)
-    t.directional_light_energy = 0.4
+    t.ambient_color = Color(0.35, 0.25, 0.15)
+    t.ambient_energy = 0.6
+    t.fog_color = Color(0.15, 0.1, 0.05)
+    t.fog_density = 0.01
+    t.fog_depth_begin = 6.0
+    t.fog_depth_end = 40.0
+    t.directional_light_color = Color(0.5, 0.4, 0.2)
+    t.directional_light_energy = 0.6
     t.point_light_color = Color(1.0, 0.75, 0.35)
-    t.point_light_energy = 3.0
-    t.point_light_range_mult = 1.5
-    t.point_light_attenuation = 2.0
+    t.point_light_energy = 4.0
+    t.point_light_range_mult = 2.0
+    t.point_light_attenuation = 1.8
     t.point_light_spacing = 2
 
     # Level Structure (section 6)
@@ -221,8 +221,8 @@ static func _create_golden_palace() -> ThemeData:
     t.wall_roughness = 0.9
     t.ceiling_albedo = Color(0.28, 0.2, 0.1)        # wooden ceiling
     t.ceiling_roughness = 0.85
-    t.accent_emission_energy = 2.5
-    t.accent_use_palette = true
+    t.accent_emission_energy = 1.5
+    t.accent_use_palette = false  # no neon strips — palace uses matte gold trim from wall builder
 
     # Textures (section 6)
     t.floor_pattern = {
