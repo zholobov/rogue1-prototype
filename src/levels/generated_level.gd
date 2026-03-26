@@ -9,6 +9,8 @@ var level_data: Dictionary = {}
 var monsters_remaining: int = 0
 var death_system: S_Death
 var _is_boss_level: bool = false
+var _damage_accum: Dictionary = {}   # rounded pos key -> {amount: int, time: float}
+const DAMAGE_NUMBER_INTERVAL := 0.3  # seconds between damage numbers per location
 var _hud: Control
 
 func _ready():
@@ -229,9 +231,32 @@ func _on_actor_died(entity: Entity) -> void:
             RunManager.on_player_died()
 
 func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
+    # Rate-limit: accumulate damage per location, show combined number every 0.3s
+    var key = Vector3i(roundi(pos.x * 2), roundi(pos.y * 2), roundi(pos.z * 2))
+    var now = Time.get_ticks_msec() / 1000.0
+    if _damage_accum.has(key):
+        var entry = _damage_accum[key]
+        entry.amount += amount
+        entry.element = element
+        if now - entry.time < DAMAGE_NUMBER_INTERVAL:
+            return  # Accumulate, don't spawn yet
+        # Time to show accumulated damage
+        amount = entry.amount
+        _damage_accum.erase(key)
+    else:
+        _damage_accum[key] = {"amount": amount, "time": now, "element": element}
+
     var ft = DamageNumberFactory.create(element)
-    add_child(ft)
+    get_tree().current_scene.add_child(ft)
     ft.show_text(pos, "-%d" % amount)
+
+    # Clean up old entries that were never flushed
+    var stale_keys: Array = []
+    for k in _damage_accum:
+        if now - _damage_accum[k].time > 1.0:
+            stale_keys.append(k)
+    for k in stale_keys:
+        _damage_accum.erase(k)
 
 func _find_in_group(node: Node, group: String) -> Array[Node]:
     var found: Array[Node] = []

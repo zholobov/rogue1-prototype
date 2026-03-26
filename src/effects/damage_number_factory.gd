@@ -6,5 +6,6 @@ extends RefCounted
 
 static func create(element: String) -> FloatingText:
     var ft = FloatingText.new()
-    ft.modulate = ThemeManager.active_theme.get_element_color(element)
+    var color = ThemeManager.active_theme.get_element_color(element)
+    ft.add_theme_color_override("font_color", color)
     return ft
