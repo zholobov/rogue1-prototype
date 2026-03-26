@@ -23,6 +23,7 @@ func _ready() -> void:
 
 func _build_ui() -> void:
     var theme = ThemeManager.active_theme
+    var btn_font_size = 11
 
     # Background
     var bg = ColorRect.new()
@@ -31,64 +32,70 @@ func _build_ui() -> void:
     bg.mouse_filter = MOUSE_FILTER_IGNORE
     add_child(bg)
 
+    # Root layout: margin → vbox (top bar + hsplit)
+    var margin = MarginContainer.new()
+    margin.set_anchors_preset(PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 10)
+    margin.add_theme_constant_override("margin_right", 10)
+    margin.add_theme_constant_override("margin_top", 8)
+    margin.add_theme_constant_override("margin_bottom", 8)
+    add_child(margin)
+
+    var root_vbox = VBoxContainer.new()
+    root_vbox.add_theme_constant_override("separation", 6)
+    margin.add_child(root_vbox)
+
     # Top bar
     var top_bar = HBoxContainer.new()
-    top_bar.set_anchors_preset(PRESET_TOP_WIDE)
-    top_bar.offset_top = 8
-    top_bar.offset_bottom = 36
-    top_bar.offset_left = 16
-    top_bar.offset_right = -16
-    add_child(top_bar)
+    root_vbox.add_child(top_bar)
 
     var title = Label.new()
     title.text = "LEVEL GENERATOR PLAYGROUND"
     title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    title.add_theme_font_size_override("font_size", 16)
+    title.add_theme_font_size_override("font_size", 14)
     title.add_theme_color_override("font_color", theme.ui_accent_color)
     top_bar.add_child(title)
 
     var back_btn = Button.new()
     back_btn.text = "Back"
+    back_btn.add_theme_font_size_override("font_size", btn_font_size)
     back_btn.pressed.connect(func(): back_pressed.emit())
     top_bar.add_child(back_btn)
 
     # Main split: left panel + right panel
     var hsplit = HSplitContainer.new()
-    hsplit.anchor_left = 0.0
-    hsplit.anchor_top = 0.0
-    hsplit.anchor_right = 1.0
-    hsplit.anchor_bottom = 1.0
-    hsplit.offset_top = 44
-    hsplit.offset_left = 8
-    hsplit.offset_right = -8
-    hsplit.offset_bottom = -8
-    hsplit.split_offset = 300
-    add_child(hsplit)
+    hsplit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    hsplit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    hsplit.split_offset = 260
+    root_vbox.add_child(hsplit)
 
     # Left panel: config editor + buttons
     var left_vbox = VBoxContainer.new()
-    left_vbox.custom_minimum_size.x = 280
-    left_vbox.add_theme_constant_override("separation", 6)
+    left_vbox.custom_minimum_size.x = 240
+    left_vbox.add_theme_constant_override("separation", 4)
     hsplit.add_child(left_vbox)
 
     _config_editor = ConfigEditor.new()
     _config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _config_editor.custom_minimum_size.y = 100
     _config_editor.setup(_build_sections())
     _config_editor.property_changed.connect(_on_property_changed)
     left_vbox.add_child(_config_editor)
 
-    # Action buttons
+    # Action buttons — compact
     var btn_vbox = VBoxContainer.new()
-    btn_vbox.add_theme_constant_override("separation", 4)
+    btn_vbox.add_theme_constant_override("separation", 2)
     left_vbox.add_child(btn_vbox)
 
     _generate_btn = Button.new()
     _generate_btn.text = "Generate"
+    _generate_btn.add_theme_font_size_override("font_size", btn_font_size)
     _generate_btn.pressed.connect(_on_generate)
     btn_vbox.add_child(_generate_btn)
 
     var random_btn = Button.new()
     random_btn.text = "Randomize Seed"
+    random_btn.add_theme_font_size_override("font_size", btn_font_size)
     random_btn.pressed.connect(_on_randomize_seed)
     btn_vbox.add_child(random_btn)
 
@@ -97,13 +104,15 @@ func _build_ui() -> void:
     btn_vbox.add_child(clipboard_row)
 
     var copy_btn = Button.new()
-    copy_btn.text = "Copy Params"
+    copy_btn.text = "Copy"
+    copy_btn.add_theme_font_size_override("font_size", btn_font_size)
     copy_btn.pressed.connect(func(): _config_editor.copy_to_clipboard())
     copy_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     clipboard_row.add_child(copy_btn)
 
     var paste_btn = Button.new()
-    paste_btn.text = "Paste Params"
+    paste_btn.text = "Paste"
+    paste_btn.add_theme_font_size_override("font_size", btn_font_size)
     paste_btn.pressed.connect(_on_paste_params)
     paste_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     clipboard_row.add_child(paste_btn)
@@ -123,24 +132,26 @@ func _build_ui() -> void:
     _error_label = Label.new()
     _error_label.text = ""
     _error_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-    _error_label.add_theme_font_size_override("font_size", 12)
+    _error_label.add_theme_font_size_override("font_size", 11)
     _error_label.visible = false
     right_panel.add_child(_error_label)
 
     # Bottom bar for 3D toggle
     var bottom_bar = HBoxContainer.new()
     bottom_bar.alignment = BoxContainer.ALIGNMENT_CENTER
-    bottom_bar.add_theme_constant_override("separation", 12)
+    bottom_bar.add_theme_constant_override("separation", 8)
     right_panel.add_child(bottom_bar)
 
     _preview_3d_btn = Button.new()
     _preview_3d_btn.text = "Preview 3D"
+    _preview_3d_btn.add_theme_font_size_override("font_size", btn_font_size)
     _preview_3d_btn.pressed.connect(_on_preview_3d)
     _preview_3d_btn.disabled = true
     bottom_bar.add_child(_preview_3d_btn)
 
     _back_to_2d_btn = Button.new()
     _back_to_2d_btn.text = "Back to 2D"
+    _back_to_2d_btn.add_theme_font_size_override("font_size", btn_font_size)
     _back_to_2d_btn.pressed.connect(_on_back_to_2d)
     _back_to_2d_btn.visible = false
     bottom_bar.add_child(_back_to_2d_btn)
