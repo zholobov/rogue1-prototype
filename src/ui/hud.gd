@@ -43,6 +43,10 @@ var _minimap: Minimap
 # --- FPS counter ---
 var _fps_label: Label
 
+# --- Pause menu ---
+var _pause_menu: PanelContainer
+var _pause_visible: bool = false
+
 # --- Config panel ---
 var _config_panel: PanelContainer
 var _config_editor: ConfigEditor
@@ -65,6 +69,7 @@ func _ready() -> void:
 	_build_boss_bar()
 	_build_minimap()
 	_build_fps_counter()
+	_build_pause_menu()
 	_build_config_panel()
 	_apply_theme()
 	ThemeManager.theme_changed.connect(_on_theme_changed)
@@ -285,6 +290,76 @@ func _build_fps_counter() -> void:
 	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fps_label)
 
+func _build_pause_menu() -> void:
+	_pause_menu = PanelContainer.new()
+	_pause_menu.set_anchors_preset(Control.PRESET_CENTER)
+	_pause_menu.offset_left = -100
+	_pause_menu.offset_right = 100
+	_pause_menu.offset_top = -80
+	_pause_menu.offset_bottom = 80
+	_pause_menu.visible = false
+	_pause_menu.mouse_filter = Control.MOUSE_FILTER_STOP
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.05, 0.05, 0.1, 0.9)
+	style.set_corner_radius_all(6)
+	_pause_menu.add_theme_stylebox_override("panel", style)
+	add_child(_pause_menu)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	_pause_menu.add_child(vbox)
+
+	var title = Label.new()
+	title.text = "PAUSED"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", ThemeManager.active_theme.ui_accent_color)
+	vbox.add_child(title)
+
+	var resume_btn = Button.new()
+	resume_btn.text = "Resume"
+	resume_btn.pressed.connect(_on_pause_resume)
+	vbox.add_child(resume_btn)
+
+	var config_btn = Button.new()
+	config_btn.text = "Config"
+	config_btn.pressed.connect(_on_pause_config)
+	vbox.add_child(config_btn)
+
+	var exit_btn = Button.new()
+	exit_btn.text = "Exit to Menu"
+	exit_btn.pressed.connect(_on_pause_exit)
+	vbox.add_child(exit_btn)
+
+func _toggle_pause_menu() -> void:
+	_pause_visible = not _pause_visible
+	_pause_menu.visible = _pause_visible
+	if _pause_visible:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		# Also close config if open
+		if _config_visible:
+			_config_visible = false
+			_config_panel.visible = false
+
+func _on_pause_resume() -> void:
+	_toggle_pause_menu()
+
+func _on_pause_config() -> void:
+	_pause_visible = false
+	_pause_menu.visible = false
+	_config_visible = true
+	_config_panel.visible = true
+
+func _on_pause_exit() -> void:
+	_pause_visible = false
+	_pause_menu.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if RunManager:
+		RunManager.return_to_lobby()
+
 func _build_config_panel() -> void:
 	# Semi-transparent panel on the right side, toggled with Tab
 	_config_panel = PanelContainer.new()
@@ -369,15 +444,22 @@ func _toggle_config_panel() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed:
 		return
-	# Escape toggles config panel
 	if event.keycode == KEY_ESCAPE:
 		if _config_visible:
-			# Close panel, re-capture mouse
-			_toggle_config_panel()
+			# Close config, show pause menu
+			_config_visible = false
+			_config_panel.visible = false
+			_pause_visible = true
+			_pause_menu.visible = true
+			get_viewport().set_input_as_handled()
+		elif _pause_visible:
+			# Close pause menu, resume game
+			_toggle_pause_menu()
 			get_viewport().set_input_as_handled()
 		elif Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-			# Mouse already free (player released it) — open panel
-			_toggle_config_panel()
+			# Mouse free (player released it) — show pause menu
+			_pause_visible = true
+			_pause_menu.visible = true
 			get_viewport().set_input_as_handled()
 
 # ========== PUBLIC API ==========
