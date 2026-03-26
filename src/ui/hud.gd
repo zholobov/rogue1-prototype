@@ -280,7 +280,7 @@ func _build_fps_counter() -> void:
 	_fps_label.anchor_left = 0.0
 	_fps_label.anchor_top = 0.0
 	_fps_label.offset_left = 16
-	_fps_label.offset_top = 120
+	_fps_label.offset_top = 138
 	_fps_label.add_theme_font_size_override("font_size", 11)
 	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_fps_label)
