@@ -21,7 +21,9 @@ var _stale: bool = false
 const LEFT_WIDTH = 240
 
 func _ready() -> void:
-    set_anchors_preset(PRESET_FULL_RECT)
+    # Parent is Node (not Control), so anchors resolve to 0. Set size explicitly.
+    size = get_viewport().get_visible_rect().size
+    get_viewport().size_changed.connect(func(): size = get_viewport().get_visible_rect().size)
     _build_ui()
 
 func _build_ui() -> void:
@@ -72,7 +74,8 @@ func _build_ui() -> void:
 
     _config_editor = ConfigEditor.new()
     _config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _config_editor.setup(_build_sections())
+    var sections = _build_sections()
+    _config_editor.setup(sections)
     _config_editor.property_changed.connect(_on_property_changed)
     left_vbox.add_child(_config_editor)
 
@@ -168,6 +171,18 @@ func _build_ui() -> void:
 
     # Auto-generate on open
     _on_generate()
+    # Deferred size check
+    call_deferred("_debug_layout", left_vbox)
+
+func _debug_layout(left: VBoxContainer) -> void:
+    print("[Layout] self.size=", size, " pos=", position)
+    print("[Layout] left.size=", left.size, " pos=", left.position)
+    print("[Layout] config_editor.size=", _config_editor.size, " children=", _config_editor.get_child_count())
+    if _config_editor.get_child_count() > 0:
+        var root = _config_editor.get_child(0)
+        print("[Layout] config_editor.child[0].size=", root.size, " children=", root.get_child_count())
+    print("[Layout] right.size=", _right_panel.size)
+    print("[Layout] grid.size=", _grid_preview.size)
 
 func _build_sections() -> Array:
     var theme = ThemeManager.active_theme
