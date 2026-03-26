@@ -639,53 +639,72 @@ func _add_ice_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var cz = pos.z + tile_size / 2.0
 	var rng = RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(int(pos.x), int(pos.z)))
-	# Shared materials
 	var ice_colors = [
-		Color(theme.wall_albedo.r - 0.05, theme.wall_albedo.g - 0.03, theme.wall_albedo.b),
+		Color(theme.wall_albedo.r - 0.06, theme.wall_albedo.g - 0.04, theme.wall_albedo.b - 0.02),
 		theme.wall_albedo,
-		Color(theme.wall_albedo.r + 0.05, theme.wall_albedo.g + 0.05, theme.wall_albedo.b + 0.08),
+		Color(theme.wall_albedo.r + 0.04, theme.wall_albedo.g + 0.06, theme.wall_albedo.b + 0.08),
+		Color(theme.wall_albedo.r - 0.02, theme.wall_albedo.g + 0.02, theme.wall_albedo.b + 0.05),
 	]
-	var snow_mat = StandardMaterial3D.new()
-	snow_mat.albedo_color = Color(0.85, 0.88, 0.92)
-	snow_mat.roughness = 0.8
 	var frost_mat = StandardMaterial3D.new()
 	frost_mat.albedo_color = Color(0.7, 0.85, 1.0)
 	frost_mat.emission_enabled = true
 	frost_mat.emission = Color(0.7, 0.88, 1.0)
 	frost_mat.emission_energy_multiplier = 2.0
-	# Snow base across bottom
-	var snow_base = MeshInstance3D.new()
-	var snow_mesh = BoxMesh.new()
-	snow_mesh.size = Vector3(tile_size * 0.95, 0.25, tile_size * 0.95)
-	snow_base.mesh = snow_mesh
-	snow_base.material_override = snow_mat
-	snow_base.position = Vector3(cx, 0.125, cz)
-	parent.add_child(snow_base)
-	# Packed crystal pillars — 10-14 tightly filling the tile
-	var pillar_count = rng.randi_range(10, 14)
-	var half = tile_size * 0.42
-	for i in range(pillar_count):
-		var crystal = MeshInstance3D.new()
-		var crystal_mesh = BoxMesh.new()
-		var crystal_h = rng.randf_range(WALL_HEIGHT * 0.6, WALL_HEIGHT + 0.3)
-		var crystal_w = rng.randf_range(0.15, 0.35)
-		var crystal_d = rng.randf_range(0.12, 0.3)
-		crystal_mesh.size = Vector3(crystal_w, crystal_h, crystal_d)
-		crystal.mesh = crystal_mesh
+	var snow_mat = StandardMaterial3D.new()
+	snow_mat.albedo_color = Color(0.85, 0.88, 0.92)
+	snow_mat.roughness = 0.8
+	# 4 thick overlapping ice slabs — each 35-55% of tile width, nearly full height
+	# Offset slightly so ~5% of area has thin gaps for light to peek through
+	var slab_count = 4
+	var half = tile_size * 0.48
+	for i in range(slab_count):
+		var slab = MeshInstance3D.new()
+		var slab_mesh = BoxMesh.new()
+		var slab_w = tile_size * rng.randf_range(0.35, 0.55)
+		var slab_d = tile_size * rng.randf_range(0.35, 0.55)
+		var slab_h = WALL_HEIGHT + rng.randf_range(-0.2, 0.3)
+		slab_mesh.size = Vector3(slab_w, slab_h, slab_d)
+		slab.mesh = slab_mesh
 		var mat = StandardMaterial3D.new()
-		mat.albedo_color = ice_colors[rng.randi() % ice_colors.size()]
-		mat.roughness = rng.randf_range(0.15, 0.3)
-		crystal.material_override = mat
-		crystal.position = Vector3(
+		mat.albedo_color = ice_colors[i % ice_colors.size()]
+		mat.roughness = rng.randf_range(0.15, 0.28)
+		slab.material_override = mat
+		# Distribute across tile with overlap — offset from center
+		var spread = tile_size * 0.22
+		var offset_x = -spread + i * (spread * 2.0 / (slab_count - 1))
+		var offset_z = rng.randf_range(-spread * 0.5, spread * 0.5)
+		slab.position = Vector3(cx + offset_x, slab_h / 2.0, cz + offset_z)
+		slab.rotation_degrees.y = rng.randf_range(-8, 8)
+		parent.add_child(slab)
+	# 4 thinner accent crystals layered on top for texture
+	for i in range(4):
+		var accent = MeshInstance3D.new()
+		var accent_mesh = BoxMesh.new()
+		var accent_h = rng.randf_range(WALL_HEIGHT * 0.5, WALL_HEIGHT * 0.9)
+		accent_mesh.size = Vector3(rng.randf_range(0.2, 0.4), accent_h, rng.randf_range(0.15, 0.3))
+		accent.mesh = accent_mesh
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = ice_colors[(i + 2) % ice_colors.size()].lightened(0.1)
+		mat.roughness = 0.2
+		accent.material_override = mat
+		accent.position = Vector3(
 			cx + rng.randf_range(-half, half),
-			crystal_h / 2.0 + 0.1,
-			cz + rng.randf_range(-half, half)
+			accent_h / 2.0 + rng.randf_range(0.0, 0.5),
+			cz + rng.randf_range(-half * 0.6, half * 0.6)
 		)
-		crystal.rotation_degrees.y = rng.randf_range(-15, 15)
-		crystal.rotation_degrees.z = rng.randf_range(-5, 5)
-		parent.add_child(crystal)
-	# Frost sparkles (3-4 scattered across crystals)
-	for i in range(rng.randi_range(3, 4)):
+		accent.rotation_degrees.y = rng.randf_range(-20, 20)
+		accent.rotation_degrees.z = rng.randf_range(-6, 6)
+		parent.add_child(accent)
+	# Snow drift at base
+	var snow = MeshInstance3D.new()
+	var snow_mesh = BoxMesh.new()
+	snow_mesh.size = Vector3(tile_size * 0.9, 0.2, tile_size * 0.9)
+	snow.mesh = snow_mesh
+	snow.material_override = snow_mat
+	snow.position = Vector3(cx, 0.1, cz)
+	parent.add_child(snow)
+	# Frost sparkles (3-5)
+	for i in range(rng.randi_range(3, 5)):
 		var sparkle = MeshInstance3D.new()
 		var spark_mesh = SphereMesh.new()
 		spark_mesh.radius = 0.04
@@ -694,26 +713,26 @@ func _add_ice_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 		sparkle.material_override = frost_mat
 		sparkle.position = Vector3(
 			cx + rng.randf_range(-half, half),
-			rng.randf_range(0.8, WALL_HEIGHT * 0.8),
-			cz + rng.randf_range(-half * 0.5, half * 0.5)
+			rng.randf_range(0.5, WALL_HEIGHT * 0.85),
+			cz + rng.randf_range(-half * 0.4, half * 0.4)
 		)
 		parent.add_child(sparkle)
-	# Icicles from top (3-4)
-	var ice_hang_mat = StandardMaterial3D.new()
-	ice_hang_mat.albedo_color = Color(0.55, 0.7, 0.9)
-	ice_hang_mat.roughness = 0.15
-	for i in range(rng.randi_range(3, 4)):
+	# Icicles from top (3)
+	var icicle_mat = StandardMaterial3D.new()
+	icicle_mat.albedo_color = Color(0.55, 0.7, 0.9)
+	icicle_mat.roughness = 0.15
+	for i in range(3):
 		var icicle = MeshInstance3D.new()
 		var icicle_mesh = CylinderMesh.new()
 		icicle_mesh.top_radius = 0.015
 		icicle_mesh.bottom_radius = 0.05
 		icicle_mesh.height = rng.randf_range(0.3, 0.7)
 		icicle.mesh = icicle_mesh
-		icicle.material_override = ice_hang_mat
+		icicle.material_override = icicle_mat
 		icicle.position = Vector3(
 			cx + rng.randf_range(-half, half),
 			WALL_HEIGHT - icicle_mesh.height / 2.0,
-			cz + rng.randf_range(-half, half)
+			cz + rng.randf_range(-half * 0.8, half * 0.8)
 		)
 		parent.add_child(icicle)
 
