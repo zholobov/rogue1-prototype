@@ -1,6 +1,9 @@
 class_name S_WeaponVisual
 extends System
 
+const VIEWMODEL_BASE_POS = Vector3(0.35, -0.35, -0.6)
+const VIEWMODEL_BASE_ROT = Vector3(0, -5, 0)
+
 var _last_index: Dictionary = {}  # entity instance_id -> last weapon_index
 var _weapon_nodes: Dictionary = {}  # entity instance_id -> Node3D (weapon mesh)
 var _recoil_tweens: Dictionary = {}  # entity instance_id -> Tween
@@ -31,17 +34,17 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
         if not weapon_node or not is_instance_valid(weapon_node):
             continue
 
+        # Idle sway (viewmodel only) — only X/Y, leave Z for recoil
+        if wv.show_viewmodel:
+            var t = Time.get_ticks_msec() / 1000.0
+            weapon_node.position.x = VIEWMODEL_BASE_POS.x + sin(t * 2.0) * 0.003
+            weapon_node.position.y = VIEWMODEL_BASE_POS.y + cos(t * 1.5) * 0.002
+
         # Fire recoil
         if wv.just_fired:
             wv.just_fired = false
             if wv.show_viewmodel:
                 _play_recoil(weapon_node, eid)
-
-        # Idle sway (viewmodel only)
-        if wv.show_viewmodel:
-            var t = Time.get_ticks_msec() / 1000.0
-            weapon_node.position.x = 0.35 + sin(t * 2.0) * 0.003
-            weapon_node.position.y = -0.35 + cos(t * 1.5) * 0.002
 
         # Element pulse
         if wv.element != "":
@@ -69,8 +72,8 @@ func _swap_weapon(entity: Entity, wv: C_WeaponVisual, body: CharacterBody3D, eid
         # Attach to camera
         var camera = body.get_node_or_null("Camera3D")
         if camera:
-            new_node.position = Vector3(0.35, -0.35, -0.6)
-            new_node.rotation_degrees = Vector3(0, -5, 0)
+            new_node.position = VIEWMODEL_BASE_POS
+            new_node.rotation_degrees = VIEWMODEL_BASE_ROT
             camera.add_child(new_node)
     else:
         # Attach to WeaponMount or fallback position
@@ -101,19 +104,20 @@ func _play_recoil(weapon_node: Node3D, eid: int) -> void:
     var old_tween = _recoil_tweens.get(eid)
     if old_tween and old_tween.is_valid():
         old_tween.kill()
+    # Reset to base immediately so rapid fire doesn't stack
+    weapon_node.position.z = VIEWMODEL_BASE_POS.z
+    weapon_node.rotation_degrees = VIEWMODEL_BASE_ROT
 
-    var base_pos = weapon_node.position
-    var base_rot = weapon_node.rotation_degrees
     var tree = weapon_node.get_tree()
     if not tree:
         return
     var tween = tree.create_tween()
     # Kick back
-    tween.tween_property(weapon_node, "position:z", base_pos.z + 0.05, 0.05)
-    tween.parallel().tween_property(weapon_node, "rotation_degrees:x", base_rot.x + 3.0, 0.05)
+    tween.tween_property(weapon_node, "position:z", VIEWMODEL_BASE_POS.z + 0.05, 0.05)
+    tween.parallel().tween_property(weapon_node, "rotation_degrees:x", VIEWMODEL_BASE_ROT.x + 3.0, 0.05)
     # Return
-    tween.tween_property(weapon_node, "position:z", base_pos.z, 0.1)
-    tween.parallel().tween_property(weapon_node, "rotation_degrees:x", base_rot.x, 0.1)
+    tween.tween_property(weapon_node, "position:z", VIEWMODEL_BASE_POS.z, 0.1)
+    tween.parallel().tween_property(weapon_node, "rotation_degrees:x", VIEWMODEL_BASE_ROT.x, 0.1)
     _recoil_tweens[eid] = tween
 
 func _set_accent_energy(weapon_node: Node3D, energy: float) -> void:

@@ -120,7 +120,7 @@ func _build_weapon_panel() -> void:
 	_weapon_container.anchor_right = 1.0
 	_weapon_container.anchor_bottom = 1.0
 	_weapon_container.offset_left = -220
-	_weapon_container.offset_top = -62
+	_weapon_container.offset_top = -90
 	_weapon_container.offset_right = -20
 	_weapon_container.offset_bottom = -16
 	_weapon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -137,18 +137,36 @@ func _build_weapon_panel() -> void:
 
 	_weapon_panel_bg = ColorRect.new()
 	_weapon_panel_bg.position = Vector2(0, 0)
-	_weapon_panel_bg.size = Vector2(200, 56)
+	_weapon_panel_bg.size = Vector2(200, 74)
 	_weapon_panel_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_weapon_container.add_child(_weapon_panel_bg)
 
+	# Row 1: weapon icon (left) + name/element (right)
 	_weapon_icon = Control.new()
-	_weapon_icon.position = Vector2(8, 4)
+	_weapon_icon.position = Vector2(6, 4)
 	_weapon_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_weapon_container.add_child(_weapon_icon)
 
+	_weapon_name_label = Label.new()
+	_weapon_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_weapon_name_label.position = Vector2(80, 6)
+	_weapon_name_label.size = Vector2(114, 18)
+	_weapon_name_label.add_theme_font_size_override("font_size", 12)
+	_weapon_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_container.add_child(_weapon_name_label)
+
+	_weapon_element_label = Label.new()
+	_weapon_element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_weapon_element_label.position = Vector2(80, 26)
+	_weapon_element_label.size = Vector2(114, 16)
+	_weapon_element_label.add_theme_font_size_override("font_size", 10)
+	_weapon_element_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_container.add_child(_weapon_element_label)
+
+	# Row 2: slot indicators
 	for i in range(4):
 		var slot_bg = ColorRect.new()
-		slot_bg.position = Vector2(8 + i * 22, 16)
+		slot_bg.position = Vector2(8 + i * 22, 52)
 		slot_bg.size = Vector2(18, 18)
 		slot_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_weapon_container.add_child(slot_bg)
@@ -158,28 +176,12 @@ func _build_weapon_panel() -> void:
 		slot_label.text = str(i + 1)
 		slot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		slot_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		slot_label.position = Vector2(8 + i * 22, 16)
+		slot_label.position = Vector2(8 + i * 22, 52)
 		slot_label.size = Vector2(18, 18)
 		slot_label.add_theme_font_size_override("font_size", 9)
 		slot_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_weapon_container.add_child(slot_label)
 		_weapon_slot_labels.append(slot_label)
-
-	_weapon_name_label = Label.new()
-	_weapon_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_weapon_name_label.position = Vector2(96, 14)
-	_weapon_name_label.size = Vector2(96, 18)
-	_weapon_name_label.add_theme_font_size_override("font_size", 12)
-	_weapon_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_weapon_container.add_child(_weapon_name_label)
-
-	_weapon_element_label = Label.new()
-	_weapon_element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_weapon_element_label.position = Vector2(96, 34)
-	_weapon_element_label.size = Vector2(96, 16)
-	_weapon_element_label.add_theme_font_size_override("font_size", 10)
-	_weapon_element_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_weapon_container.add_child(_weapon_element_label)
 
 func _build_ability_indicators() -> void:
 	_ability_container = HBoxContainer.new()
