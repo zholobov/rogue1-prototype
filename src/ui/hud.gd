@@ -13,6 +13,8 @@ var _weapon_panel_bg: ColorRect
 var _weapon_title: Label
 var _weapon_name_label: Label
 var _weapon_element_label: Label
+var _weapon_icon: Control
+var _last_hud_weapon_index: int = -1
 var _weapon_slots: Array[ColorRect] = []
 var _weapon_slot_labels: Array[Label] = []
 
@@ -38,6 +40,9 @@ var _boss_entity: Entity
 # --- Minimap ---
 var _minimap: Minimap
 
+# --- FPS counter ---
+var _fps_label: Label
+
 # --- Damage flash ---
 var _damage_flash: ColorRect
 
@@ -53,6 +58,7 @@ func _ready() -> void:
 	_build_kill_feed()
 	_build_boss_bar()
 	_build_minimap()
+	_build_fps_counter()
 	_apply_theme()
 	ThemeManager.theme_changed.connect(_on_theme_changed)
 
@@ -131,13 +137,18 @@ func _build_weapon_panel() -> void:
 
 	_weapon_panel_bg = ColorRect.new()
 	_weapon_panel_bg.position = Vector2(0, 0)
-	_weapon_panel_bg.size = Vector2(200, 46)
+	_weapon_panel_bg.size = Vector2(200, 56)
 	_weapon_panel_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_weapon_container.add_child(_weapon_panel_bg)
 
+	_weapon_icon = Control.new()
+	_weapon_icon.position = Vector2(8, 4)
+	_weapon_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_weapon_container.add_child(_weapon_icon)
+
 	for i in range(4):
 		var slot_bg = ColorRect.new()
-		slot_bg.position = Vector2(8 + i * 22, 6)
+		slot_bg.position = Vector2(8 + i * 22, 16)
 		slot_bg.size = Vector2(18, 18)
 		slot_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_weapon_container.add_child(slot_bg)
@@ -147,7 +158,7 @@ func _build_weapon_panel() -> void:
 		slot_label.text = str(i + 1)
 		slot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		slot_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		slot_label.position = Vector2(8 + i * 22, 6)
+		slot_label.position = Vector2(8 + i * 22, 16)
 		slot_label.size = Vector2(18, 18)
 		slot_label.add_theme_font_size_override("font_size", 9)
 		slot_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -156,7 +167,7 @@ func _build_weapon_panel() -> void:
 
 	_weapon_name_label = Label.new()
 	_weapon_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_weapon_name_label.position = Vector2(96, 4)
+	_weapon_name_label.position = Vector2(96, 14)
 	_weapon_name_label.size = Vector2(96, 18)
 	_weapon_name_label.add_theme_font_size_override("font_size", 12)
 	_weapon_name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -164,7 +175,7 @@ func _build_weapon_panel() -> void:
 
 	_weapon_element_label = Label.new()
 	_weapon_element_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_weapon_element_label.position = Vector2(96, 24)
+	_weapon_element_label.position = Vector2(96, 34)
 	_weapon_element_label.size = Vector2(96, 16)
 	_weapon_element_label.add_theme_font_size_override("font_size", 10)
 	_weapon_element_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -255,6 +266,16 @@ func _build_minimap() -> void:
 	_minimap.position = Vector2(16, 12)
 	add_child(_minimap)
 
+func _build_fps_counter() -> void:
+	_fps_label = Label.new()
+	_fps_label.anchor_left = 0.0
+	_fps_label.anchor_top = 0.0
+	_fps_label.offset_left = 16
+	_fps_label.offset_top = 120
+	_fps_label.add_theme_font_size_override("font_size", 11)
+	_fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_fps_label)
+
 # ========== PUBLIC API ==========
 
 func setup_minimap(level_data: Dictionary) -> void:
@@ -287,6 +308,7 @@ func _process(_delta: float) -> void:
 			_update_crosshair(player)
 			break
 	_update_boss_bar()
+	_fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 
 func _update_health(player: PlayerEntity) -> void:
 	var health = player.get_component(C_Health)
@@ -326,6 +348,14 @@ func _update_weapon(player: PlayerEntity) -> void:
 		preset_name = Config.weapon_presets[idx].name
 	_weapon_name_label.text = preset_name
 	_weapon_element_label.text = weapon.element if weapon.element != "" else "Standard"
+
+	if idx != _last_hud_weapon_index:
+		_last_hud_weapon_index = idx
+		for child in _weapon_icon.get_children():
+			child.queue_free()
+		var new_icon = WeaponModelFactory.create_hud_icon(idx, weapon.element)
+		if new_icon:
+			_weapon_icon.add_child(new_icon)
 
 func _update_abilities(player: PlayerEntity) -> void:
 	var dash = player.get_component(C_Dash)
@@ -427,3 +457,4 @@ func _apply_theme() -> void:
 	_ability_life.apply_theme()
 	_crosshair.apply_theme()
 	_minimap.apply_theme()
+	_fps_label.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.5))
