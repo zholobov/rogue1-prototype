@@ -38,6 +38,10 @@ func select_map_node(node_index: int) -> void:
     map.visit_node(current_depth, node_index)
     var node = map.get_node(current_depth, node_index)
     _apply_modifier(node.modifier)
+    if ThemeManager and ThemeManager.active_group:
+        var biome = ThemeManager.active_group.get_biome(node.biome_index)
+        if biome:
+            ThemeManager.set_biome(biome)
     Config.level_seed = node.level_seed
     if node.modifier == "boss":
         _change_state(State.BOSS)

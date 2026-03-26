@@ -8,6 +8,7 @@ class MapNode:
     var modifier: String = "normal"
     var connections: Array = []
     var visited: bool = false
+    var biome_index: int = 0
 
 static func generate(boss_depth: int) -> RunMap:
     var map = RunMap.new()
@@ -21,6 +22,8 @@ static func generate(boss_depth: int) -> RunMap:
             node.level_seed = randi()
             node.modifier = _random_modifier_excluding(used_modifiers)
             used_modifiers.append(node.modifier)
+            var biome_count = ThemeManager.active_group.biomes.size() if ThemeManager and ThemeManager.active_group else 1
+            node.biome_index = randi() % biome_count
             layer.append(node)
         map.layers.append(layer)
 
@@ -28,6 +31,8 @@ static func generate(boss_depth: int) -> RunMap:
     var boss_node = MapNode.new()
     boss_node.level_seed = randi()
     boss_node.modifier = "boss"
+    var biome_count = ThemeManager.active_group.biomes.size() if ThemeManager and ThemeManager.active_group else 1
+    boss_node.biome_index = randi() % biome_count
     map.layers.append([boss_node])
 
     # Connect layers
