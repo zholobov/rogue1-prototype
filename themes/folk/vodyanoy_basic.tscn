@@ -1,0 +1,207 @@
+[gd_scene load_steps=28 format=3]
+
+[sub_resource type="BoxMesh" id="1"]
+size = Vector3(1.1, 0.8, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="2"]
+albedo_color = Color(0.2, 0.3, 0.15, 1)
+emission_enabled = true
+emission = Color(0.15, 0.3, 0.1, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="BoxMesh" id="3"]
+size = Vector3(0.9, 0.35, 0.7)
+
+[sub_resource type="SphereMesh" id="4"]
+radius = 0.1
+height = 0.2
+
+[sub_resource type="SphereMesh" id="5"]
+radius = 0.1
+height = 0.2
+
+[sub_resource type="StandardMaterial3D" id="6"]
+albedo_color = Color(0.0, 0.0, 0.0, 1)
+emission_enabled = true
+emission = Color(1.0, 0.4, 0.2, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="BoxMesh" id="7"]
+size = Vector3(0.5, 0.1, 0.2)
+
+[sub_resource type="BoxMesh" id="8"]
+size = Vector3(0.5, 0.1, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="9"]
+albedo_color = Color(0.18, 0.28, 0.12, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="10"]
+size = Vector3(0.22, 0.55, 0.18)
+
+[sub_resource type="BoxMesh" id="11"]
+size = Vector3(0.22, 0.55, 0.18)
+
+[sub_resource type="BoxMesh" id="12"]
+size = Vector3(0.28, 0.45, 0.2)
+
+[sub_resource type="BoxMesh" id="13"]
+size = Vector3(0.28, 0.45, 0.2)
+
+[sub_resource type="BoxMesh" id="14"]
+size = Vector3(0.85, 0.12, 0.75)
+
+[sub_resource type="StandardMaterial3D" id="15"]
+albedo_color = Color(0.25, 0.4, 0.2, 1)
+roughness = 0.8
+
+[sub_resource type="SphereMesh" id="16"]
+radius = 0.055
+height = 0.11
+
+[sub_resource type="SphereMesh" id="17"]
+radius = 0.055
+height = 0.11
+
+[sub_resource type="SphereMesh" id="18"]
+radius = 0.05
+height = 0.1
+
+[sub_resource type="SphereMesh" id="19"]
+radius = 0.05
+height = 0.1
+
+[sub_resource type="SphereMesh" id="20"]
+radius = 0.045
+height = 0.09
+
+[sub_resource type="StandardMaterial3D" id="21"]
+albedo_color = Color(0.15, 0.22, 0.1, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="22"]
+size = Vector3(0.35, 0.04, 0.8)
+
+[sub_resource type="BoxMesh" id="23"]
+size = Vector3(0.35, 0.04, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="24"]
+albedo_color = Color(0.22, 0.32, 0.16, 1)
+roughness = 0.88
+
+[sub_resource type="BoxMesh" id="25"]
+size = Vector3(0.6, 0.04, 0.2)
+
+[sub_resource type="BoxMesh" id="26"]
+size = Vector3(0.6, 0.04, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="27"]
+albedo_color = Color(0.18, 0.28, 0.1, 1)
+roughness = 0.92
+
+[node name="VodyanoyBasic" type="Node3D"]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("1")
+material_override = SubResource("2")
+
+[node name="HeadMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
+mesh = SubResource("3")
+material_override = SubResource("2")
+
+[node name="EyeMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.82, -0.35)
+mesh = SubResource("4")
+material_override = SubResource("6")
+
+[node name="EyeMeshR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.82, -0.35)
+mesh = SubResource("5")
+material_override = SubResource("6")
+
+[node name="ArmL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.72, 0.1, 0)
+mesh = SubResource("7")
+material_override = SubResource("9")
+
+[node name="ArmR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.72, 0.1, 0)
+mesh = SubResource("8")
+material_override = SubResource("9")
+
+[node name="LegFL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, -0.68, 0.1)
+mesh = SubResource("10")
+material_override = SubResource("9")
+
+[node name="LegFR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.68, 0.1)
+mesh = SubResource("11")
+material_override = SubResource("9")
+
+[node name="LegBL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, -0.65, -0.1)
+mesh = SubResource("12")
+material_override = SubResource("9")
+
+[node name="LegBR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, -0.65, -0.1)
+mesh = SubResource("13")
+material_override = SubResource("9")
+
+[node name="BellyStripe" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0, -0.47)
+mesh = SubResource("14")
+material_override = SubResource("15")
+
+[node name="WartBump1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.3, -0.46)
+mesh = SubResource("16")
+material_override = SubResource("21")
+
+[node name="WartBump2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.1, -0.46)
+mesh = SubResource("17")
+material_override = SubResource("21")
+
+[node name="WartBump3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, -0.2, -0.46)
+mesh = SubResource("18")
+material_override = SubResource("21")
+
+[node name="WartBump4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0.28, 0.46)
+mesh = SubResource("19")
+material_override = SubResource("21")
+
+[node name="WartBump5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, -0.15, 0.46)
+mesh = SubResource("20")
+material_override = SubResource("21")
+
+[node name="BackPlateL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.2, 0.46)
+mesh = SubResource("22")
+material_override = SubResource("24")
+
+[node name="BackPlateR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, -0.05, 0.46)
+mesh = SubResource("23")
+material_override = SubResource("24")
+
+[node name="ChestFlap1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.22, -0.47)
+mesh = SubResource("25")
+material_override = SubResource("27")
+
+[node name="ChestFlap2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, -0.47)
+mesh = SubResource("26")
+material_override = SubResource("27")
+
+[node name="HealthBarAnchor" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+
+[node name="WeaponMount" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.3, -0.5)
