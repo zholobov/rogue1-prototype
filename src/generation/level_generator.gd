@@ -10,23 +10,14 @@ var builder: LevelBuilder
 func _init() -> void:
     tile_rules = TileRules.new()
     solver = WFCSolver.new()
-    builder = LevelBuilder.new()
 
 func generate(width: int, height: int, seed_val: int, tile_size: float = 4.0) -> Dictionary:
-    var rng = RandomNumberGenerator.new()
-    rng.seed = seed_val
-
     var modifier = Config.current_modifier
     tile_rules.setup_profile(modifier)
 
-    # Pin room seeds — count and spacing vary by modifier
-    var pinned = _generate_room_seeds(rng, width, height, modifier)
-
-    var grid = solver.solve(tile_rules, width, height, seed_val, pinned)
-    _ensure_connectivity(grid)
-    _remove_tiny_rooms(grid)
-    _prune_dead_ends(grid)
-    _seal_empty_borders(grid)
+    var grid = generate_grid(tile_rules, width, height, seed_val, modifier)
+    if not builder:
+        builder = LevelBuilder.new()
     var geometry = builder.build(grid, tile_rules, tile_size)
 
     var spawn_points: Array[Vector3] = []
@@ -41,6 +32,22 @@ func generate(width: int, height: int, seed_val: int, tile_size: float = 4.0) ->
         "width": width,
         "height": height,
     }
+
+## Generates only the 2D grid (no 3D geometry). Accepts a pre-configured TileRules
+## so callers can customize weights without mutating global Config.
+## Does not require a full LevelGenerator instance — uses its own solver.
+func generate_grid(rules: TileRules, width: int, height: int, seed_val: int, modifier: String) -> Array:
+    var rng = RandomNumberGenerator.new()
+    rng.seed = seed_val
+
+    var local_solver = solver if solver else WFCSolver.new()
+    var pinned = _generate_room_seeds(rng, width, height, modifier)
+    var grid = local_solver.solve(rules, width, height, seed_val, pinned)
+    _ensure_connectivity(grid)
+    _remove_tiny_rooms(grid)
+    _prune_dead_ends(grid)
+    _seal_empty_borders(grid)
+    return grid
 
 func _generate_room_seeds(rng: RandomNumberGenerator, width: int, height: int, modifier: String) -> Dictionary:
     var pinned: Dictionary = {}

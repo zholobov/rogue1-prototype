@@ -14,6 +14,7 @@ var _current_grid: Array = []
 var _current_params: Dictionary = {}
 var _is_3d_mode: bool = false
 var _level_builder: LevelBuilder  # Lazy init on first 3D preview
+var _level_generator: LevelGenerator
 var _stale: bool = false
 
 func _ready() -> void:
@@ -90,6 +91,22 @@ func _build_ui() -> void:
     random_btn.text = "Randomize Seed"
     random_btn.pressed.connect(_on_randomize_seed)
     btn_vbox.add_child(random_btn)
+
+    var clipboard_row = HBoxContainer.new()
+    clipboard_row.add_theme_constant_override("separation", 4)
+    btn_vbox.add_child(clipboard_row)
+
+    var copy_btn = Button.new()
+    copy_btn.text = "Copy Params"
+    copy_btn.pressed.connect(func(): _config_editor.copy_to_clipboard())
+    copy_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    clipboard_row.add_child(copy_btn)
+
+    var paste_btn = Button.new()
+    paste_btn.text = "Paste Params"
+    paste_btn.pressed.connect(_on_paste_params)
+    paste_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    clipboard_row.add_child(paste_btn)
 
     # Right panel: visualization area
     var right_panel = VBoxContainer.new()
@@ -219,13 +236,12 @@ func _on_generate() -> void:
 
     var width = int(_current_params.get("level_grid_width", 12))
     var height = int(_current_params.get("level_grid_height", 12))
-    var tile_size = float(_current_params.get("level_tile_size", 4.0))
 
     # Build local TileRules with custom weights
     var modifier = str(_current_params.get("current_modifier", "normal"))
     var rules = TileRules.new()
     rules.setup_profile(modifier)
-    # Override individual tile weights
+    # Override individual tile weights from editor
     var weight_keys = {"w_room": "room", "w_spawn": "spawn", "w_cor": "corridor_h", "w_door": "door", "w_wall": "wall", "w_empty": "empty"}
     for w_key in weight_keys:
         var tile_name = weight_keys[w_key]
@@ -235,19 +251,10 @@ func _on_generate() -> void:
     if _current_params.has("w_cor") and rules.tiles.has("corridor_v"):
         rules.tiles["corridor_v"].weight = float(_current_params["w_cor"])
 
-    # Run generation using local TileRules — bypass LevelGenerator to avoid Config mutation
-    var solver = WFCSolver.new()
-    var rng = RandomNumberGenerator.new()
-    rng.seed = seed_val
-
-    var pinned = _generate_room_seeds(rng, width, height, modifier)
-    var grid = solver.solve(rules, width, height, seed_val, pinned)
-
-    # Post-processing — mirrors LevelGenerator pipeline (all 4 steps)
-    _ensure_connectivity(grid)
-    _remove_tiny_rooms(grid)
-    _prune_dead_ends(grid)
-    _seal_empty_borders(grid)
+    # Reuse LevelGenerator for the full pipeline (WFC + post-processing)
+    if not _level_generator:
+        _level_generator = LevelGenerator.new()
+    var grid = _level_generator.generate_grid(rules, width, height, seed_val, modifier)
     _current_grid = grid
 
     # Check for empty/bad generation
@@ -274,6 +281,11 @@ func _on_generate() -> void:
     # If 3D mode is active, rebuild
     if _is_3d_mode:
         _rebuild_3d_preview()
+
+func _on_paste_params() -> void:
+    _config_editor.paste_from_clipboard()
+    _stale = true
+    _generate_btn.text = "Generate *"
 
 func _on_randomize_seed() -> void:
     var new_seed = randi() % 999999 + 1
@@ -365,189 +377,6 @@ func _rebuild_3d_preview() -> void:
     var world_env = WorldEnvironment.new()
     world_env.environment = env
     viewport.add_child(world_env)
-
-# --- Room seed generation (mirrors LevelGenerator._generate_room_seeds) ---
-
-func _generate_room_seeds(rng: RandomNumberGenerator, width: int, height: int, modifier: String) -> Dictionary:
-    var pinned: Dictionary = {}
-    var seeds: Array = []
-
-    var room_count: int
-    var min_dist: int
-    match modifier:
-        "dense":
-            room_count = rng.randi_range(6, 9)
-            min_dist = 3
-        "large":
-            room_count = rng.randi_range(3, 5)
-            min_dist = 5
-        "dark":
-            room_count = rng.randi_range(5, 8)
-            min_dist = 3
-        "horde":
-            room_count = rng.randi_range(3, 5)
-            min_dist = 5
-        "boss":
-            var cx = width / 2
-            var cy = height / 2
-            for dy in range(-2, 3):
-                for dx in range(-2, 3):
-                    var px = cx + dx
-                    var py = cy + dy
-                    if px > 0 and px < width - 1 and py > 0 and py < height - 1:
-                        if dx == 0 and dy == 0:
-                            pinned[Vector2i(px, py)] = "spawn"
-                        else:
-                            pinned[Vector2i(px, py)] = "room"
-            return pinned
-        _:
-            room_count = rng.randi_range(4, 7)
-            min_dist = 4
-
-    var attempts = 0
-    while seeds.size() < room_count and attempts < 100:
-        attempts += 1
-        var x = rng.randi_range(2, width - 3)
-        var y = rng.randi_range(2, height - 3)
-        var too_close = false
-        for s in seeds:
-            if absi(x - s.x) + absi(y - s.y) < min_dist:
-                too_close = true
-                break
-        if too_close:
-            continue
-        seeds.append(Vector2i(x, y))
-        pinned[Vector2i(x, y)] = "spawn"
-
-    return pinned
-
-# --- Post-processing (mirrors LevelGenerator._ensure_connectivity) ---
-
-func _ensure_connectivity(grid: Array) -> void:
-    var h = grid.size()
-    var w = grid[0].size() if h > 0 else 0
-    var visited: Dictionary = {}
-    var clusters: Array = []
-    var walkable = ["room", "spawn", "corridor_h", "corridor_v", "door"]
-
-    for y in range(h):
-        for x in range(w):
-            var key = Vector2i(x, y)
-            if visited.has(key) or grid[y][x] not in walkable:
-                continue
-            var cluster: Array = []
-            var stack: Array = [key]
-            while not stack.is_empty():
-                var cell = stack.pop_back()
-                if visited.has(cell):
-                    continue
-                if cell.x < 0 or cell.x >= w or cell.y < 0 or cell.y >= h:
-                    continue
-                if grid[cell.y][cell.x] not in walkable:
-                    continue
-                visited[cell] = true
-                cluster.append(cell)
-                stack.append(Vector2i(cell.x + 1, cell.y))
-                stack.append(Vector2i(cell.x - 1, cell.y))
-                stack.append(Vector2i(cell.x, cell.y + 1))
-                stack.append(Vector2i(cell.x, cell.y - 1))
-            if cluster.size() > 0:
-                clusters.append(cluster)
-
-    if clusters.size() <= 1:
-        return
-    clusters.sort_custom(func(a, b): return a.size() > b.size())
-    var main_cluster = clusters[0]
-    for i in range(1, clusters.size()):
-        var small = clusters[i]
-        var best_dist = 9999
-        var best_main = Vector2i.ZERO
-        var best_small = Vector2i.ZERO
-        for mc in main_cluster:
-            for sc in small:
-                var dist = absi(mc.x - sc.x) + absi(mc.y - sc.y)
-                if dist < best_dist:
-                    best_dist = dist
-                    best_main = mc
-                    best_small = sc
-        var cx = best_main.x
-        var cy = best_main.y
-        while cx != best_small.x:
-            cx += 1 if best_small.x > cx else -1
-            if cx > 0 and cx < w - 1 and grid[cy][cx] not in walkable:
-                grid[cy][cx] = "corridor_h"
-        while cy != best_small.y:
-            cy += 1 if best_small.y > cy else -1
-            if cy > 0 and cy < h - 1 and grid[cy][cx] not in walkable:
-                grid[cy][cx] = "corridor_v"
-        main_cluster.append_array(small)
-
-func _remove_tiny_rooms(grid: Array) -> void:
-    var h = grid.size()
-    var w = grid[0].size() if h > 0 else 0
-    var visited: Dictionary = {}
-    var room_tiles = ["room", "spawn"]
-    for y in range(h):
-        for x in range(w):
-            var key = Vector2i(x, y)
-            if visited.has(key) or grid[y][x] not in room_tiles:
-                continue
-            var cluster: Array = []
-            var has_spawn = false
-            var stack: Array = [key]
-            while not stack.is_empty():
-                var cell = stack.pop_back()
-                if visited.has(cell):
-                    continue
-                if cell.x < 0 or cell.x >= w or cell.y < 0 or cell.y >= h:
-                    continue
-                if grid[cell.y][cell.x] not in room_tiles:
-                    continue
-                visited[cell] = true
-                cluster.append(cell)
-                if grid[cell.y][cell.x] == "spawn":
-                    has_spawn = true
-                for d in [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]:
-                    stack.append(cell + d)
-            if cluster.size() < 4 and not has_spawn:
-                for cell in cluster:
-                    grid[cell.y][cell.x] = "wall"
-
-func _prune_dead_ends(grid: Array) -> void:
-    var h = grid.size()
-    var w = grid[0].size() if h > 0 else 0
-    var corridor_tiles = ["corridor_h", "corridor_v"]
-    var walkable = ["room", "spawn", "corridor_h", "corridor_v", "door"]
-    var changed = true
-    while changed:
-        changed = false
-        for y in range(1, h - 1):
-            for x in range(1, w - 1):
-                if grid[y][x] not in corridor_tiles:
-                    continue
-                var neighbors = 0
-                for d in [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]:
-                    if grid[y + d.y][x + d.x] in walkable:
-                        neighbors += 1
-                if neighbors <= 1:
-                    grid[y][x] = "wall"
-                    changed = true
-
-func _seal_empty_borders(grid: Array) -> void:
-    var h = grid.size()
-    var w = grid[0].size() if h > 0 else 0
-    var walkable = ["room", "spawn", "corridor_h", "corridor_v", "door"]
-    for y in range(h):
-        for x in range(w):
-            if grid[y][x] != "empty":
-                continue
-            for d in [Vector2i(1,0), Vector2i(-1,0), Vector2i(0,1), Vector2i(0,-1)]:
-                var nx = x + d.x
-                var ny = y + d.y
-                if nx >= 0 and nx < w and ny >= 0 and ny < h:
-                    if grid[ny][nx] in walkable:
-                        grid[y][x] = "wall"
-                        break
 
 
 # ===== GridPreview inner class =====
