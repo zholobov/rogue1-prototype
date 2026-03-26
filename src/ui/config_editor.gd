@@ -172,6 +172,29 @@ func _on_color_changed(color: Color, key: String) -> void:
     if not _suppress_signals:
         property_changed.emit(key, color)
 
+func copy_to_clipboard() -> void:
+    var values = get_values()
+    var json_str = JSON.stringify(values, "  ")
+    DisplayServer.clipboard_set(json_str)
+
+func paste_from_clipboard() -> void:
+    var text = DisplayServer.clipboard_get()
+    if text.is_empty():
+        return
+    var json = JSON.new()
+    if json.parse(text) != OK:
+        return
+    var data = json.data
+    if not data is Dictionary:
+        return
+    for key in data:
+        if _controls.has(key):
+            set_property_value(key, data[key])
+    # Emit property_changed for each restored value so callers can react
+    for key in data:
+        if _controls.has(key):
+            property_changed.emit(key, data[key])
+
 func _toggle_section(header: Button, content: VBoxContainer) -> void:
     content.visible = not content.visible
     var title = header.text.substr(2)  # Remove "▼ " or "▶ "
