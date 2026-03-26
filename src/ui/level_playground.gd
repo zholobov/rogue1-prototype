@@ -10,6 +10,7 @@ var _error_label: Label
 var _preview_3d_btn: Button
 var _back_to_2d_btn: Button
 var _viewport_container: SubViewportContainer
+var _right_panel: VBoxContainer
 var _current_grid: Array = []
 var _current_params: Dictionary = {}
 var _is_3d_mode: bool = false
@@ -69,10 +70,11 @@ func _build_ui() -> void:
     hbox_main.add_theme_constant_override("separation", 8)
     root_vbox.add_child(hbox_main)
 
-    # Left panel: config editor + buttons (fixed 250px)
+    # Left panel: config editor + buttons
     var left_vbox = VBoxContainer.new()
-    left_vbox.custom_minimum_size.x = 250
-    left_vbox.size_flags_horizontal = 0  # Don't expand
+    left_vbox.custom_minimum_size.x = 220
+    left_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    left_vbox.stretch_ratio = 1.0  # Left gets 1 part, right gets 3 parts
     left_vbox.add_theme_constant_override("separation", 4)
     hbox_main.add_child(left_vbox)
 
@@ -119,30 +121,30 @@ func _build_ui() -> void:
     clipboard_row.add_child(paste_btn)
 
     # Right panel: visualization area (fills remaining space)
-    var right_panel = VBoxContainer.new()
-    right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    right_panel.add_theme_constant_override("separation", 4)
-    hbox_main.add_child(right_panel)
+    _right_panel = VBoxContainer.new()
+    _right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    _right_panel.stretch_ratio = 3.0  # Take 3x more space than left panel
+    _right_panel.add_theme_constant_override("separation", 4)
+    hbox_main.add_child(_right_panel)
 
     _grid_preview = GridPreview.new()
     _grid_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _grid_preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _grid_preview.custom_minimum_size = Vector2(200, 200)
-    right_panel.add_child(_grid_preview)
+    _right_panel.add_child(_grid_preview)
 
     _error_label = Label.new()
     _error_label.text = ""
     _error_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
     _error_label.add_theme_font_size_override("font_size", 11)
     _error_label.visible = false
-    right_panel.add_child(_error_label)
+    _right_panel.add_child(_error_label)
 
     # Bottom bar for 3D toggle
     var bottom_bar = HBoxContainer.new()
     bottom_bar.alignment = BoxContainer.ALIGNMENT_CENTER
     bottom_bar.add_theme_constant_override("separation", 8)
-    right_panel.add_child(bottom_bar)
+    _right_panel.add_child(bottom_bar)
 
     _preview_3d_btn = Button.new()
     _preview_3d_btn.text = "Preview 3D"
@@ -347,13 +349,13 @@ func _rebuild_3d_preview() -> void:
 
     var geometry = _level_builder.build(_current_grid, rules, tile_size)
 
-    # SubViewport setup
+    # SubViewport setup — fill right panel
     _viewport_container = SubViewportContainer.new()
     _viewport_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _viewport_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
     _viewport_container.stretch = true
-    _grid_preview.get_parent().add_child(_viewport_container)
-    _grid_preview.get_parent().move_child(_viewport_container, 0)
+    _right_panel.add_child(_viewport_container)
+    _right_panel.move_child(_viewport_container, 0)
 
     var viewport = SubViewport.new()
     viewport.own_world_3d = true
