@@ -219,12 +219,24 @@ func _setup_health_bar() -> void:
     _health_bar_fg.material_override = fg_mat
     _health_bar_node.add_child(_health_bar_fg)
 
+var _last_health: int = -1
+
 func _process(_delta: float) -> void:
     if not _health_bar_node:
         return
     var health := ecs_entity.get_component(C_Health) as C_Health
     if not health:
         return
+
+    # Only update bar when health actually changes
+    if health.current_health == _last_health:
+        # Still need to billboard if visible
+        if _health_bar_visible:
+            var camera = get_viewport().get_camera_3d()
+            if camera:
+                _health_bar_node.look_at(camera.global_position)
+        return
+    _last_health = health.current_health
 
     # Show only when damaged
     var should_show = health.current_health < health.max_health and health.current_health > 0
@@ -240,7 +252,6 @@ func _process(_delta: float) -> void:
     _health_bar_fg.scale.x = ratio
     _health_bar_fg.position.x = (1.0 - ratio) * 0.5
 
-    # Color: foreground at full → low_color at low
     var theme := ThemeManager.active_theme
     var bar_color = theme.health_bar_foreground.lerp(theme.health_bar_low_color, 1.0 - ratio)
     var fg_mat = _health_bar_fg.material_override as StandardMaterial3D

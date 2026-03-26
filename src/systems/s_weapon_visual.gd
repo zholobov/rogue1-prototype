@@ -46,8 +46,8 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
             if wv.show_viewmodel:
                 _play_recoil(weapon_node, eid)
 
-        # Element pulse
-        if wv.element != "":
+        # Element pulse — only for viewmodel (player's weapon), throttled for world models
+        if wv.element != "" and (wv.show_viewmodel or eid % 6 == Engine.get_frames_drawn() % 6):
             var pulse = 1.5 + sin(Time.get_ticks_msec() / 500.0) * 0.5
             _set_accent_energy(weapon_node, pulse)
 

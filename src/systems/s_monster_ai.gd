@@ -1,15 +1,22 @@
 class_name S_MonsterAI
 extends System
 
+# Cached once per frame to avoid repeated tree scans
+var _cached_player_nodes: Array[Node] = []
+var _cached_player_positions: Array[Vector3] = []
+
 func query() -> QueryBuilder:
     return q.with_all([C_MonsterAI, C_Velocity, C_Health])
 
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
-    # Find all player positions
-    var player_positions: Array[Vector3] = []
-    var player_nodes: Array[Node] = _get_players()
-    for node in player_nodes:
-        player_positions.append(node.global_position)
+    # Cache player positions ONCE per frame
+    _cached_player_nodes.clear()
+    _cached_player_positions.clear()
+    var tree = ECS.world.get_tree()
+    if tree:
+        for node in tree.get_nodes_in_group("players"):
+            _cached_player_nodes.append(node)
+            _cached_player_positions.append(node.global_position)
 
     for entity in entities:
         if not is_instance_valid(entity):
@@ -28,10 +35,10 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
         # Tick attack cooldown
         ai.cooldown_remaining = maxf(ai.cooldown_remaining - delta, 0)
 
-        # Find nearest player
+        # Find nearest player from cache
         var nearest_dist := INF
         var nearest_pos := Vector3.ZERO
-        for pos in player_positions:
+        for pos in _cached_player_positions:
             var dist = body.global_position.distance_to(pos)
             if dist < nearest_dist:
                 nearest_dist = dist
@@ -48,14 +55,12 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
             dir.y = 0
             vel.direction = dir
             vel.speed = ai.move_speed
-            # Face movement direction
             if dir.length() > 0.1:
                 body.look_at(body.global_position + dir, Vector3.UP)
         else:
             ai.state = C_MonsterAI.AIState.ATTACK
             vel.direction = Vector3.ZERO
             vel.speed = 0.0
-            # Face player while attacking
             var face_dir = (nearest_pos - body.global_position).normalized()
             face_dir.y = 0
             if face_dir.length() > 0.1:
@@ -64,22 +69,13 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
                 ai.cooldown_remaining = ai.attack_cooldown
                 _attack_nearest(entity, nearest_pos, ai)
 
-func _get_players() -> Array[Node]:
-    var players: Array[Node] = []
-    var tree = ECS.world.get_tree()
-    if tree:
-        for node in tree.get_nodes_in_group("players"):
-            players.append(node)
-    return players
-
-func _attack_nearest(monster_entity: Entity, target_pos: Vector3, ai: C_MonsterAI) -> void:
+func _attack_nearest(monster_entity: Entity, _target_pos: Vector3, ai: C_MonsterAI) -> void:
     var body = monster_entity.get_parent() as CharacterBody3D
     if not body:
         return
-    for player in _get_players():
+    # Use cached player nodes instead of another tree scan
+    for player in _cached_player_nodes:
         if player.global_position.distance_to(body.global_position) <= ai.attack_range + 0.5:
             if player is PlayerEntity:
-                var hp = player.ecs_entity.get_component(C_Health) as C_Health
-                print("[S_MonsterAI] Monster attacks player for %d dmg (player HP: %d→%d)" % [ai.attack_damage, hp.current_health if hp else -1, (hp.current_health - ai.attack_damage) if hp else -1])
                 S_Damage.apply_damage(player.ecs_entity, ai.attack_damage, ai.attack_element)
                 break
