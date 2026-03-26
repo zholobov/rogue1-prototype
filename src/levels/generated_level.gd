@@ -136,9 +136,10 @@ func _spawn_monsters() -> void:
             var monster = MonsterScene.instantiate()
             # Pick monster variant (50% basic, 25% variant1, 25% variant2)
             var variant_roll = randf()
-            if variant_roll < 0.25 and theme.monster_scenes.has("variant2"):
+            var active = ThemeManager.active_theme
+            if variant_roll < 0.25 and active.monster_scenes.has("variant2"):
                 monster.visual_variant = "variant2"
-            elif variant_roll < 0.5 and theme.monster_scenes.has("variant1"):
+            elif variant_roll < 0.5 and active.monster_scenes.has("variant1"):
                 monster.visual_variant = "variant1"
             var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
             monster.position = spawn_points[i] + offset
