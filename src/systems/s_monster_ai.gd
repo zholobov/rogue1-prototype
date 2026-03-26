@@ -55,6 +55,11 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
             ai.state = C_MonsterAI.AIState.ATTACK
             vel.direction = Vector3.ZERO
             vel.speed = 0.0
+            # Face player while attacking
+            var face_dir = (nearest_pos - body.global_position).normalized()
+            face_dir.y = 0
+            if face_dir.length() > 0.1:
+                body.look_at(body.global_position + face_dir, Vector3.UP)
             if ai.cooldown_remaining <= 0:
                 ai.cooldown_remaining = ai.attack_cooldown
                 _attack_nearest(entity, nearest_pos, ai)

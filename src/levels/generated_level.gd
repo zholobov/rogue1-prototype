@@ -142,7 +142,7 @@ func _spawn_monsters() -> void:
                 monster.ecs_entity.add_component(wv)
                 var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
                 if ai:
-                    ai.attack_range = 15.0
+                    ai.attack_range = 8.0
             monsters_remaining += 1
 
 func _spawn_boss() -> void:

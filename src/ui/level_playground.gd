@@ -211,6 +211,9 @@ func _build_sections() -> Array:
                 {"label": "Max/Level (0=∞)", "key": "max_monsters_per_level", "type": "int", "value": Config.max_monsters_per_level, "min_value": 0, "max_value": 50, "step": 1, "options": []},
                 {"label": "HP Mult", "key": "monster_hp_mult", "type": "float", "value": Config.monster_hp_mult, "min_value": 0.1, "max_value": 10.0, "step": 0.1, "options": []},
                 {"label": "Damage Mult", "key": "monster_damage_mult", "type": "float", "value": Config.monster_damage_mult, "min_value": 0.1, "max_value": 10.0, "step": 0.1, "options": []},
+                {"label": "Weapon Chance", "key": "monster_weapon_chance", "type": "float", "value": Config.monster_weapon_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
+                {"label": "Ranged Cooldown", "key": "monster_ranged_cooldown", "type": "float", "value": Config.monster_ranged_cooldown, "min_value": 0.5, "max_value": 10.0, "step": 0.5, "options": []},
+                {"label": "Ranged Damage", "key": "monster_ranged_damage", "type": "int", "value": Config.monster_ranged_damage, "min_value": 1, "max_value": 50, "step": 1, "options": []},
             ]
         },
         {
