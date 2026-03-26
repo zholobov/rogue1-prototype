@@ -55,18 +55,18 @@ static func _create_dark_forest() -> ThemeData:
 
     # Environment (section 5)
     t.background_color = Color(0.02, 0.04, 0.02)
-    t.ambient_color = Color(0.1, 0.15, 0.08)
-    t.ambient_energy = 0.15
-    t.fog_color = Color(0.05, 0.08, 0.04)
-    t.fog_density = 0.03
-    t.fog_depth_begin = 2.0
-    t.fog_depth_end = 20.0
-    t.directional_light_color = Color(0.2, 0.3, 0.15)
-    t.directional_light_energy = 0.3
+    t.ambient_color = Color(0.2, 0.3, 0.15)
+    t.ambient_energy = 0.6
+    t.fog_color = Color(0.1, 0.15, 0.08)
+    t.fog_density = 0.015
+    t.fog_depth_begin = 5.0
+    t.fog_depth_end = 35.0
+    t.directional_light_color = Color(0.3, 0.4, 0.2)
+    t.directional_light_energy = 0.6
     t.point_light_color = Color(0.3, 0.5, 0.2)
-    t.point_light_energy = 2.0
-    t.point_light_range_mult = 1.2
-    t.point_light_attenuation = 2.5
+    t.point_light_energy = 3.5
+    t.point_light_range_mult = 1.8
+    t.point_light_attenuation = 2.0
     t.point_light_spacing = 3
 
     # Level Structure (section 5)
