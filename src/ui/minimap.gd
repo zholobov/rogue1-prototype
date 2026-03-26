@@ -76,13 +76,23 @@ func _draw() -> void:
             var dot_pos = _world_to_map(monster.global_position)
             draw_circle(dot_pos, 2.0, theme.health_bar_low_color)
 
-    # Player dot (green)
+    # Player dot + view cone
     var players = get_tree().get_nodes_in_group("players")
     for player in players:
         if player is PlayerEntity:
             var net_id = player.get_component(C_NetworkIdentity)
             if net_id and net_id.is_local:
                 var dot_pos = _world_to_map(player.global_position)
+                # View cone — triangle showing facing direction
+                var facing_angle = -player.rotation.y  # Godot Y rotation, negated for 2D
+                var cone_length = 18.0
+                var cone_half_angle = 0.45  # ~25 degrees half-angle
+                var cone_color = Color(theme.health_bar_foreground, 0.2)
+                var tip = dot_pos
+                var left_pt = tip + Vector2(sin(facing_angle - cone_half_angle), -cos(facing_angle - cone_half_angle)) * cone_length
+                var right_pt = tip + Vector2(sin(facing_angle + cone_half_angle), -cos(facing_angle + cone_half_angle)) * cone_length
+                draw_colored_polygon(PackedVector2Array([tip, left_pt, right_pt]), cone_color)
+                # Player dot on top
                 draw_circle(dot_pos, 3.0, theme.health_bar_foreground)
                 break
 
