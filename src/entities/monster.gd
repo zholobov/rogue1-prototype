@@ -161,6 +161,11 @@ func setup_as_boss(loop: int) -> void:
     if _health_bar_node:
         _health_bar_node.position = Vector3(0, 2.4, 0)
 
+    var wv := C_WeaponVisual.new()
+    wv.weapon_index = 0
+    wv.element = ""
+    ecs_entity.add_component(wv)
+
 func flash_hit() -> void:
     if _body_material:
         _body_material.emission_energy_multiplier = 5.0

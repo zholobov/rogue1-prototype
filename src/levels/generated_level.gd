@@ -130,6 +130,19 @@ func _spawn_monsters() -> void:
                 var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
                 if ai:
                     ai.attack_damage = int(ai.attack_damage * Config.monster_damage_mult)
+            if randf() < Config.monster_weapon_chance and monster.ecs_entity:
+                var weapon_index := Config.monster_weapon_presets[randi() % Config.monster_weapon_presets.size()]
+                var boss_ai := C_BossAI.new()
+                boss_ai.projectile_damage = Config.monster_ranged_damage
+                boss_ai.ranged_cooldown = Config.monster_ranged_cooldown
+                monster.ecs_entity.add_component(boss_ai)
+                var wv := C_WeaponVisual.new()
+                wv.weapon_index = weapon_index
+                wv.element = ""
+                monster.ecs_entity.add_component(wv)
+                var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
+                if ai:
+                    ai.attack_range = 15.0
             monsters_remaining += 1
 
 func _spawn_boss() -> void:
