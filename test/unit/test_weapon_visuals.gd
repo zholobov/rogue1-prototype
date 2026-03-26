@@ -62,3 +62,17 @@ func test_factory_element_glow():
 func test_factory_invalid_index_returns_null():
     var model = WeaponModelFactory.create_viewmodel(99, "")
     assert_null(model)
+
+# --- S_WeaponVisual smoke ---
+
+func test_weapon_visual_system_instantiates():
+    var sys = S_WeaponVisual.new()
+    assert_not_null(sys)
+
+# --- Monster weapon config ---
+
+func test_monster_weapon_config_defaults():
+    assert_almost_eq(Config.monster_weapon_chance, 0.0, 0.001)
+    assert_eq(Config.monster_weapon_presets.size(), 4)
+    assert_almost_eq(Config.monster_ranged_cooldown, 3.0, 0.001)
+    assert_eq(Config.monster_ranged_damage, 8)
