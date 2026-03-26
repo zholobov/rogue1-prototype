@@ -119,6 +119,12 @@ extends Resource
 @export var room_prop_min: int = 1
 @export var room_prop_max: int = 3
 
+# --- Level Structure ---
+@export_group("Level Structure")
+@export var has_ceiling: bool = true
+@export var wall_style: String = "default"
+@export var sky_config: Dictionary = {}
+
 # --- Helper methods ---
 
 func get_palette_array() -> Array[Color]:
