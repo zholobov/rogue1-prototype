@@ -66,3 +66,32 @@ func test_config_editor_emits_property_changed():
     # Programmatically toggle the CheckButton to trigger signal
     editor._controls["flag"].button_pressed = true
     assert_signal_emitted(editor, "property_changed")
+
+# --- LevelPlayground smoke test ---
+
+func test_playground_instantiates():
+    var playground = LevelPlayground.new()
+    add_child_autofree(playground)
+    # Should have built UI without crashing
+    assert_not_null(playground)
+    assert_true(playground.get_child_count() > 0, "Playground should build UI children")
+
+func test_grid_preview_renders_empty():
+    var preview = LevelPlayground.GridPreview.new()
+    add_child_autofree(preview)
+    preview.set_grid([])
+    # Should not crash on empty grid
+    assert_not_null(preview)
+
+func test_grid_preview_renders_grid():
+    var preview = LevelPlayground.GridPreview.new()
+    preview.size = Vector2(200, 200)
+    add_child_autofree(preview)
+    var grid = [
+        ["wall", "wall", "wall"],
+        ["wall", "room", "wall"],
+        ["wall", "wall", "wall"],
+    ]
+    preview.set_grid(grid)
+    # Should not crash; grid stored
+    assert_eq(preview._grid.size(), 3)
