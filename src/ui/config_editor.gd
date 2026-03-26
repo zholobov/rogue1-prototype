@@ -173,7 +173,11 @@ func _build_property(container: VBoxContainer, prop: Dictionary) -> void:
 func _format_default(value: Variant, type: String) -> String:
     match type:
         "float":
-            return "%.2g" % value
+            # Round to 2 decimal places, strip trailing zeros
+            var s = "%.2f" % value
+            if "." in s:
+                s = s.rstrip("0").rstrip(".")
+            return s
         "bool":
             return "on" if value else "off"
         _:
