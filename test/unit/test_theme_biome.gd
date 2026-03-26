@@ -33,3 +33,33 @@ func test_theme_data_has_biome_name():
     assert_eq(t.biome_name, "")
     t.biome_name = "Test"
     assert_eq(t.biome_name, "Test")
+
+# --- ThemeManager group integration ---
+
+func test_theme_manager_has_groups():
+    assert_true(ThemeManager.available_groups.size() >= 2, "Should have at least 2 theme groups")
+
+func test_theme_manager_active_group_not_null():
+    assert_not_null(ThemeManager.active_group)
+    assert_true(ThemeManager.active_group.biomes.size() > 0)
+
+func test_theme_manager_set_theme_by_group_name():
+    ThemeManager.set_theme("Stone Dungeon")
+    assert_eq(ThemeManager.active_group.group_name, "Stone Dungeon")
+    assert_eq(ThemeManager.active_theme.biome_name, "Stone")
+    ThemeManager.set_theme("Neon Dungeon")
+
+func test_theme_manager_set_biome():
+    var biome = ThemeManager.active_group.biomes[0]
+    ThemeManager.set_biome(biome)
+    assert_eq(ThemeManager.active_theme, biome)
+
+func test_existing_themes_have_biome_name():
+    for group in ThemeManager.available_groups:
+        for biome in group.biomes:
+            assert_true(biome.biome_name != "", "%s should have biome_name" % group.group_name)
+
+func test_backward_compat_available_themes():
+    assert_true(ThemeManager.available_themes.size() >= 2, "Flat list should have all biomes")
+    for t in ThemeManager.available_themes:
+        assert_true(t is ThemeData)
