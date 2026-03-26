@@ -715,55 +715,60 @@ func _add_ice_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	base.material_override = base_mat
 	base.position = Vector3(cx, WALL_HEIGHT / 2.0, cz)
 	parent.add_child(base)
-	# Crack lines across the ice face (4-5 thin dark boxes)
+	# Crack lines — wrap around wall on all faces
 	var crack_mat = StandardMaterial3D.new()
 	crack_mat.albedo_color = theme.wall_albedo.darkened(0.3)
 	crack_mat.roughness = 0.3
-	for i in range(rng.randi_range(4, 5)):
+	# Horizontal cracks (wrap around)
+	for i in range(3):
 		var crack = MeshInstance3D.new()
 		var crack_mesh = BoxMesh.new()
-		if rng.randf() < 0.6:
-			# Vertical crack
-			crack_mesh.size = Vector3(0.03, WALL_HEIGHT * rng.randf_range(0.4, 0.9), 0.03)
-		else:
-			# Horizontal crack
-			crack_mesh.size = Vector3(tile_size * rng.randf_range(0.3, 0.7), 0.03, 0.03)
+		crack_mesh.size = Vector3(tile_size + 0.04, 0.04, tile_size + 0.04)
 		crack.mesh = crack_mesh
 		crack.material_override = crack_mat
-		crack.position = Vector3(
-			cx + rng.randf_range(-tile_size * 0.35, tile_size * 0.35),
-			rng.randf_range(WALL_HEIGHT * 0.2, WALL_HEIGHT * 0.8),
-			pos.z + 0.02
-		)
+		crack.position = Vector3(cx, rng.randf_range(WALL_HEIGHT * 0.2, WALL_HEIGHT * 0.8), cz)
 		parent.add_child(crack)
-	# Crystal formations protruding from the face (5-6)
-	var half = tile_size * 0.4
-	for i in range(rng.randi_range(5, 6)):
-		var crystal = MeshInstance3D.new()
-		var crystal_mesh = BoxMesh.new()
-		var crystal_h = rng.randf_range(0.4, 1.2)
-		var crystal_w = rng.randf_range(0.15, 0.35)
-		crystal_mesh.size = Vector3(crystal_w, crystal_h, rng.randf_range(0.2, 0.5))
-		crystal.mesh = crystal_mesh
-		var crystal_mat = StandardMaterial3D.new()
-		crystal_mat.albedo_color = theme.wall_albedo.lightened(rng.randf_range(0.05, 0.15))
-		crystal_mat.roughness = rng.randf_range(0.1, 0.25)
-		crystal.material_override = crystal_mat
-		crystal.position = Vector3(
-			cx + rng.randf_range(-half, half),
-			rng.randf_range(WALL_HEIGHT * 0.15, WALL_HEIGHT * 0.75),
-			pos.z - rng.randf_range(0.1, 0.4)
-		)
-		crystal.rotation_degrees.y = rng.randf_range(-15, 15)
-		crystal.rotation_degrees.z = rng.randf_range(-10, 10)
-		parent.add_child(crystal)
-	# Snow drift at base
+	# Crystal formations protruding from ALL 4 faces (2 per face = 8 total)
+	var half = tile_size / 2.0
+	var face_dirs = [
+		Vector3(0, 0, -1),  # -Z face
+		Vector3(0, 0, 1),   # +Z face
+		Vector3(-1, 0, 0),  # -X face
+		Vector3(1, 0, 0),   # +X face
+	]
+	for face_dir in face_dirs:
+		for _j in range(2):
+			var crystal = MeshInstance3D.new()
+			var crystal_mesh = BoxMesh.new()
+			var crystal_h = rng.randf_range(0.5, 1.4)
+			var crystal_w = rng.randf_range(0.2, 0.4)
+			crystal_mesh.size = Vector3(crystal_w, crystal_h, rng.randf_range(0.25, 0.5))
+			crystal.mesh = crystal_mesh
+			var crystal_mat = StandardMaterial3D.new()
+			crystal_mat.albedo_color = theme.wall_albedo.lightened(rng.randf_range(0.05, 0.15))
+			crystal_mat.roughness = rng.randf_range(0.1, 0.25)
+			crystal.material_override = crystal_mat
+			# Position on the face, protruding outward
+			var face_offset = face_dir * (half + rng.randf_range(0.1, 0.35))
+			var lateral = rng.randf_range(-half * 0.6, half * 0.6)
+			var crystal_pos = Vector3(cx, rng.randf_range(WALL_HEIGHT * 0.15, WALL_HEIGHT * 0.75), cz)
+			if abs(face_dir.x) > 0:
+				crystal_pos.x = cx + face_offset.x
+				crystal_pos.z += lateral
+			else:
+				crystal_pos.z = cz + face_offset.z
+				crystal_pos.x += lateral
+			crystal.position = crystal_pos
+			crystal.rotation_degrees.y = rng.randf_range(-20, 20)
+			crystal.rotation_degrees.z = rng.randf_range(-10, 10)
+			parent.add_child(crystal)
+	# Snow drift at base — wraps around
 	var snow = MeshInstance3D.new()
 	var snow_mesh = BoxMesh.new()
-	snow_mesh.size = Vector3(tile_size * 0.95, 0.25, tile_size * 0.6)
+	snow_mesh.size = Vector3(tile_size + 0.1, 0.25, tile_size + 0.1)
 	snow.mesh = snow_mesh
 	snow.material_override = snow_mat
-	snow.position = Vector3(cx, 0.125, pos.z - 0.1)
+	snow.position = Vector3(cx, 0.125, cz)
 	parent.add_child(snow)
 	# Frost sparkles (3-5)
 	for i in range(rng.randi_range(3, 5)):
