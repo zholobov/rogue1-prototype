@@ -72,7 +72,8 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 				var is_room = (tile_name == "room" or tile_name == "spawn")
 				var floor_mat = _floor_material_room if is_room else _floor_material_corridor
 				_add_floor(root, world_pos, tile_size, floor_mat)
-				_add_ceiling(root, world_pos, tile_size, is_room)
+				if ThemeManager.active_theme.has_ceiling:
+					_add_ceiling(root, world_pos, tile_size, is_room)
 
 				# Edge strips where walkable meets wall
 				var accent_color = ThemeManager.active_theme.get_random_palette_color()
@@ -98,7 +99,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 
 	# Ceiling beams
 	var beam_spacing = ThemeManager.active_theme.ceiling_beam_spacing
-	if ThemeManager.active_theme.prop_density > 0.0 and beam_spacing > 0:
+	if ThemeManager.active_theme.has_ceiling and ThemeManager.active_theme.prop_density > 0.0 and beam_spacing > 0:
 		for y in range(height):
 			for x in range(width):
 				var tile_name = grid[y][x]
@@ -358,6 +359,10 @@ func _add_ceiling_beam(parent: Node3D, pos: Vector3, tile_size: float, along_x: 
 	parent.add_child(beam)
 
 func _add_wall_block(parent: Node3D, pos: Vector3, tile_size: float, grid: Array, x: int, y: int, width: int, height: int) -> void:
+	var style = ThemeManager.active_theme.wall_style
+	if style != "default":
+		_add_styled_wall(parent, pos, tile_size, grid, x, y, width, height, style)
+		return
 	var wall_body = StaticBody3D.new()
 	wall_body.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT / 2.0, tile_size / 2.0)
 	wall_body.add_to_group("wall_geo")
@@ -453,6 +458,234 @@ func _add_wall_detail(parent: Node3D, pos: Vector3, tile_size: float, grid: Arra
 			dmg_mat.roughness = 1.0
 			dmg.material_override = dmg_mat
 			parent.add_child(dmg)
+
+func _add_styled_wall(parent: Node3D, pos: Vector3, tile_size: float, grid: Array, x: int, y: int, width: int, height: int, style: String) -> void:
+	# Always add collision (same as default wall)
+	var wall_body = StaticBody3D.new()
+	wall_body.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT / 2.0, tile_size / 2.0)
+	wall_body.add_to_group("wall_geo")
+	var col = CollisionShape3D.new()
+	var box_shape = BoxShape3D.new()
+	box_shape.size = Vector3(tile_size, WALL_HEIGHT, tile_size)
+	col.shape = box_shape
+	wall_body.add_child(col)
+	parent.add_child(wall_body)
+
+	match style:
+		"forest_thicket":
+			_add_forest_wall(parent, pos, tile_size)
+		"palace_ornate":
+			_add_palace_wall(parent, pos, tile_size)
+		"ice_crystal":
+			_add_ice_wall(parent, pos, tile_size)
+
+func _add_forest_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+	var cx = pos.x + tile_size / 2.0
+	var cz = pos.z + tile_size / 2.0
+	var rng = RandomNumberGenerator.new()
+	rng.seed = hash(Vector2i(int(pos.x), int(pos.z)))
+	# 2-3 tree trunks
+	var trunk_count = rng.randi_range(2, 3)
+	for i in range(trunk_count):
+		var trunk = MeshInstance3D.new()
+		var cyl = CylinderMesh.new()
+		var radius = rng.randf_range(0.15, 0.3)
+		cyl.top_radius = radius
+		cyl.bottom_radius = radius * 1.1
+		cyl.height = WALL_HEIGHT + rng.randf_range(-0.3, 0.3)
+		trunk.mesh = cyl
+		trunk.material_override = _wall_material
+		var offset_x = rng.randf_range(-tile_size * 0.35, tile_size * 0.35)
+		var offset_z = rng.randf_range(-tile_size * 0.35, tile_size * 0.35)
+		trunk.position = Vector3(cx + offset_x, cyl.height / 2.0, cz + offset_z)
+		parent.add_child(trunk)
+		# Knot on trunk
+		if rng.randf() < 0.6:
+			var knot = MeshInstance3D.new()
+			var sphere = SphereMesh.new()
+			sphere.radius = rng.randf_range(0.05, 0.1)
+			sphere.height = sphere.radius * 2.0
+			knot.mesh = sphere
+			knot.material_override = _wall_material
+			knot.position = trunk.position + Vector3(radius * 0.8, rng.randf_range(0.5, 2.0), 0)
+			parent.add_child(knot)
+	# Branch crossbeam
+	var branch = MeshInstance3D.new()
+	var branch_mesh = BoxMesh.new()
+	branch_mesh.size = Vector3(tile_size * 0.5, 0.08, 0.06)
+	branch.mesh = branch_mesh
+	branch.material_override = _wall_material
+	branch.position = Vector3(cx, rng.randf_range(1.0, 2.0), cz)
+	branch.rotation_degrees.z = rng.randf_range(-15, 15)
+	parent.add_child(branch)
+	# Moss patch (emissive)
+	if rng.randf() < 0.5:
+		var moss = MeshInstance3D.new()
+		var moss_mesh = BoxMesh.new()
+		moss_mesh.size = Vector3(0.2, 0.1, 0.15)
+		moss.mesh = moss_mesh
+		var moss_mat = StandardMaterial3D.new()
+		moss_mat.albedo_color = Color(0.15, 0.3, 0.1)
+		moss_mat.emission_enabled = true
+		moss_mat.emission = Color(0.2, 0.5, 0.15)
+		moss_mat.emission_energy_multiplier = 1.0
+		moss.material_override = moss_mat
+		moss.position = Vector3(cx + rng.randf_range(-0.3, 0.3), rng.randf_range(0.5, 1.5), cz + rng.randf_range(-0.3, 0.3))
+		parent.add_child(moss)
+	# Root tangle at base
+	var root_mesh = MeshInstance3D.new()
+	var root_box = BoxMesh.new()
+	root_box.size = Vector3(tile_size * 0.8, 0.15, tile_size * 0.6)
+	root_mesh.mesh = root_box
+	root_mesh.material_override = _wall_material
+	root_mesh.position = Vector3(cx, 0.075, cz)
+	parent.add_child(root_mesh)
+
+func _add_palace_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+	var theme = ThemeManager.active_theme
+	var cx = pos.x + tile_size / 2.0
+	var cz = pos.z + tile_size / 2.0
+	# Base wall panel
+	var base = MeshInstance3D.new()
+	var base_mesh = BoxMesh.new()
+	base_mesh.size = Vector3(tile_size, WALL_HEIGHT, tile_size)
+	base.mesh = base_mesh
+	base.material_override = _wall_material
+	base.position = Vector3(cx, WALL_HEIGHT / 2.0, cz)
+	parent.add_child(base)
+	# Horizontal log lines (4)
+	for i in range(4):
+		var line = MeshInstance3D.new()
+		var line_mesh = BoxMesh.new()
+		line_mesh.size = Vector3(tile_size + 0.02, 0.03, tile_size + 0.02)
+		line.mesh = line_mesh
+		var dark_mat = StandardMaterial3D.new()
+		dark_mat.albedo_color = theme.wall_albedo.darkened(0.3)
+		dark_mat.roughness = 0.9
+		line.material_override = dark_mat
+		line.position = Vector3(cx, 0.5 + i * 0.65, cz)
+		parent.add_child(line)
+	# Pilaster column (left edge)
+	var pilaster = MeshInstance3D.new()
+	var pil_mesh = BoxMesh.new()
+	pil_mesh.size = Vector3(0.2, WALL_HEIGHT, 0.2)
+	pilaster.mesh = pil_mesh
+	var pil_mat = StandardMaterial3D.new()
+	pil_mat.albedo_color = theme.wall_albedo.lightened(0.15)
+	pil_mat.roughness = 0.85
+	pilaster.material_override = pil_mat
+	pilaster.position = Vector3(pos.x + 0.1, WALL_HEIGHT / 2.0, cz)
+	parent.add_child(pilaster)
+	# Capital on pilaster
+	var capital = MeshInstance3D.new()
+	var cap_mesh = BoxMesh.new()
+	cap_mesh.size = Vector3(0.3, 0.1, 0.3)
+	capital.mesh = cap_mesh
+	capital.material_override = pil_mat
+	capital.position = Vector3(pos.x + 0.1, WALL_HEIGHT - 0.05, cz)
+	parent.add_child(capital)
+	# Gold trim strip
+	var trim = MeshInstance3D.new()
+	var trim_mesh = BoxMesh.new()
+	trim_mesh.size = Vector3(tile_size * 0.7, 0.04, 0.02)
+	trim.mesh = trim_mesh
+	var gold_mat = StandardMaterial3D.new()
+	gold_mat.albedo_color = Color(0.6, 0.45, 0.1)
+	gold_mat.emission_enabled = true
+	gold_mat.emission = Color(0.85, 0.65, 0.2)
+	gold_mat.emission_energy_multiplier = 2.0
+	trim.material_override = gold_mat
+	trim.position = Vector3(cx, WALL_HEIGHT - 0.15, pos.z + 0.01)
+	parent.add_child(trim)
+	# Ornamental panel (recessed)
+	var panel = MeshInstance3D.new()
+	var panel_mesh = BoxMesh.new()
+	panel_mesh.size = Vector3(tile_size * 0.5, 0.8, 0.05)
+	panel.mesh = panel_mesh
+	var panel_mat = StandardMaterial3D.new()
+	panel_mat.albedo_color = theme.wall_albedo.darkened(0.2)
+	panel_mat.roughness = 0.9
+	panel.material_override = panel_mat
+	panel.position = Vector3(cx, 1.2, pos.z + 0.03)
+	parent.add_child(panel)
+	# Gold ornament sphere in panel
+	var ornament = MeshInstance3D.new()
+	var orn_mesh = SphereMesh.new()
+	orn_mesh.radius = 0.06
+	orn_mesh.height = 0.12
+	ornament.mesh = orn_mesh
+	ornament.material_override = gold_mat
+	ornament.position = Vector3(cx, 1.2, pos.z + 0.06)
+	parent.add_child(ornament)
+	# Baseboard
+	var baseboard = MeshInstance3D.new()
+	var bb_mesh = BoxMesh.new()
+	bb_mesh.size = Vector3(tile_size + 0.02, 0.12, tile_size + 0.02)
+	baseboard.mesh = bb_mesh
+	baseboard.material_override = pil_mat
+	baseboard.position = Vector3(cx, 0.06, cz)
+	parent.add_child(baseboard)
+
+func _add_ice_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+	var theme = ThemeManager.active_theme
+	var cx = pos.x + tile_size / 2.0
+	var cz = pos.z + tile_size / 2.0
+	var rng = RandomNumberGenerator.new()
+	rng.seed = hash(Vector2i(int(pos.x), int(pos.z)))
+	var ice_mat = StandardMaterial3D.new()
+	ice_mat.albedo_color = theme.wall_albedo
+	ice_mat.roughness = 0.2
+	var snow_mat = StandardMaterial3D.new()
+	snow_mat.albedo_color = Color(0.85, 0.88, 0.92)
+	snow_mat.roughness = 0.8
+	# Snow mounds (2-3 at base)
+	for i in range(rng.randi_range(2, 3)):
+		var mound = MeshInstance3D.new()
+		var mound_mesh = BoxMesh.new()
+		var mound_h = rng.randf_range(0.3, 0.8)
+		mound_mesh.size = Vector3(tile_size * rng.randf_range(0.3, 0.5), mound_h, tile_size * rng.randf_range(0.3, 0.5))
+		mound.mesh = mound_mesh
+		mound.material_override = snow_mat
+		mound.position = Vector3(cx + rng.randf_range(-0.5, 0.5), mound_h / 2.0, cz + rng.randf_range(-0.5, 0.5))
+		parent.add_child(mound)
+	# Ice crystals (2-3 tall angular shapes)
+	for i in range(rng.randi_range(2, 3)):
+		var crystal = MeshInstance3D.new()
+		var crystal_mesh = BoxMesh.new()
+		var crystal_h = rng.randf_range(1.5, WALL_HEIGHT)
+		crystal_mesh.size = Vector3(rng.randf_range(0.15, 0.35), crystal_h, rng.randf_range(0.15, 0.35))
+		crystal.mesh = crystal_mesh
+		crystal.material_override = ice_mat
+		crystal.position = Vector3(cx + rng.randf_range(-0.6, 0.6), crystal_h / 2.0, cz + rng.randf_range(-0.6, 0.6))
+		crystal.rotation_degrees.y = rng.randf_range(-20, 20)
+		crystal.rotation_degrees.z = rng.randf_range(-8, 8)
+		parent.add_child(crystal)
+	# Frost sparkle
+	if rng.randf() < 0.6:
+		var sparkle = MeshInstance3D.new()
+		var spark_mesh = SphereMesh.new()
+		spark_mesh.radius = 0.04
+		spark_mesh.height = 0.08
+		sparkle.mesh = spark_mesh
+		var frost_mat = StandardMaterial3D.new()
+		frost_mat.albedo_color = Color(0.7, 0.85, 1.0)
+		frost_mat.emission_enabled = true
+		frost_mat.emission = Color(0.7, 0.88, 1.0)
+		frost_mat.emission_energy_multiplier = 2.0
+		sparkle.material_override = frost_mat
+		sparkle.position = Vector3(cx + rng.randf_range(-0.5, 0.5), rng.randf_range(1.0, 2.5), cz + rng.randf_range(-0.3, 0.3))
+		parent.add_child(sparkle)
+	# Icicles from top (2)
+	for i in range(2):
+		var icicle = MeshInstance3D.new()
+		var icicle_mesh = CylinderMesh.new()
+		icicle_mesh.top_radius = 0.02
+		icicle_mesh.bottom_radius = 0.06
+		icicle_mesh.height = rng.randf_range(0.3, 0.6)
+		icicle.mesh = icicle_mesh
+		icicle.material_override = ice_mat
+		icicle.position = Vector3(cx + rng.randf_range(-0.5, 0.5), WALL_HEIGHT - icicle_mesh.height / 2.0, cz + rng.randf_range(-0.5, 0.5))
+		parent.add_child(icicle)
 
 func _add_spawn_point(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var marker = Marker3D.new()
