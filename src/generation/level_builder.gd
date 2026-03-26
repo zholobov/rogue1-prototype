@@ -589,6 +589,7 @@ func _add_palace_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var theme = ThemeManager.active_theme
 	var cx = pos.x + tile_size / 2.0
 	var cz = pos.z + tile_size / 2.0
+	var half = tile_size / 2.0
 	# Base wall panel
 	var base = MeshInstance3D.new()
 	var base_mesh = BoxMesh.new()
@@ -597,74 +598,93 @@ func _add_palace_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	base.material_override = _wall_material
 	base.position = Vector3(cx, WALL_HEIGHT / 2.0, cz)
 	parent.add_child(base)
-	# Horizontal log lines (4)
-	for i in range(4):
-		var line = MeshInstance3D.new()
-		var line_mesh = BoxMesh.new()
-		line_mesh.size = Vector3(tile_size + 0.02, 0.03, tile_size + 0.02)
-		line.mesh = line_mesh
-		var dark_mat = StandardMaterial3D.new()
-		dark_mat.albedo_color = theme.wall_albedo.darkened(0.3)
-		dark_mat.roughness = 0.9
-		line.material_override = dark_mat
-		line.position = Vector3(cx, 0.5 + i * 0.65, cz)
-		parent.add_child(line)
-	# Pilaster column (left edge)
-	var pilaster = MeshInstance3D.new()
-	var pil_mesh = BoxMesh.new()
-	pil_mesh.size = Vector3(0.2, WALL_HEIGHT, 0.2)
-	pilaster.mesh = pil_mesh
+	# Materials
+	var dark_mat = StandardMaterial3D.new()
+	dark_mat.albedo_color = theme.wall_albedo.darkened(0.3)
+	dark_mat.roughness = 0.9
 	var pil_mat = StandardMaterial3D.new()
 	pil_mat.albedo_color = theme.wall_albedo.lightened(0.15)
 	pil_mat.roughness = 0.85
-	pilaster.material_override = pil_mat
-	pilaster.position = Vector3(pos.x + 0.1, WALL_HEIGHT / 2.0, cz)
-	parent.add_child(pilaster)
-	# Capital on pilaster
-	var capital = MeshInstance3D.new()
-	var cap_mesh = BoxMesh.new()
-	cap_mesh.size = Vector3(0.3, 0.1, 0.3)
-	capital.mesh = cap_mesh
-	capital.material_override = pil_mat
-	capital.position = Vector3(pos.x + 0.1, WALL_HEIGHT - 0.05, cz)
-	parent.add_child(capital)
-	# Gold trim strip
-	var trim = MeshInstance3D.new()
-	var trim_mesh = BoxMesh.new()
-	trim_mesh.size = Vector3(tile_size * 0.7, 0.04, 0.02)
-	trim.mesh = trim_mesh
 	var gold_mat = StandardMaterial3D.new()
 	gold_mat.albedo_color = theme.primary.darkened(0.3)
 	gold_mat.emission_enabled = true
 	gold_mat.emission = theme.primary
 	gold_mat.emission_energy_multiplier = 2.0
-	trim.material_override = gold_mat
-	trim.position = Vector3(cx, WALL_HEIGHT - 0.15, pos.z + 0.01)
-	parent.add_child(trim)
-	# Ornamental panel (recessed)
-	var panel = MeshInstance3D.new()
-	var panel_mesh = BoxMesh.new()
-	panel_mesh.size = Vector3(tile_size * 0.5, 0.8, 0.05)
-	panel.mesh = panel_mesh
 	var panel_mat = StandardMaterial3D.new()
 	panel_mat.albedo_color = theme.wall_albedo.darkened(0.2)
 	panel_mat.roughness = 0.9
-	panel.material_override = panel_mat
-	panel.position = Vector3(cx, 1.2, pos.z + 0.03)
-	parent.add_child(panel)
-	# Gold ornament sphere in panel
-	var ornament = MeshInstance3D.new()
-	var orn_mesh = SphereMesh.new()
-	orn_mesh.radius = 0.06
-	orn_mesh.height = 0.12
-	ornament.mesh = orn_mesh
-	ornament.material_override = gold_mat
-	ornament.position = Vector3(cx, 1.2, pos.z + 0.06)
-	parent.add_child(ornament)
-	# Baseboard
+	# Horizontal log lines (4) — wrap around all sides
+	for i in range(4):
+		var line = MeshInstance3D.new()
+		var line_mesh = BoxMesh.new()
+		line_mesh.size = Vector3(tile_size + 0.06, 0.04, tile_size + 0.06)
+		line.mesh = line_mesh
+		line.material_override = dark_mat
+		line.position = Vector3(cx, 0.5 + i * 0.65, cz)
+		parent.add_child(line)
+	# 4 pilaster columns — one on each corner, protruding outward
+	var corners = [
+		Vector3(pos.x - 0.05, WALL_HEIGHT / 2.0, pos.z - 0.05),
+		Vector3(pos.x + tile_size + 0.05, WALL_HEIGHT / 2.0, pos.z - 0.05),
+		Vector3(pos.x - 0.05, WALL_HEIGHT / 2.0, pos.z + tile_size + 0.05),
+		Vector3(pos.x + tile_size + 0.05, WALL_HEIGHT / 2.0, pos.z + tile_size + 0.05),
+	]
+	for corner_pos in corners:
+		var pilaster = MeshInstance3D.new()
+		var pil_mesh = BoxMesh.new()
+		pil_mesh.size = Vector3(0.25, WALL_HEIGHT + 0.05, 0.25)
+		pilaster.mesh = pil_mesh
+		pilaster.material_override = pil_mat
+		pilaster.position = corner_pos
+		parent.add_child(pilaster)
+		# Capital
+		var capital = MeshInstance3D.new()
+		var cap_mesh = BoxMesh.new()
+		cap_mesh.size = Vector3(0.35, 0.12, 0.35)
+		capital.mesh = cap_mesh
+		capital.material_override = pil_mat
+		capital.position = Vector3(corner_pos.x, WALL_HEIGHT + 0.01, corner_pos.z)
+		parent.add_child(capital)
+	# Gold trim strips — on all 4 faces, protruding outward
+	var face_offsets = [
+		{"pos": Vector3(cx, WALL_HEIGHT - 0.15, pos.z - 0.02), "size": Vector3(tile_size * 0.6, 0.06, 0.04)},
+		{"pos": Vector3(cx, WALL_HEIGHT - 0.15, pos.z + tile_size + 0.02), "size": Vector3(tile_size * 0.6, 0.06, 0.04)},
+		{"pos": Vector3(pos.x - 0.02, WALL_HEIGHT - 0.15, cz), "size": Vector3(0.04, 0.06, tile_size * 0.6)},
+		{"pos": Vector3(pos.x + tile_size + 0.02, WALL_HEIGHT - 0.15, cz), "size": Vector3(0.04, 0.06, tile_size * 0.6)},
+	]
+	for fo in face_offsets:
+		var trim = MeshInstance3D.new()
+		var trim_mesh = BoxMesh.new()
+		trim_mesh.size = fo.size
+		trim.mesh = trim_mesh
+		trim.material_override = gold_mat
+		trim.position = fo.pos
+		parent.add_child(trim)
+	# Ornamental panel + gold sphere — on 2 faces (front and back)
+	var panel_faces = [
+		Vector3(cx, 1.2, pos.z - 0.03),
+		Vector3(cx, 1.2, pos.z + tile_size + 0.03),
+	]
+	for pf in panel_faces:
+		var panel = MeshInstance3D.new()
+		var pm = BoxMesh.new()
+		pm.size = Vector3(tile_size * 0.45, 0.7, 0.06)
+		panel.mesh = pm
+		panel.material_override = panel_mat
+		panel.position = pf
+		parent.add_child(panel)
+		var ornament = MeshInstance3D.new()
+		var orn_mesh = SphereMesh.new()
+		orn_mesh.radius = 0.08
+		orn_mesh.height = 0.16
+		ornament.mesh = orn_mesh
+		ornament.material_override = gold_mat
+		ornament.position = Vector3(pf.x, pf.y, pf.z - 0.03 if pf.z < cz else pf.z + 0.03)
+		parent.add_child(ornament)
+	# Baseboard — wrap around
 	var baseboard = MeshInstance3D.new()
 	var bb_mesh = BoxMesh.new()
-	bb_mesh.size = Vector3(tile_size + 0.02, 0.12, tile_size + 0.02)
+	bb_mesh.size = Vector3(tile_size + 0.06, 0.15, tile_size + 0.06)
 	baseboard.mesh = bb_mesh
 	baseboard.material_override = pil_mat
 	baseboard.position = Vector3(cx, 0.06, cz)
