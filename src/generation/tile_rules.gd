@@ -4,30 +4,26 @@ extends RefCounted
 var tiles: Dictionary = {}
 var adjacency_dir: Dictionary = {}
 
+static func get_profile_weights(modifier: String) -> Dictionary:
+    match modifier:
+        "dense":
+            return { room = 2.5, spawn = 2.5, cor = 0.3, door = 0.5, wall = 2.0, empty = 0.5 }
+        "large":
+            return { room = 1.0, spawn = 1.0, cor = 0.8, door = 0.3, wall = 3.0, empty = 1.5 }
+        "dark":
+            return { room = 0.8, spawn = 0.8, cor = 0.5, door = 0.15, wall = 4.0, empty = 1.5 }
+        "horde":
+            return { room = 3.0, spawn = 3.0, cor = 0.3, door = 0.6, wall = 2.0, empty = 0.3 }
+        "boss":
+            return { room = 3.0, spawn = 3.0, cor = 0.2, door = 0.3, wall = 2.5, empty = 0.5 }
+        _:
+            return { room = 1.5, spawn = 1.5, cor = 0.4, door = 0.2, wall = 3.5, empty = 1.0 }
+
 func setup_profile(modifier: String) -> void:
     tiles.clear()
     adjacency_dir.clear()
 
-    # Weight profiles per modifier
-    var w: Dictionary
-    match modifier:
-        "dense":
-            # Open arenas, many doors, less wall
-            w = { room = 2.5, spawn = 2.5, cor = 0.3, door = 0.5, wall = 2.0, empty = 0.5 }
-        "large":
-            # Sprawling corridors, scattered rooms
-            w = { room = 1.0, spawn = 1.0, cor = 0.8, door = 0.3, wall = 3.0, empty = 1.5 }
-        "dark":
-            # Tight, claustrophobic — tiny rooms, few doors
-            w = { room = 0.8, spawn = 0.8, cor = 0.5, door = 0.15, wall = 4.0, empty = 1.5 }
-        "horde":
-            # Big open rooms for fighting, many doors for enemy flow
-            w = { room = 3.0, spawn = 3.0, cor = 0.3, door = 0.6, wall = 2.0, empty = 0.3 }
-        "boss":
-            # One big arena
-            w = { room = 3.0, spawn = 3.0, cor = 0.2, door = 0.3, wall = 2.5, empty = 0.5 }
-        _:  # "normal"
-            w = { room = 1.5, spawn = 1.5, cor = 0.4, door = 0.2, wall = 3.5, empty = 1.0 }
+    var w = TileRules.get_profile_weights(modifier)
 
     add_tile("room", w.room, true, false)
     add_tile("spawn", w.spawn, true, true)
