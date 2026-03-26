@@ -309,7 +309,7 @@ func _build_config_panel() -> void:
 	_config_panel.add_child(vbox)
 
 	var header = Label.new()
-	header.text = "CONFIG [Tab to close]"
+	header.text = "CONFIG [Esc to close]"
 	header.add_theme_font_size_override("font_size", 12)
 	header.add_theme_color_override("font_color", ThemeManager.active_theme.ui_accent_color)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -367,9 +367,18 @@ func _toggle_config_panel() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
-		_toggle_config_panel()
-		get_viewport().set_input_as_handled()
+	if not event is InputEventKey or not event.pressed:
+		return
+	# Escape toggles config panel
+	if event.keycode == KEY_ESCAPE:
+		if _config_visible:
+			# Close panel, re-capture mouse
+			_toggle_config_panel()
+			get_viewport().set_input_as_handled()
+		elif Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+			# Mouse already free (player released it) — open panel
+			_toggle_config_panel()
+			get_viewport().set_input_as_handled()
 
 # ========== PUBLIC API ==========
 
