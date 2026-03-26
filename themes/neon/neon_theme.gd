@@ -4,6 +4,7 @@ static func create() -> ThemeData:
     var t = ThemeData.new()
 
     t.theme_name = "Neon Dungeon"
+    t.biome_name = "Neon"
     t.description = "Dark corridors lit by neon glow"
 
     # Palette (from neon_palette.gd)

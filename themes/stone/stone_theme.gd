@@ -5,6 +5,7 @@ static func create() -> ThemeData:
 
     # Meta
     t.theme_name = "Stone Dungeon"
+    t.biome_name = "Stone"
     t.description = "Ancient stone corridors lit by flickering torches"
 
     # Palette — warm earthy tones

@@ -5,19 +5,35 @@ signal theme_changed(theme: ThemeData)
 var active_theme: ThemeData
 var available_themes: Array[ThemeData] = []
 
+var active_group: ThemeGroup
+var available_groups: Array[ThemeGroup] = []
+
 func _ready() -> void:
     _load_themes()
-    if available_themes.size() > 0:
-        active_theme = available_themes[0]
+    if available_groups.size() > 0:
+        active_group = available_groups[0]
+        active_theme = active_group.biomes[0]
         TextureFactory.generate_for_theme(active_theme)
 
 func set_theme(theme_name_to_set: String) -> void:
-    for theme in available_themes:
-        if theme.theme_name == theme_name_to_set:
-            active_theme = theme
-            TextureFactory.generate_for_theme(theme)
-            theme_changed.emit(theme)
+    # Search by group name
+    for group in available_groups:
+        if group.group_name == theme_name_to_set:
+            active_group = group
+            active_theme = group.biomes[0]
+            TextureFactory.generate_for_theme(active_theme)
+            theme_changed.emit(active_theme)
             return
+    # Fallback: search by biome name in current group
+    for biome in active_group.biomes:
+        if biome.theme_name == theme_name_to_set or biome.biome_name == theme_name_to_set:
+            set_biome(biome)
+            return
+
+func set_biome(biome: ThemeData) -> void:
+    active_theme = biome
+    TextureFactory.generate_for_theme(biome)
+    theme_changed.emit(active_theme)
 
 func get_palette() -> Array[Color]:
     return active_theme.get_palette_array()
@@ -31,6 +47,23 @@ func get_projectile_scene() -> PackedScene:
     return active_theme.projectile_scene
 
 func _load_themes() -> void:
-    available_themes.append(NeonTheme.create())
-    available_themes.append(StoneTheme.create())
-    active_theme = available_themes[0]
+    var neon_biome = NeonTheme.create()
+    var neon_group = ThemeGroup.new()
+    neon_group.group_name = "Neon Dungeon"
+    neon_group.description = "Glowing neon corridors"
+    neon_group.biomes = [neon_biome]
+    available_groups.append(neon_group)
+
+    var stone_biome = StoneTheme.create()
+    var stone_group = ThemeGroup.new()
+    stone_group.group_name = "Stone Dungeon"
+    stone_group.description = "Ancient stone halls"
+    stone_group.biomes = [stone_biome]
+    available_groups.append(stone_group)
+
+    # Flat list for backward compat
+    for group in available_groups:
+        available_themes.append_array(group.biomes)
+
+    active_group = available_groups[0]
+    active_theme = active_group.biomes[0]
