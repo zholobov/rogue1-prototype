@@ -61,6 +61,9 @@ func _load_themes() -> void:
     stone_group.biomes = [stone_biome]
     available_groups.append(stone_group)
 
+    var folk_group = FolkTheme.create_group()
+    available_groups.append(folk_group)
+
     # Flat list for backward compat
     for group in available_groups:
         available_themes.append_array(group.biomes)
