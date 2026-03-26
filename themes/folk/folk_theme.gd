@@ -72,6 +72,7 @@ static func _create_dark_forest() -> ThemeData:
     # Level Structure (section 5)
     t.has_ceiling = false
     t.wall_style = "forest_thicket"
+    t.light_source_style = "mushroom"
     t.sky_config = {
         "sky_top_color": Color(0.02, 0.05, 0.02),
         "sky_horizon_color": Color(0.05, 0.1, 0.05),
@@ -206,6 +207,7 @@ static func _create_golden_palace() -> ThemeData:
     # Level Structure (section 6)
     t.has_ceiling = true
     t.wall_style = "palace_ornate"
+    t.light_source_style = "torch"
     t.sky_config = {}
 
     # Level Materials (section 6)
@@ -340,6 +342,7 @@ static func _create_winter_realm() -> ThemeData:
     # Level Structure (section 7)
     t.has_ceiling = false
     t.wall_style = "ice_crystal"
+    t.light_source_style = "crystal"
     t.sky_config = {
         "sky_top_color": Color(0.05, 0.05, 0.15),
         "sky_horizon_color": Color(0.3, 0.4, 0.6),

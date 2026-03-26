@@ -138,10 +138,17 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 
 		# Space torches by skipping candidates (global stride — good enough for prototype)
 		var spacing = maxi(ThemeManager.active_theme.point_light_spacing, 1)
+		var light_style = ThemeManager.active_theme.light_source_style
 		for i in range(0, torch_candidates.size(), spacing):
 			var c = torch_candidates[i]
 			var world_pos_torch = Vector3(c.x * tile_size, 0, c.y * tile_size)
-			_add_torch(root, world_pos_torch, tile_size, c.dir, light_index)
+			match light_style:
+				"mushroom":
+					_add_mushroom_light(root, world_pos_torch, tile_size, c.dir, light_index)
+				"crystal":
+					_add_crystal_light(root, world_pos_torch, tile_size, c.dir, light_index)
+				_:
+					_add_torch(root, world_pos_torch, tile_size, c.dir, light_index)
 			light_index += 1
 
 	# Props (pillars, rubble, room props)
@@ -781,6 +788,106 @@ func _add_torch(parent: Node3D, pos: Vector3, tile_size: float, wall_dir: Vector
 		tween.tween_property(light, "light_energy", theme.point_light_energy, randf_range(0.1, 0.3))
 
 	parent.add_child(torch_root)
+
+func _add_mushroom_light(parent: Node3D, pos: Vector3, tile_size: float, wall_dir: Vector2i, index: int) -> void:
+	var theme = ThemeManager.active_theme
+	var light_root = Node3D.new()
+	light_root.name = "Mushroom_%d" % index
+	var base_pos = pos + Vector3(tile_size / 2.0, 0, tile_size / 2.0)
+	var mount_pos: Vector3 = base_pos
+	if wall_dir.x != 0:
+		mount_pos.x += wall_dir.x * (tile_size / 2.0 - 0.2)
+	else:
+		mount_pos.z += wall_dir.y * (tile_size / 2.0 - 0.2)
+	mount_pos.y = 0.0
+	light_root.position = mount_pos
+	# Stem: thin cylinder
+	var stem = MeshInstance3D.new()
+	var stem_mesh = CylinderMesh.new()
+	stem_mesh.top_radius = 0.04
+	stem_mesh.bottom_radius = 0.05
+	stem_mesh.height = 0.3
+	stem.mesh = stem_mesh
+	var stem_mat = StandardMaterial3D.new()
+	stem_mat.albedo_color = Color(0.25, 0.2, 0.15)
+	stem_mat.roughness = 0.9
+	stem.material_override = stem_mat
+	stem.position = Vector3(0, 0.15, 0)
+	light_root.add_child(stem)
+	# Cap: wide flat sphere (emissive)
+	var cap = MeshInstance3D.new()
+	var cap_mesh = SphereMesh.new()
+	cap_mesh.radius = 0.15
+	cap_mesh.height = 0.12
+	cap.mesh = cap_mesh
+	var cap_mat = StandardMaterial3D.new()
+	cap_mat.albedo_color = Color(0.1, 0.2, 0.08)
+	cap_mat.emission_enabled = true
+	cap_mat.emission = theme.point_light_color
+	cap_mat.emission_energy_multiplier = 2.5
+	cap.material_override = cap_mat
+	cap.position = Vector3(0, 0.35, 0)
+	light_root.add_child(cap)
+	# Light
+	var light = OmniLight3D.new()
+	light.position = Vector3(0, 0.4, 0)
+	light.omni_range = tile_size * theme.point_light_range_mult
+	light.light_energy = theme.point_light_energy
+	light.omni_attenuation = theme.point_light_attenuation
+	light.light_color = theme.point_light_color
+	light_root.add_child(light)
+	if theme.torch_flicker:
+		var tween = parent.create_tween().set_loops()
+		tween.tween_property(light, "light_energy", theme.point_light_energy * 0.6, randf_range(0.2, 0.5))
+		tween.tween_property(light, "light_energy", theme.point_light_energy, randf_range(0.2, 0.5))
+	parent.add_child(light_root)
+
+func _add_crystal_light(parent: Node3D, pos: Vector3, tile_size: float, wall_dir: Vector2i, index: int) -> void:
+	var theme = ThemeManager.active_theme
+	var light_root = Node3D.new()
+	light_root.name = "Crystal_%d" % index
+	var base_pos = pos + Vector3(tile_size / 2.0, 0, tile_size / 2.0)
+	var mount_pos: Vector3 = base_pos
+	if wall_dir.x != 0:
+		mount_pos.x += wall_dir.x * (tile_size / 2.0 - 0.15)
+	else:
+		mount_pos.z += wall_dir.y * (tile_size / 2.0 - 0.15)
+	mount_pos.y = 0.0
+	light_root.position = mount_pos
+	# Ice crystal: tall narrow emissive box
+	var crystal = MeshInstance3D.new()
+	var crystal_mesh = BoxMesh.new()
+	crystal_mesh.size = Vector3(0.1, 0.5, 0.08)
+	crystal.mesh = crystal_mesh
+	var crystal_mat = StandardMaterial3D.new()
+	crystal_mat.albedo_color = Color(0.3, 0.5, 0.8)
+	crystal_mat.roughness = 0.15
+	crystal_mat.emission_enabled = true
+	crystal_mat.emission = theme.point_light_color
+	crystal_mat.emission_energy_multiplier = 2.0
+	crystal.material_override = crystal_mat
+	crystal.position = Vector3(0, 0.25, 0)
+	crystal.rotation_degrees.z = randf_range(-10, 10)
+	light_root.add_child(crystal)
+	# Smaller shard next to it
+	var shard = MeshInstance3D.new()
+	var shard_mesh = BoxMesh.new()
+	shard_mesh.size = Vector3(0.06, 0.3, 0.05)
+	shard.mesh = shard_mesh
+	shard.material_override = crystal_mat
+	shard.position = Vector3(0.08, 0.15, 0.04)
+	shard.rotation_degrees.z = randf_range(-15, 15)
+	light_root.add_child(shard)
+	# Light
+	var light = OmniLight3D.new()
+	light.position = Vector3(0, 0.35, 0)
+	light.omni_range = tile_size * theme.point_light_range_mult
+	light.light_energy = theme.point_light_energy
+	light.omni_attenuation = theme.point_light_attenuation
+	light.light_color = theme.point_light_color
+	light_root.add_child(light)
+	# No flicker — steady frozen glow
+	parent.add_child(light_root)
 
 func _add_edge_strips(parent: Node3D, grid: Array, x: int, y: int, width: int, height: int, pos: Vector3, tile_size: float, accent: Color) -> void:
 	var dirs = [

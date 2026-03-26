@@ -124,6 +124,7 @@ extends Resource
 @export var has_ceiling: bool = true
 @export var wall_style: String = "default"
 @export var sky_config: Dictionary = {}
+@export var light_source_style: String = "floating"  # "floating", "torch", "mushroom", "crystal"
 
 # --- Helper methods ---
 
