@@ -49,24 +49,12 @@ func _setup_visuals() -> void:
         var visual_root := scene_override.instantiate() as Node3D
         visual_root.name = "VisualRoot"
         add_child(visual_root)
-        # Apply body material to BodyMesh child
+        # Use the scene's own materials — don't override with random accent.
+        # Just grab a reference to BodyMesh material for the hit-flash system.
         var body_mesh := visual_root.get_node_or_null("BodyMesh") as MeshInstance3D
-        if body_mesh:
-            _body_material = StandardMaterial3D.new()
-            _body_material.albedo_color = theme.body_albedo
-            _body_material.emission_enabled = true
-            _body_material.emission = accent
-            _body_material.emission_energy_multiplier = _base_emission_energy
-            body_mesh.material_override = _body_material
-        # Apply eye material to optional EyeMesh child
-        var eye_mesh := visual_root.get_node_or_null("EyeMesh") as MeshInstance3D
-        if eye_mesh:
-            var eye_mat = StandardMaterial3D.new()
-            eye_mat.albedo_color = Color.BLACK
-            eye_mat.emission_enabled = true
-            eye_mat.emission = theme.eye_color
-            eye_mat.emission_energy_multiplier = 3.0
-            eye_mesh.material_override = eye_mat
+        if body_mesh and body_mesh.material_override:
+            _body_material = body_mesh.material_override as StandardMaterial3D
+            _base_emission_energy = _body_material.emission_energy_multiplier if _body_material else 1.0
     else:
         # Procedural fallback: find existing MeshInstance3D child (from the .tscn scene)
         var mesh_node: MeshInstance3D = null
