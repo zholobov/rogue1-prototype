@@ -44,6 +44,7 @@ func _show_lobby() -> void:
 	lobby.game_started.connect(_on_game_started)
 	lobby.meta_upgrades_pressed.connect(_on_meta_upgrades)
 	lobby.themes_pressed.connect(_on_themes)
+	lobby.playground_pressed.connect(_on_playground)
 	add_child(lobby)
 	current_scene = lobby
 
@@ -70,6 +71,17 @@ func _on_themes() -> void:
 	current_scene = screen
 
 func _on_themes_back() -> void:
+	_clear_current()
+	_show_lobby()
+
+func _on_playground() -> void:
+	_clear_current()
+	var screen = preload("res://src/ui/level_playground.gd").new()
+	screen.back_pressed.connect(_on_playground_back)
+	add_child(screen)
+	current_scene = screen
+
+func _on_playground_back() -> void:
 	_clear_current()
 	_show_lobby()
 

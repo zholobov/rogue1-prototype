@@ -3,6 +3,7 @@ extends Control
 signal game_started(solo: bool)
 signal meta_upgrades_pressed()
 signal themes_pressed()
+signal playground_pressed()
 
 @onready var lobby_input: LineEdit = $VBoxContainer/LobbyInput
 @onready var solo_button: Button = $VBoxContainer/SoloButton
@@ -47,6 +48,11 @@ func _ready():
 	themes_btn.pressed.connect(_on_themes)
 	vbox.add_child(themes_btn)
 
+	var playground_btn = Button.new()
+	playground_btn.text = "Level Playground"
+	playground_btn.pressed.connect(_on_playground)
+	vbox.add_child(playground_btn)
+
 func _on_solo():
 	game_started.emit(true)
 
@@ -90,6 +96,9 @@ func _on_meta_upgrades():
 
 func _on_themes():
 	themes_pressed.emit()
+
+func _on_playground():
+	playground_pressed.emit()
 
 func _on_player_disconnected(peer_id: int):
 	for i in range(player_list.item_count):
