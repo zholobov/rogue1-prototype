@@ -18,6 +18,8 @@ var _level_builder: LevelBuilder  # Lazy init on first 3D preview
 var _level_generator: LevelGenerator
 var _stale: bool = false
 
+const LEFT_WIDTH = 240
+
 func _ready() -> void:
     set_anchors_preset(PRESET_FULL_RECT)
     _build_ui()
@@ -26,29 +28,21 @@ func _build_ui() -> void:
     var theme = ThemeManager.active_theme
     var btn_font_size = 11
 
-    # Background
+    # Background — fills viewport via anchors
     var bg = ColorRect.new()
     bg.color = theme.ui_background_color
     bg.set_anchors_preset(PRESET_FULL_RECT)
     bg.mouse_filter = MOUSE_FILTER_IGNORE
     add_child(bg)
 
-    # Root layout: margin → vbox (top bar + hsplit)
-    var margin = MarginContainer.new()
-    margin.set_anchors_preset(PRESET_FULL_RECT)
-    margin.add_theme_constant_override("margin_left", 10)
-    margin.add_theme_constant_override("margin_right", 10)
-    margin.add_theme_constant_override("margin_top", 8)
-    margin.add_theme_constant_override("margin_bottom", 8)
-    add_child(margin)
-
-    var root_vbox = VBoxContainer.new()
-    root_vbox.add_theme_constant_override("separation", 6)
-    margin.add_child(root_vbox)
-
-    # Top bar
+    # Top bar — anchored top-wide
     var top_bar = HBoxContainer.new()
-    root_vbox.add_child(top_bar)
+    top_bar.set_anchors_preset(PRESET_TOP_WIDE)
+    top_bar.offset_left = 10
+    top_bar.offset_top = 8
+    top_bar.offset_right = -10
+    top_bar.offset_bottom = 34
+    add_child(top_bar)
 
     var title = Label.new()
     title.text = "LEVEL GENERATOR PLAYGROUND"
@@ -63,29 +57,26 @@ func _build_ui() -> void:
     back_btn.pressed.connect(func(): back_pressed.emit())
     top_bar.add_child(back_btn)
 
-    # Main layout: left panel (fixed width) + right panel (expand)
-    var hbox_main = HBoxContainer.new()
-    hbox_main.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    hbox_main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    hbox_main.add_theme_constant_override("separation", 8)
-    root_vbox.add_child(hbox_main)
-
-    # Left panel: config editor + buttons
+    # Left panel — anchored: left edge, top to bottom, fixed width
     var left_vbox = VBoxContainer.new()
-    left_vbox.custom_minimum_size.x = 220
-    left_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    left_vbox.size_flags_stretch_ratio = 1.0  # Left gets 1 part, right gets 3 parts
+    left_vbox.anchor_left = 0.0
+    left_vbox.anchor_top = 0.0
+    left_vbox.anchor_right = 0.0
+    left_vbox.anchor_bottom = 1.0
+    left_vbox.offset_left = 10
+    left_vbox.offset_top = 40
+    left_vbox.offset_right = 10 + LEFT_WIDTH
+    left_vbox.offset_bottom = -10
     left_vbox.add_theme_constant_override("separation", 4)
-    hbox_main.add_child(left_vbox)
+    add_child(left_vbox)
 
     _config_editor = ConfigEditor.new()
     _config_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _config_editor.custom_minimum_size.y = 100
     _config_editor.setup(_build_sections())
     _config_editor.property_changed.connect(_on_property_changed)
     left_vbox.add_child(_config_editor)
 
-    # Action buttons — compact
+    # Action buttons
     var btn_vbox = VBoxContainer.new()
     btn_vbox.add_theme_constant_override("separation", 2)
     left_vbox.add_child(btn_vbox)
@@ -120,13 +111,18 @@ func _build_ui() -> void:
     paste_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     clipboard_row.add_child(paste_btn)
 
-    # Right panel: visualization area (fills remaining space)
+    # Right panel — anchored: from left panel edge to right edge, top to bottom
     _right_panel = VBoxContainer.new()
-    _right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    _right_panel.size_flags_stretch_ratio = 3.0  # Take 3x more space than left panel
+    _right_panel.anchor_left = 0.0
+    _right_panel.anchor_top = 0.0
+    _right_panel.anchor_right = 1.0
+    _right_panel.anchor_bottom = 1.0
+    _right_panel.offset_left = LEFT_WIDTH + 18
+    _right_panel.offset_top = 40
+    _right_panel.offset_right = -10
+    _right_panel.offset_bottom = -10
     _right_panel.add_theme_constant_override("separation", 4)
-    hbox_main.add_child(_right_panel)
+    add_child(_right_panel)
 
     _grid_preview = GridPreview.new()
     _grid_preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
