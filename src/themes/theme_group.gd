@@ -3,7 +3,7 @@ extends RefCounted
 
 var group_name: String = ""
 var description: String = ""
-var biomes: Array[ThemeData] = []
+var biomes: Array = []
 
 func get_random_biome() -> ThemeData:
     if biomes.is_empty():
