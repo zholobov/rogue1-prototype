@@ -639,59 +639,82 @@ func _add_ice_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var cz = pos.z + tile_size / 2.0
 	var rng = RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(int(pos.x), int(pos.z)))
-	var ice_mat = StandardMaterial3D.new()
-	ice_mat.albedo_color = theme.wall_albedo
-	ice_mat.roughness = 0.2
+	# Shared materials
+	var ice_colors = [
+		Color(theme.wall_albedo.r - 0.05, theme.wall_albedo.g - 0.03, theme.wall_albedo.b),
+		theme.wall_albedo,
+		Color(theme.wall_albedo.r + 0.05, theme.wall_albedo.g + 0.05, theme.wall_albedo.b + 0.08),
+	]
 	var snow_mat = StandardMaterial3D.new()
 	snow_mat.albedo_color = Color(0.85, 0.88, 0.92)
 	snow_mat.roughness = 0.8
-	# Snow mounds (2-3 at base)
-	for i in range(rng.randi_range(2, 3)):
-		var mound = MeshInstance3D.new()
-		var mound_mesh = BoxMesh.new()
-		var mound_h = rng.randf_range(0.3, 0.8)
-		mound_mesh.size = Vector3(tile_size * rng.randf_range(0.3, 0.5), mound_h, tile_size * rng.randf_range(0.3, 0.5))
-		mound.mesh = mound_mesh
-		mound.material_override = snow_mat
-		mound.position = Vector3(cx + rng.randf_range(-0.5, 0.5), mound_h / 2.0, cz + rng.randf_range(-0.5, 0.5))
-		parent.add_child(mound)
-	# Ice crystals (2-3 tall angular shapes)
-	for i in range(rng.randi_range(2, 3)):
+	var frost_mat = StandardMaterial3D.new()
+	frost_mat.albedo_color = Color(0.7, 0.85, 1.0)
+	frost_mat.emission_enabled = true
+	frost_mat.emission = Color(0.7, 0.88, 1.0)
+	frost_mat.emission_energy_multiplier = 2.0
+	# Snow base across bottom
+	var snow_base = MeshInstance3D.new()
+	var snow_mesh = BoxMesh.new()
+	snow_mesh.size = Vector3(tile_size * 0.95, 0.25, tile_size * 0.95)
+	snow_base.mesh = snow_mesh
+	snow_base.material_override = snow_mat
+	snow_base.position = Vector3(cx, 0.125, cz)
+	parent.add_child(snow_base)
+	# Packed crystal pillars — 10-14 tightly filling the tile
+	var pillar_count = rng.randi_range(10, 14)
+	var half = tile_size * 0.42
+	for i in range(pillar_count):
 		var crystal = MeshInstance3D.new()
 		var crystal_mesh = BoxMesh.new()
-		var crystal_h = rng.randf_range(1.5, WALL_HEIGHT)
-		crystal_mesh.size = Vector3(rng.randf_range(0.15, 0.35), crystal_h, rng.randf_range(0.15, 0.35))
+		var crystal_h = rng.randf_range(WALL_HEIGHT * 0.6, WALL_HEIGHT + 0.3)
+		var crystal_w = rng.randf_range(0.15, 0.35)
+		var crystal_d = rng.randf_range(0.12, 0.3)
+		crystal_mesh.size = Vector3(crystal_w, crystal_h, crystal_d)
 		crystal.mesh = crystal_mesh
-		crystal.material_override = ice_mat
-		crystal.position = Vector3(cx + rng.randf_range(-0.6, 0.6), crystal_h / 2.0, cz + rng.randf_range(-0.6, 0.6))
-		crystal.rotation_degrees.y = rng.randf_range(-20, 20)
-		crystal.rotation_degrees.z = rng.randf_range(-8, 8)
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = ice_colors[rng.randi() % ice_colors.size()]
+		mat.roughness = rng.randf_range(0.15, 0.3)
+		crystal.material_override = mat
+		crystal.position = Vector3(
+			cx + rng.randf_range(-half, half),
+			crystal_h / 2.0 + 0.1,
+			cz + rng.randf_range(-half, half)
+		)
+		crystal.rotation_degrees.y = rng.randf_range(-15, 15)
+		crystal.rotation_degrees.z = rng.randf_range(-5, 5)
 		parent.add_child(crystal)
-	# Frost sparkle
-	if rng.randf() < 0.6:
+	# Frost sparkles (3-4 scattered across crystals)
+	for i in range(rng.randi_range(3, 4)):
 		var sparkle = MeshInstance3D.new()
 		var spark_mesh = SphereMesh.new()
 		spark_mesh.radius = 0.04
 		spark_mesh.height = 0.08
 		sparkle.mesh = spark_mesh
-		var frost_mat = StandardMaterial3D.new()
-		frost_mat.albedo_color = Color(0.7, 0.85, 1.0)
-		frost_mat.emission_enabled = true
-		frost_mat.emission = Color(0.7, 0.88, 1.0)
-		frost_mat.emission_energy_multiplier = 2.0
 		sparkle.material_override = frost_mat
-		sparkle.position = Vector3(cx + rng.randf_range(-0.5, 0.5), rng.randf_range(1.0, 2.5), cz + rng.randf_range(-0.3, 0.3))
+		sparkle.position = Vector3(
+			cx + rng.randf_range(-half, half),
+			rng.randf_range(0.8, WALL_HEIGHT * 0.8),
+			cz + rng.randf_range(-half * 0.5, half * 0.5)
+		)
 		parent.add_child(sparkle)
-	# Icicles from top (2)
-	for i in range(2):
+	# Icicles from top (3-4)
+	var ice_hang_mat = StandardMaterial3D.new()
+	ice_hang_mat.albedo_color = Color(0.55, 0.7, 0.9)
+	ice_hang_mat.roughness = 0.15
+	for i in range(rng.randi_range(3, 4)):
 		var icicle = MeshInstance3D.new()
 		var icicle_mesh = CylinderMesh.new()
-		icicle_mesh.top_radius = 0.02
-		icicle_mesh.bottom_radius = 0.06
-		icicle_mesh.height = rng.randf_range(0.3, 0.6)
+		icicle_mesh.top_radius = 0.015
+		icicle_mesh.bottom_radius = 0.05
+		icicle_mesh.height = rng.randf_range(0.3, 0.7)
 		icicle.mesh = icicle_mesh
-		icicle.material_override = ice_mat
-		icicle.position = Vector3(cx + rng.randf_range(-0.5, 0.5), WALL_HEIGHT - icicle_mesh.height / 2.0, cz + rng.randf_range(-0.5, 0.5))
+		icicle.material_override = ice_hang_mat
+		icicle.position = Vector3(
+			cx + rng.randf_range(-half, half),
+			WALL_HEIGHT - icicle_mesh.height / 2.0,
+			cz + rng.randf_range(-half, half)
+		)
 		parent.add_child(icicle)
 
 func _add_spawn_point(parent: Node3D, pos: Vector3, tile_size: float) -> void:
