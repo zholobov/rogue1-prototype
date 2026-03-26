@@ -7,6 +7,7 @@ var _base_emission_energy: float = 1.0
 var _health_bar_node: Node3D
 var _health_bar_fg: MeshInstance3D
 var _health_bar_visible := false
+var visual_variant: String = "basic"
 
 func _ready():
     ecs_entity = Entity.new()
@@ -35,7 +36,7 @@ func _setup_visuals() -> void:
     var accent = theme.get_random_palette_color()
 
     # Scene override: if theme provides a monster scene, use it instead of procedural
-    var scene_override := ThemeManager.get_monster_scene("basic")
+    var scene_override := ThemeManager.get_monster_scene(visual_variant)
     if scene_override:
         # Hide the original mesh from the .tscn
         var orig_mesh := get_node_or_null("MeshInstance3D") as MeshInstance3D

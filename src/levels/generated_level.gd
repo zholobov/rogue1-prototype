@@ -31,6 +31,21 @@ func _ready():
     env.fog_sky_affect = 0.0
     var world_env = WorldEnvironment.new()
     world_env.environment = env
+    # Open sky for biomes without ceiling
+    if not theme.has_ceiling and theme.sky_config.size() > 0:
+        var sky_cfg = theme.sky_config
+        var sky_mat = ProceduralSkyMaterial.new()
+        sky_mat.sky_top_color = sky_cfg.get("sky_top_color", Color(0.05, 0.05, 0.1))
+        sky_mat.sky_horizon_color = sky_cfg.get("sky_horizon_color", Color(0.1, 0.15, 0.2))
+        sky_mat.ground_bottom_color = sky_cfg.get("ground_bottom_color", Color(0.02, 0.02, 0.02))
+        sky_mat.ground_horizon_color = sky_cfg.get("ground_horizon_color", Color(0.1, 0.1, 0.1))
+        sky_mat.sun_angle_max = sky_cfg.get("sun_angle_max", 30.0)
+        sky_mat.sun_curve = 0.1
+        var sky = Sky.new()
+        sky.sky_material = sky_mat
+        env.sky = sky
+        env.background_mode = Environment.BG_SKY
+
     add_child(world_env)
 
     # Create and register the ECS world
@@ -119,6 +134,12 @@ func _spawn_monsters() -> void:
             if Config.max_monsters_per_level > 0 and monsters_remaining >= Config.max_monsters_per_level:
                 break
             var monster = MonsterScene.instantiate()
+            # Pick monster variant (50% basic, 25% variant1, 25% variant2)
+            var variant_roll = randf()
+            if variant_roll < 0.25 and theme.monster_scenes.has("variant2"):
+                monster.visual_variant = "variant2"
+            elif variant_roll < 0.5 and theme.monster_scenes.has("variant1"):
+                monster.visual_variant = "variant1"
             var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
             monster.position = spawn_points[i] + offset
             add_child(monster)
