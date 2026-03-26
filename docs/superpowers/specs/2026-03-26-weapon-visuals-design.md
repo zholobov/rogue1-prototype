@@ -55,13 +55,17 @@ Same silhouette but fewer primitives: barrel + body + grip + element accent. No 
 
 ### Materials
 
-- **Base metal:** `ThemeManager.active_theme.wall_albedo` lightened by 20%, roughness 0.7
-- **Dark metal:** base darkened by 30% (panel lines, barrel rings)
+- **Base metal:** fixed neutral gray `Color(0.55, 0.55, 0.60)`, roughness 0.7. Theme-independent so weapons look consistent across themes.
+- **Dark metal:** `Color(0.35, 0.35, 0.38)` (panel lines, barrel rings)
 - **Grip:** brown `Color(0.27, 0.2, 0.13)`, roughness 0.9
 - **Element accent:** emission color from `ThemeData.get_element_color(element)`, emission energy 2.0, pulsing between 1.0-2.0 via sine wave
 - **No element:** accent pieces use base metal color, no emission
 
 Materials are created once per factory call. Theme changes require re-creating the weapon model (handled by `S_WeaponVisual`).
+
+### MuzzlePoint
+
+Each viewmodel includes a `MuzzlePoint` Marker3D child positioned at the barrel tip. The factory names the root node `"WeaponViewmodel"` (or `"WeaponWorldModel"`) so it can be found by name. The node path from a `PlayerEntity` to the muzzle is: `get_node("Camera3D/WeaponViewmodel/MuzzlePoint")`.
 
 ---
 
@@ -76,13 +80,24 @@ extends Component
 @export var weapon_index: int = -1       # -1 = no visible weapon
 @export var element: String = ""
 @export var show_viewmodel: bool = false  # true only for local player
+@export var just_fired: bool = false     # set by S_Weapon, cleared by S_WeaponVisual after playing recoil
 ```
 
 Added to:
-- **Player entities** — always. `show_viewmodel = true` for local player, `false` for remote.
+- **Player entities** — always. Added in `player.gd:_ready()` via `ecs_entity.add_component(C_WeaponVisual.new())`. `show_viewmodel` set in `setup()`.
 - **Monster entities** — only when armed (based on `monster_weapon_chance` roll or boss).
 
 When `weapon_index` changes (detected by `S_WeaponVisual`), the old mesh is destroyed and a new one is spawned.
+
+### Entity-to-Body Traversal
+
+In GECS, the `Entity` is a child of the `CharacterBody3D` (e.g., `PlayerEntity/ECSEntity`). To get the body node from an Entity: `entity.get_parent() as CharacterBody3D`. This works for both `PlayerEntity` and `MonsterEntity`. The system uses this to find `Camera3D` (player) or `WeaponMount` (monster):
+
+```gdscript
+var body = entity.get_parent() as CharacterBody3D
+# Player viewmodel: body.get_node("Camera3D")
+# Monster mount: body.get_node_or_null("WeaponMount") or find in visual root
+```
 
 ---
 
@@ -101,20 +116,23 @@ func query() -> QueryBuilder:
 
 Each frame, for each entity with `C_WeaponVisual`:
 
-1. **Check for weapon change:** Compare `C_WeaponVisual.weapon_index` against a cached `_last_index` dictionary. If changed, destroy old mesh node, create new one from factory.
+1. **Check for weapon change:** Compare `C_WeaponVisual.weapon_index` against a cached `_last_index: Dictionary` (keyed by `entity.get_instance_id()`). If changed, destroy old mesh node, create new one from factory.
 
 2. **Viewmodel (local player, `show_viewmodel == true`):**
-   - Attach to `Camera3D` child of the player's `CharacterBody3D`
+   - Get body: `entity.get_parent() as CharacterBody3D`
+   - Attach to `body.get_node("Camera3D")` as child named `"WeaponViewmodel"`
    - Local position: `Vector3(0.35, -0.35, -0.6)` (bottom-right of view)
    - Local rotation: `Vector3(0, -5, 0)` degrees (slight inward angle)
    - Idle sway: offset position by `sin(time * 2.0) * 0.003` on X and Y
 
 3. **World model (monsters, remote players, `show_viewmodel == false`):**
-   - Attach to `WeaponMount` Marker3D if it exists on the entity's parent node
-   - Fallback position: `Vector3(0.4, 0.3, -0.3)` relative to body if no mount point
+   - Get body: `entity.get_parent() as CharacterBody3D`
+   - Look for `WeaponMount` Marker3D: search body's children and visual root children for a node named `"WeaponMount"`
+   - If found, attach as child of `WeaponMount`
+   - Fallback: attach to body at position `Vector3(0.4, 0.3, -0.3)`
    - Scale: `Vector3(0.6, 0.6, 0.6)`
 
-4. **Fire animation:** When `C_Weapon.is_firing` and cooldown just reset (detect via cooldown transition), play recoil tween on viewmodel:
+4. **Fire animation:** Triggered by `C_WeaponVisual.just_fired` flag. `S_Weapon` sets `just_fired = true` when it fires a projectile. `S_WeaponVisual` reads it, plays the recoil tween, then clears it. This requires `S_WeaponVisual` to run after `S_Weapon` in system registration order.
    - Kick: translate Z +0.05, rotate X +3 degrees over 0.05s
    - Return: translate/rotate back over 0.1s
    - Uses `create_tween()` on the weapon mesh node
@@ -155,9 +173,19 @@ if wv:
 
 ### Projectile Spawn Point
 
-Currently projectiles spawn at `camera.global_position + (-camera.basis.z * 1.0)`. With the viewmodel, the muzzle position is known. Update `generated_level.gd` to optionally read the muzzle position from the viewmodel's `MuzzlePoint` Marker3D child (if it exists), falling back to the camera offset calculation.
+Currently projectiles spawn at `camera.global_position + (-camera.basis.z * 1.0)`. With the viewmodel, the muzzle position is known. Update `_on_projectile_requested` in `generated_level.gd`:
 
-Each weapon model includes a `MuzzlePoint` Marker3D at the barrel tip. The factory places it at the correct position for each weapon shape.
+```gdscript
+# Try to get muzzle from viewmodel
+var muzzle = owner_body.get_node_or_null("Camera3D/WeaponViewmodel/MuzzlePoint")
+var spawn_pos: Vector3
+if muzzle:
+    spawn_pos = muzzle.global_position
+else:
+    spawn_pos = camera.global_position + (-camera.global_transform.basis.z * 1.0)
+```
+
+The factory names viewmodel root nodes `"WeaponViewmodel"` and includes a `MuzzlePoint` Marker3D child at the barrel tip. This path is stable because `S_WeaponVisual` always uses the name `"WeaponViewmodel"` when attaching to the camera.
 
 ---
 
@@ -194,14 +222,28 @@ In `_spawn_monsters()`, after creating a monster, roll `randf() < Config.monster
 
 1. Pick a random weapon index from `Config.monster_weapon_presets`
 2. Get the weapon preset from `Config.weapon_presets[index]`
-3. Add `C_Weapon` with the preset's stats
-4. Add `C_WeaponVisual` with `weapon_index = index`, `element = preset.element`, `show_viewmodel = false`
-5. Add `C_BossAI` with `ranged_cooldown = Config.monster_ranged_cooldown`, `projectile_damage = Config.monster_ranged_damage`
-6. Set `C_MonsterAI.attack_range = 15.0` (so they shoot from distance instead of melee)
+3. Add `C_WeaponVisual` with `weapon_index = index`, `element = preset.element`, `show_viewmodel = false`
+4. Add `C_BossAI` with `ranged_cooldown = Config.monster_ranged_cooldown`, `projectile_damage = Config.monster_ranged_damage`, `projectile_speed = preset.speed`
+5. Set `C_MonsterAI.attack_range = 15.0` (so they shoot from distance instead of melee)
+
+**Note:** Armed monsters do NOT get `C_Weapon`. The firing is handled entirely by `S_BossAI` which reads damage/speed from `C_BossAI`. `C_Weapon` is only for the player's weapon system (`S_Weapon` requires `C_NetworkIdentity` which monsters lack). The `C_WeaponVisual` is purely cosmetic — it shows which weapon the monster carries but the actual projectile stats come from `C_BossAI`.
 
 ### Boss Integration
 
-`setup_as_boss()` already adds `C_BossAI`. Additionally add `C_WeaponVisual` with `weapon_index = 0` (pistol shape) and the boss's element. The boss weapon visual is purely cosmetic — the boss's actual projectile stats come from `C_BossAI`.
+`setup_as_boss()` already adds `C_BossAI`. Additionally add `C_WeaponVisual` with `weapon_index = 0` (pistol shape) and `element = ""` (boss has no element). The boss weapon visual is purely cosmetic — the boss's actual projectile stats come from `C_BossAI`.
+
+### S_Weapon `just_fired` Integration
+
+In `s_weapon.gd`, when a projectile is fired, also set `just_fired` on `C_WeaponVisual`:
+
+```gdscript
+# After emitting projectile_requested:
+var wv = entity.get_component(C_WeaponVisual)
+if wv:
+    wv.just_fired = true
+```
+
+This is the only change to `s_weapon.gd`.
 
 ### Monster Scene Changes
 
@@ -228,9 +270,10 @@ Add `WeaponMount` Marker3D to all 4 theme monster scenes:
 
 | File | Changes |
 |---|---|
-| `src/entities/player.gd` | Add C_WeaponVisual, update in _equip_weapon() and setup() |
+| `src/entities/player.gd` | Add C_WeaponVisual component in _ready(), update in _equip_weapon() and setup() |
 | `src/entities/monster.gd` | Add C_WeaponVisual in setup_as_boss() |
-| `src/levels/generated_level.gd` | Register S_WeaponVisual, arm monsters on spawn, muzzle point for projectiles |
+| `src/systems/s_weapon.gd` | Set C_WeaponVisual.just_fired = true when firing |
+| `src/levels/generated_level.gd` | Register S_WeaponVisual, arm monsters on spawn, muzzle point from WeaponViewmodel/MuzzlePoint |
 | `src/config/game_config.gd` | Add monster_weapon_chance, monster_weapon_presets, monster_ranged_cooldown, monster_ranged_damage |
 | `src/ui/hud.gd` | Replace weapon text with icon from factory |
 | `themes/neon/monster_basic.tscn` | Add WeaponMount Marker3D |
