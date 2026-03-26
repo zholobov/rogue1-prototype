@@ -74,12 +74,12 @@ static func _create_dark_forest() -> ThemeData:
     t.wall_style = "forest_thicket"
     t.light_source_style = "mushroom"
     t.sky_config = {
-        "sky_top_color": Color(0.02, 0.05, 0.02),
-        "sky_horizon_color": Color(0.05, 0.1, 0.05),
-        "ground_bottom_color": Color(0.02, 0.03, 0.01),
-        "ground_horizon_color": Color(0.04, 0.06, 0.03),
-        "sun_angle_max": 15.0,
-        "sun_energy": 0.1,
+        "sky_top_color": Color(0.08, 0.15, 0.08),
+        "sky_horizon_color": Color(0.15, 0.25, 0.12),
+        "ground_bottom_color": Color(0.05, 0.08, 0.04),
+        "ground_horizon_color": Color(0.1, 0.15, 0.08),
+        "sun_angle_max": 25.0,
+        "sun_energy": 0.3,
     }
 
     # Level Materials (section 5)

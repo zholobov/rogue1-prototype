@@ -487,66 +487,102 @@ func _add_styled_wall(parent: Node3D, pos: Vector3, tile_size: float, grid: Arra
 			_add_ice_wall(parent, pos, tile_size)
 
 func _add_forest_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
+	var theme = ThemeManager.active_theme
 	var cx = pos.x + tile_size / 2.0
 	var cz = pos.z + tile_size / 2.0
 	var rng = RandomNumberGenerator.new()
 	rng.seed = hash(Vector2i(int(pos.x), int(pos.z)))
-	# 2-3 tree trunks
-	var trunk_count = rng.randi_range(2, 3)
-	for i in range(trunk_count):
-		var trunk = MeshInstance3D.new()
-		var cyl = CylinderMesh.new()
-		var radius = rng.randf_range(0.15, 0.3)
-		cyl.top_radius = radius
-		cyl.bottom_radius = radius * 1.1
-		cyl.height = WALL_HEIGHT + rng.randf_range(-0.3, 0.3)
-		trunk.mesh = cyl
-		trunk.material_override = _wall_material
-		var offset_x = rng.randf_range(-tile_size * 0.35, tile_size * 0.35)
-		var offset_z = rng.randf_range(-tile_size * 0.35, tile_size * 0.35)
-		trunk.position = Vector3(cx + offset_x, cyl.height / 2.0, cz + offset_z)
-		parent.add_child(trunk)
-		# Knot on trunk
-		if rng.randf() < 0.6:
-			var knot = MeshInstance3D.new()
-			var sphere = SphereMesh.new()
-			sphere.radius = rng.randf_range(0.05, 0.1)
-			sphere.height = sphere.radius * 2.0
-			knot.mesh = sphere
-			knot.material_override = _wall_material
-			knot.position = trunk.position + Vector3(radius * 0.8, rng.randf_range(0.5, 2.0), 0)
-			parent.add_child(knot)
-	# Branch crossbeam
-	var branch = MeshInstance3D.new()
-	var branch_mesh = BoxMesh.new()
-	branch_mesh.size = Vector3(tile_size * 0.5, 0.08, 0.06)
-	branch.mesh = branch_mesh
-	branch.material_override = _wall_material
-	branch.position = Vector3(cx, rng.randf_range(1.0, 2.0), cz)
-	branch.rotation_degrees.z = rng.randf_range(-15, 15)
-	parent.add_child(branch)
-	# Moss patch (emissive)
-	if rng.randf() < 0.5:
+	var moss_mat = StandardMaterial3D.new()
+	moss_mat.albedo_color = Color(0.15, 0.3, 0.1)
+	moss_mat.emission_enabled = true
+	moss_mat.emission = Color(0.2, 0.5, 0.15)
+	moss_mat.emission_energy_multiplier = 1.0
+	var dark_bark = StandardMaterial3D.new()
+	dark_bark.albedo_color = theme.wall_albedo.darkened(0.25)
+	dark_bark.roughness = 0.95
+	# Solid bark base block — fills entire tile
+	var base = MeshInstance3D.new()
+	var base_mesh = BoxMesh.new()
+	base_mesh.size = Vector3(tile_size, WALL_HEIGHT, tile_size)
+	base.mesh = base_mesh
+	base.material_override = _wall_material
+	base.position = Vector3(cx, WALL_HEIGHT / 2.0, cz)
+	parent.add_child(base)
+	# Vertical bark grain lines (4-5)
+	for i in range(rng.randi_range(4, 5)):
+		var grain = MeshInstance3D.new()
+		var grain_mesh = BoxMesh.new()
+		grain_mesh.size = Vector3(0.04, WALL_HEIGHT * rng.randf_range(0.6, 1.0), 0.04)
+		grain.mesh = grain_mesh
+		grain.material_override = dark_bark
+		grain.position = Vector3(
+			cx + rng.randf_range(-tile_size * 0.4, tile_size * 0.4),
+			WALL_HEIGHT / 2.0,
+			pos.z + 0.02
+		)
+		parent.add_child(grain)
+	# Horizontal grain lines (2-3)
+	for i in range(rng.randi_range(2, 3)):
+		var hgrain = MeshInstance3D.new()
+		var hg_mesh = BoxMesh.new()
+		hg_mesh.size = Vector3(tile_size * rng.randf_range(0.5, 0.9), 0.04, 0.04)
+		hgrain.mesh = hg_mesh
+		hgrain.material_override = dark_bark
+		hgrain.position = Vector3(
+			cx,
+			rng.randf_range(WALL_HEIGHT * 0.2, WALL_HEIGHT * 0.8),
+			pos.z + 0.02
+		)
+		parent.add_child(hgrain)
+	# Knot holes (2-3 spheres)
+	for i in range(rng.randi_range(2, 3)):
+		var knot = MeshInstance3D.new()
+		var knot_mesh = SphereMesh.new()
+		knot_mesh.radius = rng.randf_range(0.08, 0.15)
+		knot_mesh.height = knot_mesh.radius * 2.0
+		knot.mesh = knot_mesh
+		knot.material_override = dark_bark
+		knot.position = Vector3(
+			cx + rng.randf_range(-tile_size * 0.3, tile_size * 0.3),
+			rng.randf_range(WALL_HEIGHT * 0.2, WALL_HEIGHT * 0.7),
+			pos.z - 0.02
+		)
+		parent.add_child(knot)
+	# Protruding root/vine shapes (2-3)
+	for i in range(rng.randi_range(2, 3)):
+		var root = MeshInstance3D.new()
+		var root_mesh = BoxMesh.new()
+		root_mesh.size = Vector3(rng.randf_range(0.3, 0.6), rng.randf_range(0.08, 0.14), rng.randf_range(0.15, 0.3))
+		root.mesh = root_mesh
+		root.material_override = _wall_material
+		root.position = Vector3(
+			cx + rng.randf_range(-tile_size * 0.3, tile_size * 0.3),
+			rng.randf_range(WALL_HEIGHT * 0.15, WALL_HEIGHT * 0.6),
+			pos.z - rng.randf_range(0.1, 0.3)
+		)
+		root.rotation_degrees.z = rng.randf_range(-12, 12)
+		parent.add_child(root)
+	# Moss patches with glow (2-3)
+	for i in range(rng.randi_range(2, 3)):
 		var moss = MeshInstance3D.new()
-		var moss_mesh = BoxMesh.new()
-		moss_mesh.size = Vector3(0.2, 0.1, 0.15)
-		moss.mesh = moss_mesh
-		var moss_mat = StandardMaterial3D.new()
-		moss_mat.albedo_color = Color(0.15, 0.3, 0.1)
-		moss_mat.emission_enabled = true
-		moss_mat.emission = Color(0.2, 0.5, 0.15)
-		moss_mat.emission_energy_multiplier = 1.0
+		var m_mesh = BoxMesh.new()
+		m_mesh.size = Vector3(rng.randf_range(0.2, 0.4), rng.randf_range(0.1, 0.2), 0.08)
+		moss.mesh = m_mesh
 		moss.material_override = moss_mat
-		moss.position = Vector3(cx + rng.randf_range(-0.3, 0.3), rng.randf_range(0.5, 1.5), cz + rng.randf_range(-0.3, 0.3))
+		moss.position = Vector3(
+			cx + rng.randf_range(-tile_size * 0.35, tile_size * 0.35),
+			rng.randf_range(WALL_HEIGHT * 0.1, WALL_HEIGHT * 0.5),
+			pos.z - 0.05
+		)
 		parent.add_child(moss)
 	# Root tangle at base
-	var root_mesh = MeshInstance3D.new()
-	var root_box = BoxMesh.new()
-	root_box.size = Vector3(tile_size * 0.8, 0.15, tile_size * 0.6)
-	root_mesh.mesh = root_box
-	root_mesh.material_override = _wall_material
-	root_mesh.position = Vector3(cx, 0.075, cz)
-	parent.add_child(root_mesh)
+	var root_base = MeshInstance3D.new()
+	var rb_mesh = BoxMesh.new()
+	rb_mesh.size = Vector3(tile_size * 0.9, 0.2, tile_size * 0.5)
+	root_base.mesh = rb_mesh
+	root_base.material_override = dark_bark
+	root_base.position = Vector3(cx, 0.1, pos.z - 0.1)
+	parent.add_child(root_base)
 
 func _add_palace_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var theme = ThemeManager.active_theme
