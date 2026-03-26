@@ -23,3 +23,46 @@ func test_get_profile_weights_boss():
 func test_get_profile_weights_unknown_returns_normal():
     var w = TileRules.get_profile_weights("nonexistent")
     assert_eq(w.room, 1.5)
+
+# --- ConfigEditor ---
+
+func test_config_editor_get_values():
+    var editor = ConfigEditor.new()
+    add_child_autofree(editor)
+    editor.setup([{
+        "title": "Test",
+        "properties": [
+            {"label": "Width", "key": "width", "type": "int", "value": 12, "min_value": 1, "max_value": 50, "step": 1, "options": []},
+            {"label": "Speed", "key": "speed", "type": "float", "value": 1.5, "min_value": 0.0, "max_value": 10.0, "step": 0.1, "options": []},
+        ]
+    }])
+    var vals = editor.get_values()
+    assert_almost_eq(vals["width"], 12.0, 0.001)  # SpinBox.value is always float
+    assert_almost_eq(vals["speed"], 1.5, 0.001)
+
+func test_config_editor_set_property_value():
+    var editor = ConfigEditor.new()
+    add_child_autofree(editor)
+    editor.setup([{
+        "title": "Test",
+        "properties": [
+            {"label": "Width", "key": "width", "type": "int", "value": 12, "min_value": 1, "max_value": 50, "step": 1, "options": []},
+        ]
+    }])
+    editor.set_property_value("width", 20)
+    var vals = editor.get_values()
+    assert_almost_eq(vals["width"], 20.0, 0.001)
+
+func test_config_editor_emits_property_changed():
+    var editor = ConfigEditor.new()
+    add_child_autofree(editor)
+    editor.setup([{
+        "title": "Test",
+        "properties": [
+            {"label": "Flag", "key": "flag", "type": "bool", "value": false, "min_value": 0, "max_value": 0, "step": 0, "options": []},
+        ]
+    }])
+    watch_signals(editor)
+    # Programmatically toggle the CheckButton to trigger signal
+    editor._controls["flag"].button_pressed = true
+    assert_signal_emitted(editor, "property_changed")
