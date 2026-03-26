@@ -91,8 +91,8 @@ static func _create_dark_forest() -> ThemeData:
     t.wall_roughness = 0.9
     t.ceiling_albedo = Color(0.1, 0.1, 0.08)        # unused, no ceiling
     t.ceiling_roughness = 0.9
-    t.accent_emission_energy = 1.5
-    t.accent_use_palette = true
+    t.accent_emission_energy = 0.5
+    t.accent_use_palette = false  # no neon strips — forest uses moss glow from wall builder
 
     # Textures (section 5)
     t.floor_pattern = {
