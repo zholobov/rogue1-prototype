@@ -4,6 +4,7 @@ extends ScrollContainer
 signal property_changed(key: String, value: Variant)
 
 var _controls: Dictionary = {}  # key -> Control
+var _defaults: Dictionary = {}  # key -> default value
 var _section_containers: Dictionary = {}  # title -> VBoxContainer
 var _root_vbox: VBoxContainer
 var _suppress_signals: bool = false
@@ -16,6 +17,7 @@ func setup(sections: Array) -> void:
     for child in get_children():
         child.queue_free()
     _controls.clear()
+    _defaults.clear()
     _section_containers.clear()
 
     _root_vbox = VBoxContainer.new()
@@ -90,18 +92,22 @@ func _build_section(section: Dictionary) -> void:
 
 func _build_property(container: VBoxContainer, prop: Dictionary) -> void:
     var hbox = HBoxContainer.new()
-    hbox.add_theme_constant_override("separation", 8)
+    hbox.add_theme_constant_override("separation", 4)
     container.add_child(hbox)
-
-    var label = Label.new()
-    label.text = prop.get("label", prop.get("key", ""))
-    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    label.add_theme_font_size_override("font_size", 11)
-    hbox.add_child(label)
 
     var key = prop.get("key", "")
     var type = prop.get("type", "int")
     var value = prop.get("value", 0)
+    _defaults[key] = value
+
+    # Label with default hint
+    var label = Label.new()
+    var default_hint = _format_default(value, type)
+    label.text = "%s [%s]" % [prop.get("label", key), default_hint]
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    label.add_theme_font_size_override("font_size", 10)
+    label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+    hbox.add_child(label)
 
     match type:
         "int":
@@ -110,7 +116,7 @@ func _build_property(container: VBoxContainer, prop: Dictionary) -> void:
             spin.max_value = prop.get("max_value", 100)
             spin.step = prop.get("step", 1)
             spin.value = value
-            spin.custom_minimum_size.x = 80
+            spin.custom_minimum_size.x = 70
             spin.value_changed.connect(_on_value_changed.bind(key))
             hbox.add_child(spin)
             _controls[key] = spin
@@ -121,7 +127,7 @@ func _build_property(container: VBoxContainer, prop: Dictionary) -> void:
             spin.max_value = prop.get("max_value", 10.0)
             spin.step = prop.get("step", 0.01)
             spin.value = value
-            spin.custom_minimum_size.x = 80
+            spin.custom_minimum_size.x = 70
             spin.value_changed.connect(_on_value_changed.bind(key))
             hbox.add_child(spin)
             _controls[key] = spin
@@ -138,12 +144,11 @@ func _build_property(container: VBoxContainer, prop: Dictionary) -> void:
             var options = prop.get("options", [])
             for opt in options:
                 option.add_item(opt)
-            # Select current value
             for i in range(option.item_count):
                 if option.get_item_text(i) == str(value):
                     option.selected = i
                     break
-            option.custom_minimum_size.x = 100
+            option.custom_minimum_size.x = 90
             option.item_selected.connect(_on_enum_changed.bind(key, option))
             hbox.add_child(option)
             _controls[key] = option
@@ -151,10 +156,33 @@ func _build_property(container: VBoxContainer, prop: Dictionary) -> void:
         "color":
             var picker = ColorPickerButton.new()
             picker.color = value
-            picker.custom_minimum_size = Vector2(40, 24)
+            picker.custom_minimum_size = Vector2(36, 20)
             picker.color_changed.connect(_on_color_changed.bind(key))
             hbox.add_child(picker)
             _controls[key] = picker
+
+    # Reset button per property
+    var reset_btn = Button.new()
+    reset_btn.text = "↺"
+    reset_btn.add_theme_font_size_override("font_size", 10)
+    reset_btn.custom_minimum_size = Vector2(22, 0)
+    reset_btn.tooltip_text = "Reset to default: %s" % str(value)
+    reset_btn.pressed.connect(_reset_property.bind(key))
+    hbox.add_child(reset_btn)
+
+func _format_default(value: Variant, type: String) -> String:
+    match type:
+        "float":
+            return "%.2g" % value
+        "bool":
+            return "on" if value else "off"
+        _:
+            return str(value)
+
+func _reset_property(key: String) -> void:
+    if _defaults.has(key):
+        set_property_value(key, _defaults[key])
+        property_changed.emit(key, _defaults[key])
 
 func _on_value_changed(value: float, key: String) -> void:
     if not _suppress_signals:
@@ -171,6 +199,12 @@ func _on_enum_changed(index: int, key: String, option: OptionButton) -> void:
 func _on_color_changed(color: Color, key: String) -> void:
     if not _suppress_signals:
         property_changed.emit(key, color)
+
+func reset_all() -> void:
+    for key in _defaults:
+        set_property_value(key, _defaults[key])
+    for key in _defaults:
+        property_changed.emit(key, _defaults[key])
 
 func copy_to_clipboard() -> void:
     var values = get_values()

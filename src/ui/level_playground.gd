@@ -111,6 +111,16 @@ func _build_ui() -> void:
     paste_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     clipboard_row.add_child(paste_btn)
 
+    var reset_btn = Button.new()
+    reset_btn.text = "Reset All"
+    reset_btn.add_theme_font_size_override("font_size", btn_font_size)
+    reset_btn.pressed.connect(func():
+        _config_editor.reset_all()
+        _stale = true
+        _generate_btn.text = "Generate *"
+    )
+    btn_vbox.add_child(reset_btn)
+
     # Right panel — anchored: from left panel edge to right edge, top to bottom
     _right_panel = VBoxContainer.new()
     _right_panel.anchor_left = 0.0
