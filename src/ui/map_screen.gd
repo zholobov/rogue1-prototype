@@ -76,6 +76,10 @@ func _build_ui() -> void:
             var node = layer[node_idx]
             var btn = Button.new()
             btn.text = node.modifier.to_upper()
+            if ThemeManager and ThemeManager.active_group and ThemeManager.active_group.biomes.size() > 1:
+                var biome = ThemeManager.active_group.get_biome(node.biome_index)
+                if biome:
+                    btn.text += "\n[%s]" % biome.biome_name
             btn.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
             if node.visited:

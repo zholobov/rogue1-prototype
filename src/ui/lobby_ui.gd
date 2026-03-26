@@ -65,14 +65,14 @@ func _ready():
 	theme_row.add_child(theme_label)
 	var theme_option = OptionButton.new()
 	theme_option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var available = ThemeManager.available_themes
+	var groups = ThemeManager.available_groups
 	var current_idx = 0
-	for i in range(available.size()):
-		theme_option.add_item(available[i].theme_name)
-		if available[i] == ThemeManager.active_theme:
+	for i in range(groups.size()):
+		theme_option.add_item(groups[i].group_name)
+		if groups[i] == ThemeManager.active_group:
 			current_idx = i
 	theme_option.selected = current_idx
-	theme_option.item_selected.connect(_on_theme_selected.bind(available))
+	theme_option.item_selected.connect(_on_theme_selected.bind(groups))
 	theme_row.add_child(theme_option)
 
 	var playground_btn = Button.new()
@@ -124,9 +124,9 @@ func _on_meta_upgrades():
 func _on_themes():
 	themes_pressed.emit()
 
-func _on_theme_selected(index: int, themes: Array):
-	if index >= 0 and index < themes.size():
-		ThemeManager.set_theme(themes[index].theme_name)
+func _on_theme_selected(index: int, groups: Array):
+	if index >= 0 and index < groups.size():
+		ThemeManager.set_theme(groups[index].group_name)
 
 func _on_playground():
 	playground_pressed.emit()
