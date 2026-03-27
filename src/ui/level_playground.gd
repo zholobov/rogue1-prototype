@@ -177,7 +177,7 @@ func _build_sections() -> Array:
     var sections = ConfigSectionBuilder.from_object(Config)
 
     # Add tile weights (derived from TileRules, not a Config property)
-    var modifier = Config.current_modifier if Config.current_modifier != "" else "normal"
+    var modifier = Config.current_modifier if Config.current_modifier != "" else Modifiers.NORMAL
     var weights = TileRules.get_profile_weights(modifier)
     sections.append({
         "title": "Tile Weights",
@@ -237,7 +237,7 @@ func _on_generate() -> void:
     var height = int(_current_params.get("level_grid_height", 12))
 
     # Build local TileRules with custom weights
-    var modifier = str(_current_params.get("current_modifier", "normal"))
+    var modifier = str(_current_params.get("current_modifier", Modifiers.NORMAL))
     var rules = TileRules.new()
     rules.setup_profile(modifier)
     # Override individual tile weights from editor
@@ -327,7 +327,7 @@ func _rebuild_3d_preview() -> void:
         _level_builder = LevelBuilder.new()
 
     # Build local TileRules for builder
-    var modifier = str(params.get("current_modifier", "normal"))
+    var modifier = str(params.get("current_modifier", Modifiers.NORMAL))
     var rules = TileRules.new()
     rules.setup_profile(modifier)
 

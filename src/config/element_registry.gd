@@ -21,7 +21,7 @@ func _setup_defaults() -> void:
     fire.display_name = "Fire"
     fire.condition_name = ConditionNames.BURNING
     fire.condition_duration = 3.0
-    fire.default_color = ThemeManager.active_theme.get_element_color("fire")
+    fire.default_color = ThemeManager.active_theme.get_element_color(ElementNames.FIRE)
     _elements[fire.element_name] = fire
 
     # Ice
@@ -30,7 +30,7 @@ func _setup_defaults() -> void:
     ice.display_name = "Ice"
     ice.condition_name = ConditionNames.CHILLED
     ice.condition_duration = 3.0
-    ice.default_color = ThemeManager.active_theme.get_element_color("ice")
+    ice.default_color = ThemeManager.active_theme.get_element_color(ElementNames.ICE)
     _elements[ice.element_name] = ice
 
     # Water
@@ -39,7 +39,7 @@ func _setup_defaults() -> void:
     water.display_name = "Water"
     water.condition_name = ConditionNames.WET
     water.condition_duration = 5.0
-    water.default_color = ThemeManager.active_theme.get_element_color("water")
+    water.default_color = ThemeManager.active_theme.get_element_color(ElementNames.WATER)
     _elements[water.element_name] = water
 
     # Oil
@@ -48,15 +48,15 @@ func _setup_defaults() -> void:
     oil.display_name = "Oil"
     oil.condition_name = ConditionNames.OILY
     oil.condition_duration = 5.0
-    oil.default_color = ThemeManager.active_theme.get_element_color("oil")
+    oil.default_color = ThemeManager.active_theme.get_element_color(ElementNames.OIL)
     _elements[oil.element_name] = oil
 
     # Default interactions: existing_condition + incoming_element = result
-    add_interaction("wet", "ice", "frozen", 4.0, 0.0)
-    add_interaction("wet", "fire", "", 0.0, 0.0)      # fire cancels wet
-    add_interaction("oily", "fire", "burning", 5.0, 10.0)
-    add_interaction("chilled", "fire", "", 0.0, 0.0)  # fire cancels chill
-    add_interaction("burning", "water", "", 0.0, 0.0) # water cancels burning
+    add_interaction(ConditionNames.WET, ElementNames.ICE, ConditionNames.FROZEN, 4.0, 0.0)
+    add_interaction(ConditionNames.WET, ElementNames.FIRE, ElementNames.NONE, 0.0, 0.0)      # fire cancels wet
+    add_interaction(ConditionNames.OILY, ElementNames.FIRE, ConditionNames.BURNING, 5.0, 10.0)
+    add_interaction(ConditionNames.CHILLED, ElementNames.FIRE, ElementNames.NONE, 0.0, 0.0)  # fire cancels chill
+    add_interaction(ConditionNames.BURNING, ElementNames.WATER, ElementNames.NONE, 0.0, 0.0) # water cancels burning
 
 func add_element(element_name: StringName, color: Color, condition: StringName, condition_duration: float) -> void:
     var def = ElementDefinition.new()

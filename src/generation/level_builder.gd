@@ -143,9 +143,9 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 			var c = torch_candidates[i]
 			var world_pos_torch = Vector3(c.x * tile_size, 0, c.y * tile_size)
 			match light_style:
-				"mushroom":
+				LightStyles.MUSHROOM:
 					_add_mushroom_light(root, world_pos_torch, tile_size, c.dir, light_index)
-				"crystal":
+				LightStyles.CRYSTAL:
 					_add_crystal_light(root, world_pos_torch, tile_size, c.dir, light_index)
 				_:
 					_add_torch(root, world_pos_torch, tile_size, c.dir, light_index)
@@ -153,7 +153,7 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 
 	# Props (pillars, rubble, room props) — only for default wall style (stone dungeon)
 	# Folk biomes get their detail from styled wall builders, not generic stone props
-	if ThemeManager.active_theme.prop_density > 0.0 and ThemeManager.active_theme.wall_style == "default":
+	if ThemeManager.active_theme.prop_density > 0.0 and ThemeManager.active_theme.wall_style == WallStyles.DEFAULT:
 		var room_spawn_positions: Array[Vector3] = []
 		for child in root.get_children():
 			if child.is_in_group("spawn_point"):
@@ -264,7 +264,7 @@ func _add_floor(parent: Node3D, pos: Vector3, tile_size: float, mat: StandardMat
 	col.shape = box_shape
 	floor_body.add_child(col)
 
-	if ThemeManager.active_theme.floor_style == "cracked_slab":
+	if ThemeManager.active_theme.floor_style == FloorStyles.CRACKED_SLAB:
 		_add_slab_grid(floor_body, tile_size, mat)
 	else:
 		var mesh_inst = MeshInstance3D.new()
@@ -367,7 +367,7 @@ func _add_ceiling_beam(parent: Node3D, pos: Vector3, tile_size: float, along_x: 
 
 func _add_wall_block(parent: Node3D, pos: Vector3, tile_size: float, grid: Array, x: int, y: int, width: int, height: int) -> void:
 	var style = ThemeManager.active_theme.wall_style
-	if style != "default":
+	if style != WallStyles.DEFAULT:
 		_add_styled_wall(parent, pos, tile_size, grid, x, y, width, height, style)
 		return
 	var wall_body = StaticBody3D.new()
@@ -479,11 +479,11 @@ func _add_styled_wall(parent: Node3D, pos: Vector3, tile_size: float, _grid: Arr
 	parent.add_child(wall_body)
 
 	match style:
-		"forest_thicket":
+		WallStyles.FOREST_THICKET:
 			_add_forest_wall(parent, pos, tile_size)
-		"palace_ornate":
+		WallStyles.PALACE_ORNATE:
 			_add_palace_wall(parent, pos, tile_size)
-		"ice_crystal":
+		WallStyles.ICE_CRYSTAL:
 			_add_ice_wall(parent, pos, tile_size)
 
 func _add_forest_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:

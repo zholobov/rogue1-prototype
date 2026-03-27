@@ -20,11 +20,11 @@ extends Resource
     "epic": Color(0.7, 0.2, 1.0),
 }
 @export var element_colors: Dictionary = {
-    "": Color(1.0, 1.0, 1.0),
-    "fire": Color(1.0, 0.27, 0.0),
-    "ice": Color(0.0, 0.87, 1.0),
-    "water": Color(0.0, 0.4, 1.0),
-    "oil": Color(0.33, 0.42, 0.18),
+    ElementNames.NONE: Color(1.0, 1.0, 1.0),
+    ElementNames.FIRE: Color(1.0, 0.27, 0.0),
+    ElementNames.ICE: Color(0.0, 0.87, 1.0),
+    ElementNames.WATER: Color(0.0, 0.4, 1.0),
+    ElementNames.OIL: Color(0.33, 0.42, 0.18),
 }
 
 # --- Environment ---
@@ -122,11 +122,11 @@ extends Resource
 # --- Level Structure ---
 @export_group("Level Structure")
 @export var has_ceiling: bool = true
-@export var wall_style: String = "default"
+@export var wall_style: String = WallStyles.DEFAULT
 @export var sky_config: Dictionary = {}
-@export var light_source_style: String = "floating"  # "floating", "torch", "mushroom", "crystal"
-@export var floor_style: String = "plain"  # "plain", "cracked_slab"
-@export var beam_style: String = "default"  # "default", "ornate", "none"
+@export var light_source_style: String = LightStyles.FLOATING  # "floating", "torch", "mushroom", "crystal"
+@export var floor_style: String = FloorStyles.PLAIN  # "plain", "cracked_slab"
+@export var beam_style: String = WallStyles.DEFAULT  # "default", "ornate", "none"
 
 # --- Helper methods ---
 

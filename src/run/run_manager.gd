@@ -43,7 +43,7 @@ func select_map_node(node_index: int) -> void:
         if biome:
             ThemeManager.set_biome(biome)
     Config.level_seed = node.level_seed
-    if node.modifier == "boss":
+    if node.modifier == Modifiers.BOSS:
         _change_state(State.BOSS)
     else:
         _change_state(State.LEVEL)

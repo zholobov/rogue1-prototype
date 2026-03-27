@@ -100,7 +100,7 @@ func setup_as_boss(loop: int) -> void:
     var theme := ThemeManager.active_theme
 
     # Check for boss scene override
-    var boss_scene := ThemeManager.get_monster_scene("boss")
+    var boss_scene := ThemeManager.get_monster_scene(Modifiers.BOSS)
     if boss_scene:
         # Remove ALL visual children added by _setup_visuals immediately
         var to_remove: Array[Node] = []

@@ -19,11 +19,11 @@ static func create() -> ThemeData:
         "epic": Color(0.7, 0.2, 1.0),
     }
     t.element_colors = {
-        "": Color(1.0, 1.0, 1.0),
-        "fire": Color(1.0, 0.27, 0.0),
-        "ice": Color(0.0, 0.87, 1.0),
-        "water": Color(0.0, 0.4, 1.0),
-        "oil": Color(0.33, 0.42, 0.18),
+        ElementNames.NONE: Color(1.0, 1.0, 1.0),
+        ElementNames.FIRE: Color(1.0, 0.27, 0.0),
+        ElementNames.ICE: Color(0.0, 0.87, 1.0),
+        ElementNames.WATER: Color(0.0, 0.4, 1.0),
+        ElementNames.OIL: Color(0.33, 0.42, 0.18),
     }
 
     # Environment
@@ -95,7 +95,7 @@ static func create() -> ThemeData:
 
     var boss = MonsterVariantDefinition.new()
     boss.variant_name = "Neon Boss"
-    boss.variant_key = &"boss"
+    boss.variant_key = Modifiers.BOSS
     boss.scene = load("res://themes/neon/monster_boss.tscn")
     boss.is_boss = true
     boss.spawn_weight = 0.0

@@ -38,7 +38,7 @@ extends Node
 @export_range(0.1, 5.0, 0.1) var light_range_mult: float = 1.0
 
 @export_group("Modifier")
-@export_enum("normal", "dense", "large", "dark", "horde", "boss") var current_modifier: String = "normal"
+@export_enum("normal", "dense", "large", "dark", "horde", "boss") var current_modifier: String = Modifiers.NORMAL
 
 @export_group("Debug")
 @export var god_mode: bool = true

@@ -10,11 +10,11 @@ static func create_group() -> ThemeGroup:
 static func _apply_shared_properties(t: ThemeData) -> void:
     # Shared element colors (section 4)
     t.element_colors = {
-        "": Color.WHITE,
-        "fire": Color(1.0, 0.5, 0.1),
-        "ice": Color(0.0, 0.8, 1.0),
-        "water": Color(0.0, 0.5, 1.0),
-        "oil": Color(0.2, 0.15, 0.05),
+        ElementNames.NONE: Color.WHITE,
+        ElementNames.FIRE: Color(1.0, 0.5, 0.1),
+        ElementNames.ICE: Color(0.0, 0.8, 1.0),
+        ElementNames.WATER: Color(0.0, 0.5, 1.0),
+        ElementNames.OIL: Color(0.2, 0.15, 0.05),
     }
 
     # Shared rarity colors (section 4)
@@ -71,8 +71,8 @@ static func _create_dark_forest() -> ThemeData:
 
     # Level Structure (section 5)
     t.has_ceiling = false
-    t.wall_style = "forest_thicket"
-    t.light_source_style = "mushroom"
+    t.wall_style = WallStyles.FOREST_THICKET
+    t.light_source_style = LightStyles.MUSHROOM
     t.sky_config = {
         "sky_top_color": Color(0.08, 0.15, 0.08),
         "sky_horizon_color": Color(0.15, 0.25, 0.12),
@@ -132,7 +132,7 @@ static func _create_dark_forest() -> ThemeData:
     # Props (section 5)
     t.prop_density = 0.5
     t.torch_flicker = true
-    t.floor_style = "plain"
+    t.floor_style = FloorStyles.PLAIN
     t.beam_style = "none"
     t.ceiling_beam_spacing = 4  # unused, no ceiling, set for compat
     t.pillar_chance = 0.3
@@ -186,7 +186,7 @@ static func _create_dark_forest() -> ThemeData:
 
     var df_boss = MonsterVariantDefinition.new()
     df_boss.variant_name = "Leshy Boss"
-    df_boss.variant_key = &"boss"
+    df_boss.variant_key = Modifiers.BOSS
     df_boss.scene = load("res://themes/folk/leshy_boss.tscn")
     df_boss.is_boss = true
     df_boss.spawn_weight = 0.0
@@ -230,8 +230,8 @@ static func _create_golden_palace() -> ThemeData:
 
     # Level Structure (section 6)
     t.has_ceiling = true
-    t.wall_style = "palace_ornate"
-    t.light_source_style = "torch"
+    t.wall_style = WallStyles.PALACE_ORNATE
+    t.light_source_style = LightStyles.TORCH
     t.sky_config = {}
 
     # Level Materials (section 6)
@@ -291,7 +291,7 @@ static func _create_golden_palace() -> ThemeData:
     # Props (section 6)
     t.prop_density = 0.5
     t.torch_flicker = true
-    t.floor_style = "plain"
+    t.floor_style = FloorStyles.PLAIN
     t.beam_style = "ornate"
     t.ceiling_beam_spacing = 3
     t.pillar_chance = 0.35
@@ -345,7 +345,7 @@ static func _create_golden_palace() -> ThemeData:
 
     var gp_boss = MonsterVariantDefinition.new()
     gp_boss.variant_name = "Zmey Boss"
-    gp_boss.variant_key = &"boss"
+    gp_boss.variant_key = Modifiers.BOSS
     gp_boss.scene = load("res://themes/folk/zmey_boss.tscn")
     gp_boss.is_boss = true
     gp_boss.spawn_weight = 0.0
@@ -389,8 +389,8 @@ static func _create_winter_realm() -> ThemeData:
 
     # Level Structure (section 7)
     t.has_ceiling = false
-    t.wall_style = "ice_crystal"
-    t.light_source_style = "crystal"
+    t.wall_style = WallStyles.ICE_CRYSTAL
+    t.light_source_style = LightStyles.CRYSTAL
     t.sky_config = {
         "sky_top_color": Color(0.05, 0.05, 0.15),
         "sky_horizon_color": Color(0.3, 0.4, 0.6),
@@ -450,7 +450,7 @@ static func _create_winter_realm() -> ThemeData:
     # Props (section 7)
     t.prop_density = 0.35
     t.torch_flicker = false     # steady frozen light
-    t.floor_style = "plain"
+    t.floor_style = FloorStyles.PLAIN
     t.beam_style = "none"
     t.ceiling_beam_spacing = 4  # unused, no ceiling
     t.pillar_chance = 0.25
@@ -504,7 +504,7 @@ static func _create_winter_realm() -> ThemeData:
 
     var wr_boss = MonsterVariantDefinition.new()
     wr_boss.variant_name = "Morozko Boss"
-    wr_boss.variant_key = &"boss"
+    wr_boss.variant_key = Modifiers.BOSS
     wr_boss.scene = load("res://themes/folk/morozko_boss.tscn")
     wr_boss.is_boss = true
     wr_boss.spawn_weight = 0.0

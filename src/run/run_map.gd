@@ -5,7 +5,7 @@ var layers: Array = []  # Array of Array[MapNode]
 
 class MapNode:
     var level_seed: int = 0
-    var modifier: String = "normal"
+    var modifier: String = Modifiers.NORMAL
     var connections: Array = []
     var visited: bool = false
     var biome_index: int = 0
@@ -30,7 +30,7 @@ static func generate(boss_depth: int) -> RunMap:
     # Boss layer
     var boss_node = MapNode.new()
     boss_node.level_seed = randi()
-    boss_node.modifier = "boss"
+    boss_node.modifier = Modifiers.BOSS
     var biome_count = ThemeManager.active_group.biomes.size() if ThemeManager and ThemeManager.active_group else 1
     boss_node.biome_index = randi() % biome_count
     map.layers.append([boss_node])

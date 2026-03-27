@@ -20,11 +20,11 @@ static func create() -> ThemeData:
         "epic": Color(0.65, 0.3, 0.1),
     }
     t.element_colors = {
-        "": Color(0.9, 0.85, 0.7),
-        "fire": Color(1.0, 0.4, 0.0),
-        "ice": Color(0.6, 0.8, 0.95),
-        "water": Color(0.2, 0.5, 0.8),
-        "oil": Color(0.4, 0.35, 0.15),
+        ElementNames.NONE: Color(0.9, 0.85, 0.7),
+        ElementNames.FIRE: Color(1.0, 0.4, 0.0),
+        ElementNames.ICE: Color(0.6, 0.8, 0.95),
+        ElementNames.WATER: Color(0.2, 0.5, 0.8),
+        ElementNames.OIL: Color(0.4, 0.35, 0.15),
     }
 
     # Environment — warm, close, thick fog
@@ -131,9 +131,9 @@ static func create() -> ThemeData:
     # Props
     t.prop_density = 1.0
     t.torch_flicker = true
-    t.light_source_style = "torch"
-    t.floor_style = "cracked_slab"
-    t.beam_style = "default"
+    t.light_source_style = LightStyles.TORCH
+    t.floor_style = FloorStyles.CRACKED_SLAB
+    t.beam_style = WallStyles.DEFAULT
     t.ceiling_beam_spacing = 2
     t.pillar_chance = 0.2
     t.rubble_chance = 0.15
@@ -150,7 +150,7 @@ static func create() -> ThemeData:
 
     var boss = MonsterVariantDefinition.new()
     boss.variant_name = "Stone Boss"
-    boss.variant_key = &"boss"
+    boss.variant_key = Modifiers.BOSS
     boss.scene = load("res://themes/stone/monster_boss.tscn")
     boss.is_boss = true
     boss.spawn_weight = 0.0
