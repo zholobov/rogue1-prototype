@@ -43,48 +43,48 @@ func update_state(p_remaining: float, p_active: bool = false) -> void:
     queue_redraw()
 
 func apply_theme() -> void:
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     if _label:
-        _label.add_theme_color_override("font_color", theme.ui_text_color)
+        _label.add_theme_color_override("font_color", active_theme.ui_text_color)
     _update_status_label()
     queue_redraw()
 
 func _update_status_label() -> void:
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     if not _status_label:
         return
     if is_active:
         _status_label.text = "ON"
-        _status_label.add_theme_color_override("font_color", theme.highlight)
+        _status_label.add_theme_color_override("font_color", active_theme.highlight)
     elif cooldown_remaining <= 0:
         _status_label.text = "READY"
-        _status_label.add_theme_color_override("font_color", theme.health_bar_foreground)
+        _status_label.add_theme_color_override("font_color", active_theme.health_bar_foreground)
     else:
         _status_label.text = "%.1fs" % cooldown_remaining
-        _status_label.add_theme_color_override("font_color", theme.ui_text_color)
+        _status_label.add_theme_color_override("font_color", active_theme.ui_text_color)
 
 func _draw() -> void:
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     var center = Vector2(25, 22)
     var radius = 18.0
 
     # Background circle fill
-    draw_circle(center, radius, theme.ui_panel_color)
+    draw_circle(center, radius, active_theme.ui_panel_color)
 
     if is_active:
         # Active: highlight border
-        draw_arc(center, radius, 0, TAU, 64, theme.highlight, 2.0)
+        draw_arc(center, radius, 0, TAU, 64, active_theme.highlight, 2.0)
     elif cooldown_remaining <= 0:
         # Ready: accent border
-        draw_arc(center, radius, 0, TAU, 64, theme.ui_accent_color, 2.0)
+        draw_arc(center, radius, 0, TAU, 64, active_theme.ui_accent_color, 2.0)
     else:
         # On cooldown: dim border + progress arc
-        draw_arc(center, radius, 0, TAU, 64, theme.ui_panel_color.lightened(0.2), 1.5)
+        draw_arc(center, radius, 0, TAU, 64, active_theme.ui_panel_color.lightened(0.2), 1.5)
         if cooldown_total > 0:
             var progress = 1.0 - (cooldown_remaining / cooldown_total)
             var sweep = progress * TAU
             # Clockwise fill from top (-PI/2)
-            draw_arc(center, radius - 3, -PI / 2, -PI / 2 + sweep, 64, Color(theme.ui_accent_color, 0.4), 6.0)
+            draw_arc(center, radius - 3, -PI / 2, -PI / 2 + sweep, 64, Color(active_theme.ui_accent_color, 0.4), 6.0)
 
     if _label:
         _label.text = ability_name

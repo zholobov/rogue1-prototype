@@ -180,7 +180,6 @@ static func _draw_flagstone(img: Image, w: int, h: int, stone_color: Color, mort
 
 static func _draw_cobblestone(img: Image, w: int, h: int, stone_color: Color, mortar_color: Color) -> void:
 	var stone_size: int = maxi(int(w / 8.0), 4)
-	var mortar: int = 2
 	for y in range(h):
 		for x in range(w):
 			var row = int(y / float(stone_size))

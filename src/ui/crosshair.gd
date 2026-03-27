@@ -42,11 +42,11 @@ func _rebuild() -> void:
     _apply_tint()
 
 func _apply_tint() -> void:
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     if _current_element == "":
-        modulate = theme.ui_crosshair_color
+        modulate = active_theme.ui_crosshair_color
     else:
-        modulate = theme.get_element_color(_current_element)
+        modulate = active_theme.get_element_color(_current_element)
 
 # --- Pistol: center dot + 4 lines with gap ---
 

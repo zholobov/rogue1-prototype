@@ -22,8 +22,8 @@ static func generate(boss_depth: int) -> RunMap:
             node.level_seed = randi()
             node.modifier = _random_modifier_excluding(used_modifiers)
             used_modifiers.append(node.modifier)
-            var biome_count = ThemeManager.active_group.biomes.size() if ThemeManager and ThemeManager.active_group else 1
-            node.biome_index = randi() % biome_count
+            var node_biome_count = ThemeManager.active_group.biomes.size() if ThemeManager and ThemeManager.active_group else 1
+            node.biome_index = randi() % node_biome_count
             layer.append(node)
         map.layers.append(layer)
 

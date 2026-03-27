@@ -89,7 +89,7 @@ func spend_currency(amount: int) -> bool:
 
 func register_kill(max_hp: int) -> void:
     stats.kills += 1
-    var reward = maxi(Config.kill_reward_base, max_hp / 10)
+    var reward = maxi(Config.kill_reward_base, int(max_hp / 10.0))
     add_currency(reward)
 
 func return_to_lobby() -> void:

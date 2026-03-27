@@ -28,21 +28,21 @@ func _setup_defaults() -> void:
     add_interaction("chilled", "fire", "", 0.0, 0.0)  # fire cancels chill
     add_interaction("burning", "water", "", 0.0, 0.0)  # water cancels burning
 
-func add_element(name: String, color: Color, applies_condition: String, condition_duration: float) -> void:
-    elements[name] = {
-        "name": name,
+func add_element(element_name: String, color: Color, applies_condition: String, condition_duration: float) -> void:
+    elements[element_name] = {
+        "name": element_name,
         "color": color,
         "applies_condition": applies_condition,
         "condition_duration": condition_duration,
     }
 
-func get_element(name: String) -> Variant:
-    if elements.has(name):
-        return elements[name]
+func get_element(element_name: String) -> Variant:
+    if elements.has(element_name):
+        return elements[element_name]
     return null
 
-func has_element(name: String) -> bool:
-    return elements.has(name)
+func has_element(element_name: String) -> bool:
+    return elements.has(element_name)
 
 func add_interaction(existing_condition: String, incoming_element: String, result_condition: String, duration: float, damage_per_tick: float) -> void:
     var key = "%s+%s" % [existing_condition, incoming_element]
