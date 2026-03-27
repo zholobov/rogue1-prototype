@@ -22,6 +22,7 @@ func set_theme(theme_name_to_set: String) -> void:
 			active_group = group
 			active_theme = group.biomes[0]
 			TextureFactory.generate_for_theme(active_theme)
+			VfxFactory.clear_cache()
 			theme_changed.emit(active_theme)
 			return
 	# Fallback: search by biome name in current group
@@ -33,6 +34,7 @@ func set_theme(theme_name_to_set: String) -> void:
 func set_biome(biome: ThemeData) -> void:
 	active_theme = biome
 	TextureFactory.generate_for_theme(biome)
+	VfxFactory.clear_cache()
 	theme_changed.emit(active_theme)
 
 func get_palette() -> Array[Color]:
