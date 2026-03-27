@@ -6,42 +6,6 @@ const BASE_METAL = Color(0.55, 0.55, 0.60)
 const DARK_METAL = Color(0.35, 0.35, 0.38)
 const GRIP_COLOR = Color(0.27, 0.20, 0.13)
 
-static func create_viewmodel(weapon_index: int, element: String) -> Node3D:
-    var root: Node3D
-    match weapon_index:
-        0: root = _build_pistol_viewmodel()
-        1: root = _build_flamethrower_viewmodel()
-        2: root = _build_ice_rifle_viewmodel()
-        3: root = _build_water_gun_viewmodel()
-        _: return null
-    root.name = "WeaponViewmodel"
-    _apply_element_glow(root, element)
-    return root
-
-static func create_world_model(weapon_index: int, element: String) -> Node3D:
-    var root: Node3D
-    match weapon_index:
-        0: root = _build_pistol_world()
-        1: root = _build_flamethrower_world()
-        2: root = _build_ice_rifle_world()
-        3: root = _build_water_gun_world()
-        _: return null
-    root.name = "WeaponWorldModel"
-    root.scale = Vector3(1.2, 1.2, 1.2)
-    _apply_element_glow(root, element)
-    return root
-
-static func create_hud_icon(weapon_index: int, element: String) -> Control:
-    var root = Control.new()
-    root.custom_minimum_size = Vector2(64, 48)
-    root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    match weapon_index:
-        0: _build_pistol_icon(root, element)
-        1: _build_flamethrower_icon(root, element)
-        2: _build_ice_rifle_icon(root, element)
-        3: _build_water_gun_icon(root, element)
-    return root
-
 # --- Material helpers ---
 
 static func _make_mat(color: Color, roughness: float = 0.7) -> StandardMaterial3D:

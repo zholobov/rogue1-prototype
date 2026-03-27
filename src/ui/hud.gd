@@ -176,7 +176,7 @@ func _build_weapon_panel() -> void:
 	_weapon_container.add_child(_weapon_element_label)
 
 	# Row 2: slot indicators
-	for i in range(4):
+	for i in range(WeaponRegistry.weapon_count()):
 		var slot_bg = ColorRect.new()
 		slot_bg.position = Vector2(8 + i * 22, 52)
 		slot_bg.size = Vector2(18, 18)
@@ -540,9 +540,11 @@ func _update_weapon(player: PlayerEntity) -> void:
 		_last_hud_weapon_index = idx
 		for child in _weapon_icon.get_children():
 			child.queue_free()
-		var new_icon = WeaponModelFactory.create_hud_icon(idx, weapon.element)
-		if new_icon:
-			_weapon_icon.add_child(new_icon)
+		var wd = WeaponRegistry.get_weapon(idx)
+		if wd:
+			var new_icon = wd.build_hud_icon.call()
+			if new_icon:
+				_weapon_icon.add_child(new_icon)
 
 func _update_abilities(player: PlayerEntity) -> void:
 	var dash = player.get_component(C_Dash)

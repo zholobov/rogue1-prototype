@@ -60,10 +60,12 @@ func _swap_weapon(_entity: Entity, wv: C_WeaponVisual, body: CharacterBody3D, ei
 
     # Create new
     var new_node: Node3D
-    if wv.show_viewmodel:
-        new_node = WeaponModelFactory.create_viewmodel(wv.weapon_index, wv.element)
-    else:
-        new_node = WeaponModelFactory.create_world_model(wv.weapon_index, wv.element)
+    var weapon_def = WeaponRegistry.get_weapon(wv.weapon_index)
+    if weapon_def:
+        if wv.show_viewmodel:
+            new_node = weapon_def.build_viewmodel.call()
+        else:
+            new_node = weapon_def.build_world_model.call()
 
     if not new_node:
         return
