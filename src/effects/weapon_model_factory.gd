@@ -70,19 +70,10 @@ static func _add_muzzle(parent: Node3D, pos: Vector3) -> void:
 
 # --- Element glow ---
 
-static func _get_element_color(element: String) -> Color:
-    if ThemeManager and ThemeManager.active_theme:
-        return ThemeManager.active_theme.get_element_color(element)
-    match element:
-        "fire": return Color(1.0, 0.5, 0.1)
-        "ice": return Color(0.0, 0.8, 1.0)
-        "water": return Color(0.0, 0.5, 1.0)
-        _: return Color.WHITE
-
 static func _apply_element_glow(root: Node3D, element: String) -> void:
     if element == "":
         return
-    var color = _get_element_color(element)
+    var color = ThemeManager.active_theme.get_element_color(element)
     for child in root.get_children():
         if child is MeshInstance3D and child.name.begins_with("Accent"):
             child.material_override = _make_emissive_mat(color)
@@ -326,15 +317,8 @@ static func _icon_rect(parent: Control, pos: Vector2, sz: Vector2, color: Color)
     parent.add_child(r)
     return r
 
-static func _get_element_icon_color(element: String) -> Color:
-    match element:
-        "fire": return Color(1.0, 0.4, 0.05, 0.6)
-        "ice": return Color(0.0, 0.8, 1.0, 0.6)
-        "water": return Color(0.0, 0.53, 1.0, 0.6)
-        _: return Color(0.6, 0.6, 0.6, 0.0)  # invisible for no element
-
 static func _build_pistol_icon(root: Control, element: String) -> void:
-    var accent = _get_element_icon_color(element)
+    var accent = Color(ThemeManager.active_theme.get_element_color(element), 0.6 if element != "" else 0.0)
     _icon_rect(root, Vector2(8, 8), Vector2(40, 10), Color(0.5, 0.5, 0.52))    # barrel
     _icon_rect(root, Vector2(12, 18), Vector2(32, 16), Color(0.38, 0.38, 0.4))  # body
     _icon_rect(root, Vector2(22, 34), Vector2(14, 14), GRIP_COLOR)              # grip
@@ -343,7 +327,7 @@ static func _build_pistol_icon(root: Control, element: String) -> void:
         _icon_rect(root, Vector2(12, 16), Vector2(24, 3), accent)               # element accent
 
 static func _build_flamethrower_icon(root: Control, element: String) -> void:
-    var accent = _get_element_icon_color(element)
+    var accent = Color(ThemeManager.active_theme.get_element_color(element), 0.6 if element != "" else 0.0)
     _icon_rect(root, Vector2(2, 10), Vector2(50, 12), Color(0.47, 0.27, 0.0))  # barrel
     _icon_rect(root, Vector2(14, 22), Vector2(38, 14), Color(0.38, 0.38, 0.4)) # body
     _icon_rect(root, Vector2(24, 36), Vector2(20, 12), Color(0.27, 0.2, 0.0))  # tank (approx)
@@ -352,7 +336,7 @@ static func _build_flamethrower_icon(root: Control, element: String) -> void:
         _icon_rect(root, Vector2(16, 24), Vector2(22, 3), accent)
 
 static func _build_ice_rifle_icon(root: Control, element: String) -> void:
-    var accent = _get_element_icon_color(element)
+    var accent = Color(ThemeManager.active_theme.get_element_color(element), 0.6 if element != "" else 0.0)
     _icon_rect(root, Vector2(0, 16), Vector2(55, 9), Color(0.33, 0.47, 0.67))   # long barrel
     _icon_rect(root, Vector2(22, 25), Vector2(36, 13), Color(0.27, 0.33, 0.4))  # receiver
     _icon_rect(root, Vector2(28, 8), Vector2(16, 7), Color(0.22, 0.27, 0.33))   # scope
@@ -362,7 +346,7 @@ static func _build_ice_rifle_icon(root: Control, element: String) -> void:
         _icon_rect(root, Vector2(24, 27), Vector2(26, 3), accent)
 
 static func _build_water_gun_icon(root: Control, element: String) -> void:
-    var accent = _get_element_icon_color(element)
+    var accent = Color(ThemeManager.active_theme.get_element_color(element), 0.6 if element != "" else 0.0)
     _icon_rect(root, Vector2(4, 20), Vector2(40, 12), Color(0.2, 0.33, 0.67))   # barrel
     _icon_rect(root, Vector2(16, 32), Vector2(34, 14), Color(0.16, 0.27, 0.53)) # body
     _icon_rect(root, Vector2(20, 4), Vector2(24, 16), Color(0.1, 0.2, 0.47))    # tank (approx rect)
