@@ -40,10 +40,18 @@ func set_biome(biome: ThemeData) -> void:
 func get_palette() -> Array[Color]:
 	return active_theme.get_palette_array()
 
-func get_monster_scene(type: String) -> PackedScene:
-	if active_theme.monster_scenes.has(type):
-		return active_theme.monster_scenes[type]
+func get_monster_scene(type: StringName) -> PackedScene:
+	for variant in active_theme.monster_variants:
+		if variant.variant_key == type:
+			return variant.scene
 	return null
+
+func get_spawnable_variants() -> Array:
+	var result: Array = []
+	for variant in active_theme.monster_variants:
+		if not variant.is_boss and variant.spawn_weight > 0.0:
+			result.append(variant)
+	return result
 
 func get_projectile_scene() -> PackedScene:
 	return active_theme.projectile_scene

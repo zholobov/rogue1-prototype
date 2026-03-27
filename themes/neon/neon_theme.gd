@@ -85,11 +85,21 @@ static func create() -> ThemeData:
     t.ui_minimap_wall = Color(0.2, 0.3, 0.5)
     t.ui_kill_feed_color = Color(0.0, 0.83, 1.0)
 
-    # Monster scenes
-    t.monster_scenes = {
-        "basic": load("res://themes/neon/monster_basic.tscn"),
-        "boss": load("res://themes/neon/monster_boss.tscn"),
-    }
+    # Monster variants
+    var basic = MonsterVariantDefinition.new()
+    basic.variant_name = "Neon Basic"
+    basic.variant_key = &"basic"
+    basic.scene = load("res://themes/neon/monster_basic.tscn")
+    basic.spawn_weight = 2.0
+    t.monster_variants.append(basic)
+
+    var boss = MonsterVariantDefinition.new()
+    boss.variant_name = "Neon Boss"
+    boss.variant_key = &"boss"
+    boss.scene = load("res://themes/neon/monster_boss.tscn")
+    boss.is_boss = true
+    boss.spawn_weight = 0.0
+    t.monster_variants.append(boss)
 
     # Textures — neon uses minimal textures
     t.floor_pattern = {}

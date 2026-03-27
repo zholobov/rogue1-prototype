@@ -59,7 +59,7 @@ extends Resource
 
 # --- Monsters ---
 @export_group("Monsters")
-@export var monster_scenes: Dictionary = {}
+@export var monster_variants: Array = []  # Array of MonsterVariantDefinition
 @export var body_albedo: Color = Color(0.08, 0.08, 0.1)
 @export var body_emission: Color = Color(0.0, 0.83, 1.0)
 @export var boss_albedo: Color = Color(0.2, 0.02, 0.02)

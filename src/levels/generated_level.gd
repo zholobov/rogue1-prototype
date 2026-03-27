@@ -134,13 +134,19 @@ func _spawn_monsters() -> void:
 			if Config.max_monsters_per_level > 0 and monsters_remaining >= Config.max_monsters_per_level:
 				break
 			var monster = MonsterScene.instantiate()
-			# Pick monster variant (50% basic, 25% variant1, 25% variant2)
-			var variant_roll = randf()
-			var active = ThemeManager.active_theme
-			if variant_roll < 0.25 and active.monster_scenes.has("variant2"):
-				monster.visual_variant = "variant2"
-			elif variant_roll < 0.5 and active.monster_scenes.has("variant1"):
-				monster.visual_variant = "variant1"
+			# Pick monster variant using weighted random from theme
+			var spawnable = ThemeManager.get_spawnable_variants()
+			if spawnable.size() > 0:
+				var total_weight = 0.0
+				for v in spawnable:
+					total_weight += v.spawn_weight
+				var roll = randf() * total_weight
+				var cumulative = 0.0
+				for v in spawnable:
+					cumulative += v.spawn_weight
+					if roll < cumulative:
+						monster.visual_variant = v.variant_key
+						break
 			var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
 			monster.position = spawn_points[i] + offset
 			add_child(monster)

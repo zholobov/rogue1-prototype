@@ -23,7 +23,7 @@ func test_theme_data_has_level_materials():
 
 func test_theme_data_has_monsters():
     var td = ThemeData.new()
-    assert_typeof(td.monster_scenes, TYPE_DICTIONARY)
+    assert_typeof(td.monster_variants, TYPE_ARRAY)
     assert_ne(td.eye_color, Color.BLACK)
 
 func test_theme_data_has_vfx():
@@ -305,13 +305,16 @@ func test_neon_monster_boss_scene_loads():
     var scene = load("res://themes/neon/monster_boss.tscn")
     assert_not_null(scene)
 
-func test_neon_theme_has_monster_scenes():
+func test_neon_theme_has_monster_variants():
     var neon: ThemeData
     for t in ThemeManager.available_themes:
         if t.theme_name == "Neon Dungeon":
             neon = t
-    assert_true(neon.monster_scenes.has("basic"))
-    assert_true(neon.monster_scenes.has("boss"))
+    var keys: Array = []
+    for v in neon.monster_variants:
+        keys.append(v.variant_key)
+    assert_true(&"basic" in keys)
+    assert_true(&"boss" in keys)
 
 # --- Stone Monster Scenes ---
 func test_stone_monster_basic_scene_loads():
@@ -334,13 +337,16 @@ func test_stone_monster_boss_scene_loads():
     var scene = load("res://themes/stone/monster_boss.tscn")
     assert_not_null(scene)
 
-func test_stone_theme_has_monster_scenes():
+func test_stone_theme_has_monster_variants():
     var stone: ThemeData
     for t in ThemeManager.available_themes:
         if t.theme_name == "Stone Dungeon":
             stone = t
-    assert_true(stone.monster_scenes.has("basic"))
-    assert_true(stone.monster_scenes.has("boss"))
+    var keys: Array = []
+    for v in stone.monster_variants:
+        keys.append(v.variant_key)
+    assert_true(&"basic" in keys)
+    assert_true(&"boss" in keys)
 
 # --- Theme Selector ---
 func test_theme_selector_instantiates():
@@ -362,10 +368,13 @@ func test_all_themes_have_required_fields():
         assert_gt(t.get_palette_array().size(), 0, "%s needs palette colors" % t.theme_name)
         assert_gt(t.fog_depth_end, t.fog_depth_begin, "%s fog end > begin" % t.theme_name)
 
-func test_all_themes_have_monster_scenes():
+func test_all_themes_have_monster_variants():
     for t in ThemeManager.available_themes:
-        assert_true(t.monster_scenes.has("basic"), "%s needs basic monster scene" % t.theme_name)
-        assert_true(t.monster_scenes.has("boss"), "%s needs boss monster scene" % t.theme_name)
+        var keys: Array = []
+        for v in t.monster_variants:
+            keys.append(v.variant_key)
+        assert_true(&"basic" in keys, "%s needs basic monster variant" % t.theme_name)
+        assert_true(&"boss" in keys, "%s needs boss monster variant" % t.theme_name)
 
 func test_texture_cache_updates_on_theme_switch():
     ThemeManager.set_theme("Stone Dungeon")

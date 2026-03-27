@@ -162,13 +162,35 @@ static func _create_dark_forest() -> ThemeData:
     t.projectile_color = Color(0.3, 0.6, 0.2)
     t.projectile_trail_color = Color(0.2, 0.5, 0.15)
 
-    # Monster scenes (section 9)
-    t.monster_scenes = {
-        "basic": load("res://themes/folk/leshy_basic.tscn"),
-        "variant1": load("res://themes/folk/kikimora_basic.tscn"),
-        "variant2": load("res://themes/folk/vodyanoy_basic.tscn"),
-        "boss": load("res://themes/folk/leshy_boss.tscn"),
-    }
+    # Monster variants (section 9)
+    var df_basic = MonsterVariantDefinition.new()
+    df_basic.variant_name = "Leshy"
+    df_basic.variant_key = &"basic"
+    df_basic.scene = load("res://themes/folk/leshy_basic.tscn")
+    df_basic.spawn_weight = 2.0
+    t.monster_variants.append(df_basic)
+
+    var df_v1 = MonsterVariantDefinition.new()
+    df_v1.variant_name = "Kikimora"
+    df_v1.variant_key = &"variant1"
+    df_v1.scene = load("res://themes/folk/kikimora_basic.tscn")
+    df_v1.spawn_weight = 1.0
+    t.monster_variants.append(df_v1)
+
+    var df_v2 = MonsterVariantDefinition.new()
+    df_v2.variant_name = "Vodyanoy"
+    df_v2.variant_key = &"variant2"
+    df_v2.scene = load("res://themes/folk/vodyanoy_basic.tscn")
+    df_v2.spawn_weight = 1.0
+    t.monster_variants.append(df_v2)
+
+    var df_boss = MonsterVariantDefinition.new()
+    df_boss.variant_name = "Leshy Boss"
+    df_boss.variant_key = &"boss"
+    df_boss.scene = load("res://themes/folk/leshy_boss.tscn")
+    df_boss.is_boss = true
+    df_boss.spawn_weight = 0.0
+    t.monster_variants.append(df_boss)
 
     return t
 
@@ -299,13 +321,35 @@ static func _create_golden_palace() -> ThemeData:
     t.projectile_color = Color(0.9, 0.65, 0.15)
     t.projectile_trail_color = Color(0.8, 0.5, 0.1)
 
-    # Monster scenes (section 9)
-    t.monster_scenes = {
-        "basic": load("res://themes/folk/zmey_basic.tscn"),
-        "variant1": load("res://themes/folk/koschei_basic.tscn"),
-        "variant2": load("res://themes/folk/strazh_basic.tscn"),
-        "boss": load("res://themes/folk/zmey_boss.tscn"),
-    }
+    # Monster variants (section 9)
+    var gp_basic = MonsterVariantDefinition.new()
+    gp_basic.variant_name = "Zmey"
+    gp_basic.variant_key = &"basic"
+    gp_basic.scene = load("res://themes/folk/zmey_basic.tscn")
+    gp_basic.spawn_weight = 2.0
+    t.monster_variants.append(gp_basic)
+
+    var gp_v1 = MonsterVariantDefinition.new()
+    gp_v1.variant_name = "Koschei"
+    gp_v1.variant_key = &"variant1"
+    gp_v1.scene = load("res://themes/folk/koschei_basic.tscn")
+    gp_v1.spawn_weight = 1.0
+    t.monster_variants.append(gp_v1)
+
+    var gp_v2 = MonsterVariantDefinition.new()
+    gp_v2.variant_name = "Strazh"
+    gp_v2.variant_key = &"variant2"
+    gp_v2.scene = load("res://themes/folk/strazh_basic.tscn")
+    gp_v2.spawn_weight = 1.0
+    t.monster_variants.append(gp_v2)
+
+    var gp_boss = MonsterVariantDefinition.new()
+    gp_boss.variant_name = "Zmey Boss"
+    gp_boss.variant_key = &"boss"
+    gp_boss.scene = load("res://themes/folk/zmey_boss.tscn")
+    gp_boss.is_boss = true
+    gp_boss.spawn_weight = 0.0
+    t.monster_variants.append(gp_boss)
 
     return t
 
@@ -436,12 +480,34 @@ static func _create_winter_realm() -> ThemeData:
     t.projectile_color = Color(0.4, 0.6, 0.9)
     t.projectile_trail_color = Color(0.3, 0.5, 0.8)
 
-    # Monster scenes (section 9)
-    t.monster_scenes = {
-        "basic": load("res://themes/folk/morozko_basic.tscn"),
-        "variant1": load("res://themes/folk/snegurochka_basic.tscn"),
-        "variant2": load("res://themes/folk/medved_basic.tscn"),
-        "boss": load("res://themes/folk/morozko_boss.tscn"),
-    }
+    # Monster variants (section 9)
+    var wr_basic = MonsterVariantDefinition.new()
+    wr_basic.variant_name = "Morozko"
+    wr_basic.variant_key = &"basic"
+    wr_basic.scene = load("res://themes/folk/morozko_basic.tscn")
+    wr_basic.spawn_weight = 2.0
+    t.monster_variants.append(wr_basic)
+
+    var wr_v1 = MonsterVariantDefinition.new()
+    wr_v1.variant_name = "Snegurochka"
+    wr_v1.variant_key = &"variant1"
+    wr_v1.scene = load("res://themes/folk/snegurochka_basic.tscn")
+    wr_v1.spawn_weight = 1.0
+    t.monster_variants.append(wr_v1)
+
+    var wr_v2 = MonsterVariantDefinition.new()
+    wr_v2.variant_name = "Medved"
+    wr_v2.variant_key = &"variant2"
+    wr_v2.scene = load("res://themes/folk/medved_basic.tscn")
+    wr_v2.spawn_weight = 1.0
+    t.monster_variants.append(wr_v2)
+
+    var wr_boss = MonsterVariantDefinition.new()
+    wr_boss.variant_name = "Morozko Boss"
+    wr_boss.variant_key = &"boss"
+    wr_boss.scene = load("res://themes/folk/morozko_boss.tscn")
+    wr_boss.is_boss = true
+    wr_boss.spawn_weight = 0.0
+    t.monster_variants.append(wr_boss)
 
     return t

@@ -140,9 +140,20 @@ static func create() -> ThemeData:
     t.room_prop_min = 1
     t.room_prop_max = 3
 
-    t.monster_scenes = {
-        "basic": load("res://themes/stone/monster_basic.tscn"),
-        "boss": load("res://themes/stone/monster_boss.tscn"),
-    }
+    # Monster variants
+    var basic = MonsterVariantDefinition.new()
+    basic.variant_name = "Stone Basic"
+    basic.variant_key = &"basic"
+    basic.scene = load("res://themes/stone/monster_basic.tscn")
+    basic.spawn_weight = 2.0
+    t.monster_variants.append(basic)
+
+    var boss = MonsterVariantDefinition.new()
+    boss.variant_name = "Stone Boss"
+    boss.variant_key = &"boss"
+    boss.scene = load("res://themes/stone/monster_boss.tscn")
+    boss.is_boss = true
+    boss.spawn_weight = 0.0
+    t.monster_variants.append(boss)
 
     return t

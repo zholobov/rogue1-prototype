@@ -39,14 +39,17 @@ func test_winter_realm_has_no_ceiling():
             assert_false(group.biomes[2].has_ceiling)
             assert_eq(group.biomes[2].wall_style, "ice_crystal")
 
-func test_folk_biomes_have_monster_scenes():
+func test_folk_biomes_have_monster_variants():
     for group in ThemeManager.available_groups:
         if group.group_name == "Russian Folk Tales":
             for biome in group.biomes:
-                assert_true(biome.monster_scenes.has("basic"), "%s needs basic" % biome.biome_name)
-                assert_true(biome.monster_scenes.has("variant1"), "%s needs variant1" % biome.biome_name)
-                assert_true(biome.monster_scenes.has("variant2"), "%s needs variant2" % biome.biome_name)
-                assert_true(biome.monster_scenes.has("boss"), "%s needs boss" % biome.biome_name)
+                var keys: Array = []
+                for v in biome.monster_variants:
+                    keys.append(v.variant_key)
+                assert_true(&"basic" in keys, "%s needs basic" % biome.biome_name)
+                assert_true(&"variant1" in keys, "%s needs variant1" % biome.biome_name)
+                assert_true(&"variant2" in keys, "%s needs variant2" % biome.biome_name)
+                assert_true(&"boss" in keys, "%s needs boss" % biome.biome_name)
 
 func test_folk_biomes_have_sky_config():
     for group in ThemeManager.available_groups:
