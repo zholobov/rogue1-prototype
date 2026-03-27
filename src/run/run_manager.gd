@@ -115,33 +115,18 @@ func _change_state(new_state: int) -> void:
     state = new_state
     state_changed.emit(new_state)
 
-func _apply_modifier(modifier: String) -> void:
-    Config.current_modifier = modifier
-    Config.level_grid_width = 12
-    Config.level_grid_height = 12
-    Config.monsters_per_room = 1
-    Config.light_range_mult = 1.0
-    Config.monster_hp_mult = 1.0
-    Config.monster_damage_mult = 1.0
-    Config.max_monsters_per_level = 5
-
-    match modifier:
-        "dense":
-            Config.monsters_per_room = 2
-        "large":
-            Config.level_grid_width = 16
-            Config.level_grid_height = 16
-        "dark":
-            Config.light_range_mult = 0.5
-        "horde":
-            Config.monsters_per_room = 3
-            Config.monster_hp_mult = 0.5
-        "boss":
-            Config.level_grid_width = 14
-            Config.level_grid_height = 14
-            Config.monsters_per_room = 3
-            Config.monster_hp_mult = 2.0
-            Config.max_monsters_per_level = 0  # No cap for boss
+func _apply_modifier(modifier_name: StringName) -> void:
+    var mod = ModifierRegistry.get_modifier(modifier_name)
+    if not mod:
+        return
+    Config.current_modifier = modifier_name
+    Config.level_grid_width = mod.grid_width
+    Config.level_grid_height = mod.grid_height
+    Config.monsters_per_room = mod.monsters_per_room
+    Config.max_monsters_per_level = mod.max_monsters_per_level
+    Config.light_range_mult = mod.light_range_mult
+    Config.monster_hp_mult = mod.monster_hp_mult
+    Config.monster_damage_mult = mod.monster_damage_mult
 
     # Loop scaling: +50% HP, +25% damage per loop
     if stats.loop > 0:

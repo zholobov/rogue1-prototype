@@ -61,19 +61,18 @@ static func generate(boss_depth: int) -> RunMap:
     return map
 
 static func _random_modifier_excluding(exclude: Array) -> String:
-    var all_modifiers = ["normal", "dense", "large", "dark", "horde"]
-    var weights = [0.50, 0.20, 0.15, 0.10, 0.05]
+    var all_modifiers = ModifierRegistry.get_spawnable_names()
 
-    # Remove excluded modifiers and renormalize
+    # Remove excluded modifiers and collect weights
     var available: Array = []
     var available_weights: Array = []
-    for i in range(all_modifiers.size()):
-        if all_modifiers[i] not in exclude:
-            available.append(all_modifiers[i])
-            available_weights.append(weights[i])
+    for name in all_modifiers:
+        if name not in exclude:
+            available.append(name)
+            available_weights.append(ModifierRegistry.get_modifier(name).map_weight)
 
     if available.is_empty():
-        return "normal"
+        return Modifiers.NORMAL
 
     var total = 0.0
     for w in available_weights:

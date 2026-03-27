@@ -4,20 +4,11 @@ extends RefCounted
 var tiles: Dictionary = {}
 var adjacency_dir: Dictionary = {}
 
-static func get_profile_weights(modifier: String) -> Dictionary:
-    match modifier:
-        "dense":
-            return { room = 2.5, spawn = 2.5, cor = 0.3, door = 0.5, wall = 2.0, empty = 0.5 }
-        "large":
-            return { room = 1.0, spawn = 1.0, cor = 0.8, door = 0.3, wall = 3.0, empty = 1.5 }
-        "dark":
-            return { room = 0.8, spawn = 0.8, cor = 0.5, door = 0.15, wall = 4.0, empty = 1.5 }
-        "horde":
-            return { room = 3.0, spawn = 3.0, cor = 0.3, door = 0.6, wall = 2.0, empty = 0.3 }
-        "boss":
-            return { room = 3.0, spawn = 3.0, cor = 0.2, door = 0.3, wall = 2.5, empty = 0.5 }
-        _:
-            return { room = 1.5, spawn = 1.5, cor = 0.4, door = 0.2, wall = 3.5, empty = 1.0 }
+static func get_profile_weights(modifier_name: StringName) -> Dictionary:
+    var mod = ModifierRegistry.get_modifier(modifier_name)
+    if mod:
+        return mod.tile_weights
+    return ModifierRegistry.get_modifier(Modifiers.NORMAL).tile_weights
 
 func setup_profile(modifier: String) -> void:
     tiles.clear()

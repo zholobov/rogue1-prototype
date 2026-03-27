@@ -58,39 +58,11 @@ func _generate_room_seeds(rng: RandomNumberGenerator, width: int, height: int, m
     var pinned: Dictionary = {}
     var seeds: Array = []
 
-    # Per-modifier seed count and spacing
-    var room_count: int
-    var min_dist: int
-    match modifier:
-        "dense":
-            room_count = rng.randi_range(6, 9)
-            min_dist = 3
-        "large":
-            room_count = rng.randi_range(3, 5)
-            min_dist = 5
-        "dark":
-            room_count = rng.randi_range(5, 8)
-            min_dist = 3
-        "horde":
-            room_count = rng.randi_range(3, 5)
-            min_dist = 5
-        "boss":
-            # Large central arena — pin a 5x5 block of room tiles with spawn at center
-            var cx = int(width / 2.0)
-            var cy = int(height / 2.0)
-            for dy in range(-2, 3):
-                for dx in range(-2, 3):
-                    var px = cx + dx
-                    var py = cy + dy
-                    if px > 0 and px < width - 1 and py > 0 and py < height - 1:
-                        if dx == 0 and dy == 0:
-                            pinned[Vector2i(px, py)] = "spawn"
-                        else:
-                            pinned[Vector2i(px, py)] = "room"
-            return pinned
-        _:  # "normal"
-            room_count = rng.randi_range(4, 7)
-            min_dist = 4
+    var mod = ModifierRegistry.get_modifier(modifier)
+    if mod.pin_rooms_override.is_valid():
+        return mod.pin_rooms_override.call(rng, width, height)
+    var room_count = rng.randi_range(mod.room_count_range.x, mod.room_count_range.y)
+    var min_dist = mod.room_min_dist
 
     var attempts = 0
 
