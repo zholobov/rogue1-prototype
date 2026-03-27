@@ -52,7 +52,7 @@ static func apply_damage(target_entity: Entity, damage: int, element: String) ->
     # Apply elemental condition
     if element != "" and Elements:
         var elem = Elements.get_element(element)
-        if elem and elem.applies_condition != "":
+        if elem and elem.condition_name != ConditionNames.NONE:
             var conditions := target_entity.get_component(C_Conditions) as C_Conditions
             if conditions:
                 var cond_mult = 1.0
@@ -65,7 +65,7 @@ static func apply_damage(target_entity: Entity, damage: int, element: String) ->
     if parent and DamageEvents:
         DamageEvents.damage_dealt.emit(parent.global_position, actual_damage, element)
 
-static func _apply_element_to_conditions(conditions: C_Conditions, element: String, elem_data: Dictionary, duration_mult: float = 1.0) -> void:
+static func _apply_element_to_conditions(conditions: C_Conditions, element: String, elem_data: ElementDefinition, duration_mult: float = 1.0) -> void:
     # Check for interactions with existing conditions
     for cond in conditions.active.duplicate():
         var interaction = Elements.get_interaction(cond.name, element)
@@ -82,7 +82,7 @@ static func _apply_element_to_conditions(conditions: C_Conditions, element: Stri
 
     # No interaction — apply base condition
     conditions.add_condition(
-        elem_data.applies_condition,
+        elem_data.condition_name,
         elem_data.condition_duration * duration_mult,
         Elements.stacking_mode
     )
