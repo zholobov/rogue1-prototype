@@ -7,11 +7,11 @@ func _ready() -> void:
     _build_ui()
 
 func _build_ui() -> void:
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
 
     # Full-screen background
     var bg = ColorRect.new()
-    bg.color = theme.ui_background_color
+    bg.color = active_theme.ui_background_color
     bg.set_anchors_preset(PRESET_FULL_RECT)
     bg.mouse_filter = MOUSE_FILTER_IGNORE
     add_child(bg)
@@ -34,7 +34,7 @@ func _build_ui() -> void:
     title.text = "SELECT THEME"
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     title.add_theme_font_size_override("font_size", 32)
-    title.add_theme_color_override("font_color", theme.ui_text_color)
+    title.add_theme_color_override("font_color", active_theme.ui_text_color)
     vbox.add_child(title)
 
     # Theme cards grid

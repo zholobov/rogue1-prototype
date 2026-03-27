@@ -76,8 +76,8 @@ func _generate_room_seeds(rng: RandomNumberGenerator, width: int, height: int, m
             min_dist = 5
         "boss":
             # Large central arena — pin a 5x5 block of room tiles with spawn at center
-            var cx = width / 2
-            var cy = height / 2
+            var cx = int(width / 2.0)
+            var cy = int(height / 2.0)
             for dy in range(-2, 3):
                 for dx in range(-2, 3):
                     var px = cx + dx

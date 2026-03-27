@@ -27,12 +27,12 @@ func _ready() -> void:
     _build_ui()
 
 func _build_ui() -> void:
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     var btn_font_size = 11
 
     # Background — fills viewport via anchors
     var bg = ColorRect.new()
-    bg.color = theme.ui_background_color
+    bg.color = active_theme.ui_background_color
     bg.set_anchors_preset(PRESET_FULL_RECT)
     bg.mouse_filter = MOUSE_FILTER_IGNORE
     add_child(bg)
@@ -50,7 +50,7 @@ func _build_ui() -> void:
     title.text = "LEVEL GENERATOR PLAYGROUND"
     title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     title.add_theme_font_size_override("font_size", 14)
-    title.add_theme_color_override("font_color", theme.ui_accent_color)
+    title.add_theme_color_override("font_color", active_theme.ui_accent_color)
     top_bar.add_child(title)
 
     var back_btn = Button.new()
@@ -192,17 +192,17 @@ func _build_sections() -> Array:
     })
 
     # Add theme visual props (from ThemeData, not Config)
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     sections.append({
         "title": "Theme Props",
         "properties": [
-            {"label": "Prop Density", "key": "prop_density", "type": "float", "value": theme.prop_density, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
-            {"label": "Pillar Chance", "key": "pillar_chance", "type": "float", "value": theme.pillar_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
-            {"label": "Rubble Chance", "key": "rubble_chance", "type": "float", "value": theme.rubble_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
-            {"label": "Beam Spacing", "key": "ceiling_beam_spacing", "type": "int", "value": theme.ceiling_beam_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
-            {"label": "Light Spacing", "key": "point_light_spacing", "type": "int", "value": theme.point_light_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
-            {"label": "Prop Min", "key": "room_prop_min", "type": "int", "value": theme.room_prop_min, "min_value": 0, "max_value": 5, "step": 1, "options": []},
-            {"label": "Prop Max", "key": "room_prop_max", "type": "int", "value": theme.room_prop_max, "min_value": 0, "max_value": 10, "step": 1, "options": []},
+            {"label": "Prop Density", "key": "prop_density", "type": "float", "value": active_theme.prop_density, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
+            {"label": "Pillar Chance", "key": "pillar_chance", "type": "float", "value": active_theme.pillar_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
+            {"label": "Rubble Chance", "key": "rubble_chance", "type": "float", "value": active_theme.rubble_chance, "min_value": 0.0, "max_value": 1.0, "step": 0.05, "options": []},
+            {"label": "Beam Spacing", "key": "ceiling_beam_spacing", "type": "int", "value": active_theme.ceiling_beam_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
+            {"label": "Light Spacing", "key": "point_light_spacing", "type": "int", "value": active_theme.point_light_spacing, "min_value": 1, "max_value": 10, "step": 1, "options": []},
+            {"label": "Prop Min", "key": "room_prop_min", "type": "int", "value": active_theme.room_prop_min, "min_value": 0, "max_value": 5, "step": 1, "options": []},
+            {"label": "Prop Max", "key": "room_prop_max", "type": "int", "value": active_theme.room_prop_max, "min_value": 0, "max_value": 10, "step": 1, "options": []},
         ]
     })
 
@@ -367,12 +367,12 @@ func _rebuild_3d_preview() -> void:
     viewport.add_child(light)
 
     # World environment
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     var env = Environment.new()
     env.background_mode = Environment.BG_COLOR
-    env.background_color = theme.background_color
-    env.ambient_light_color = theme.ambient_color
-    env.ambient_light_energy = theme.ambient_energy
+    env.background_color = active_theme.background_color
+    env.ambient_light_color = active_theme.ambient_color
+    env.ambient_light_energy = active_theme.ambient_energy
     var world_env = WorldEnvironment.new()
     world_env.environment = env
     viewport.add_child(world_env)

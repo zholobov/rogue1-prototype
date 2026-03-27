@@ -115,7 +115,7 @@ func _rebuild_items() -> void:
             buy_btn.disabled = true
         vbox.add_child(buy_btn)
 
-func _on_buy(index: int, price: int, btn: Button) -> void:
+func _on_buy(index: int, price: int, _btn: Button) -> void:
     if not RunManager or not RunManager.spend_currency(price):
         return
     var upgrade = _items[index]

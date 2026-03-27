@@ -31,14 +31,14 @@ func _ready():
 	Net.connection_established.connect(_on_connected)
 
 	# Style headers
-	var theme = ThemeManager.active_theme
+	var active_theme = ThemeManager.active_theme
 	for header in [
 		$MarginContainer/RootVBox/Title,
 		$MarginContainer/RootVBox/Columns/LeftColumn/SoloHeader,
 		$MarginContainer/RootVBox/Columns/LeftColumn/FeaturesHeader,
 		$MarginContainer/RootVBox/Columns/RightColumn/MultiplayerHeader,
 	]:
-		header.add_theme_color_override("font_color", theme.ui_accent_color)
+		header.add_theme_color_override("font_color", active_theme.ui_accent_color)
 
 	$MarginContainer/RootVBox/Title.add_theme_font_size_override("font_size", 20)
 
