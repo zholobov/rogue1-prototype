@@ -218,11 +218,10 @@ func build(grid: Array, rules: TileRules, tile_size: float) -> Node3D:
 
 		# Room props (barrels, crates, chains)
 		var prop_types = ["barrel", "crate", "chain"]
-		var placed_this_room := 0
 		var room_prop_max_count = ThemeManager.active_theme.room_prop_max
 		var room_prop_min_count = ThemeManager.active_theme.room_prop_min
 		# Simple approach: iterate room tiles and place props with chance
-		var total_room_props := randi_range(room_prop_min_count, room_prop_max_count) * maxi(room_tiles.size() / 20, 1)
+		var total_room_props := randi_range(room_prop_min_count, room_prop_max_count) * maxi(int(room_tiles.size() / 20.0), 1)
 		room_tiles.shuffle()
 		for i in range(mini(total_room_props, room_tiles.size())):
 			var prop_pos = room_tiles[i] + Vector3(tile_size / 2.0 + randf_range(-0.3, 0.3), 0, tile_size / 2.0 + randf_range(-0.3, 0.3))
@@ -302,7 +301,7 @@ func _add_slab_grid(floor_body: StaticBody3D, tile_size: float, mat: StandardMat
 				mesh_inst.position = Vector3(local_x, y_offset, local_z)
 				floor_body.add_child(mesh_inst)
 
-func _add_cracked_slab(floor_body: StaticBody3D, local_x: float, local_z: float, y_offset: float, slab_size: float, mat: StandardMaterial3D, theme: ThemeData) -> void:
+func _add_cracked_slab(floor_body: StaticBody3D, local_x: float, local_z: float, y_offset: float, slab_size: float, mat: StandardMaterial3D, _theme: ThemeData) -> void:
 	var crack_gap := 0.03
 	var split_along_x := randf() > 0.5
 	var half_size: float = (slab_size - crack_gap) / 2.0
@@ -325,7 +324,7 @@ func _add_cracked_slab(floor_body: StaticBody3D, local_x: float, local_z: float,
 		mesh_inst.material_override = slab_mat
 		floor_body.add_child(mesh_inst)
 
-func _add_ceiling(parent: Node3D, pos: Vector3, tile_size: float, is_room: bool) -> void:
+func _add_ceiling(parent: Node3D, pos: Vector3, tile_size: float, _is_room: bool) -> void:
 	var theme = ThemeManager.active_theme
 	if theme.prop_density > 0.0:
 		# Recessed panel (slightly higher)
@@ -467,7 +466,7 @@ func _add_wall_detail(parent: Node3D, pos: Vector3, tile_size: float, grid: Arra
 			dmg.material_override = dmg_mat
 			parent.add_child(dmg)
 
-func _add_styled_wall(parent: Node3D, pos: Vector3, tile_size: float, grid: Array, x: int, y: int, width: int, height: int, style: String) -> void:
+func _add_styled_wall(parent: Node3D, pos: Vector3, tile_size: float, _grid: Array, _x: int, _y: int, _width: int, _height: int, style: String) -> void:
 	# Always add collision (same as default wall)
 	var wall_body = StaticBody3D.new()
 	wall_body.position = pos + Vector3(tile_size / 2.0, WALL_HEIGHT / 2.0, tile_size / 2.0)
@@ -589,7 +588,6 @@ func _add_palace_wall(parent: Node3D, pos: Vector3, tile_size: float) -> void:
 	var theme = ThemeManager.active_theme
 	var cx = pos.x + tile_size / 2.0
 	var cz = pos.z + tile_size / 2.0
-	var half = tile_size / 2.0
 	# Base wall panel
 	var base = MeshInstance3D.new()
 	var base_mesh = BoxMesh.new()

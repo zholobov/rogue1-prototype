@@ -51,7 +51,7 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
             var pulse = 1.5 + sin(Time.get_ticks_msec() / 500.0) * 0.5
             _set_accent_energy(weapon_node, pulse)
 
-func _swap_weapon(entity: Entity, wv: C_WeaponVisual, body: CharacterBody3D, eid: int) -> void:
+func _swap_weapon(_entity: Entity, wv: C_WeaponVisual, body: CharacterBody3D, eid: int) -> void:
     # Remove old
     var old_node = _weapon_nodes.get(eid)
     if old_node and is_instance_valid(old_node):

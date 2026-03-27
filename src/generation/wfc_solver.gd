@@ -14,9 +14,9 @@ const DIRS = [
 ]
 const DIR_NAMES = ["north", "south", "east", "west"]
 
-func solve(rules: TileRules, width: int, height: int, seed: int, pinned: Dictionary = {}) -> Array:
+func solve(rules: TileRules, width: int, height: int, seed_val: int, pinned: Dictionary = {}) -> Array:
     _rng = RandomNumberGenerator.new()
-    _rng.seed = seed
+    _rng.seed = seed_val
 
     var tile_names = rules.get_all_tile_names()
 
@@ -62,7 +62,7 @@ func solve(rules: TileRules, width: int, height: int, seed: int, pinned: Diction
                 var entropy = possibilities[y][x].size()
                 if entropy == 0:
                     # Contradiction — restart with offset seed
-                    return solve(rules, width, height, seed + 1, pinned)
+                    return solve(rules, width, height, seed_val + 1, pinned)
                 if entropy < min_entropy:
                     min_entropy = entropy
                     candidates = [Vector2i(x, y)]
