@@ -116,14 +116,14 @@ static func _generate_image(params: Dictionary) -> ImageTexture:
 	return ImageTexture.create_from_image(img)
 
 static func _draw_bricks(img: Image, w: int, h: int, brick_color: Color, mortar_color: Color) -> void:
-	var brick_w: int = maxi(w // 8, 4)
-	var brick_h: int = maxi(h // 16, 2)
+	var brick_w: int = maxi(w / 8, 4)
+	var brick_h: int = maxi(h / 16, 2)
 	var mortar: int = 1
 
 	for y in range(h):
 		for x in range(w):
-			var row = y // brick_h
-			var offset = (brick_w // 2) * (row % 2)
+			var row = y / brick_h
+			var offset = (brick_w / 2) * (row % 2)
 			var bx = (x + offset) % brick_w
 			var by = y % brick_h
 			if bx < mortar or by < mortar:
@@ -132,7 +132,7 @@ static func _draw_bricks(img: Image, w: int, h: int, brick_color: Color, mortar_
 				img.set_pixel(x, y, brick_color)
 
 static func _draw_grid(img: Image, w: int, h: int, bg_color: Color, line_color: Color) -> void:
-	var spacing: int = maxi(w // 8, 4)
+	var spacing: int = maxi(w / 8, 4)
 	img.fill(bg_color)
 	for y in range(h):
 		for x in range(w):
@@ -140,12 +140,12 @@ static func _draw_grid(img: Image, w: int, h: int, bg_color: Color, line_color: 
 				img.set_pixel(x, y, line_color)
 
 static func _draw_scales(img: Image, w: int, h: int, c1: Color, c2: Color) -> void:
-	var scale_w: int = maxi(w // 8, 4)
-	var scale_h: int = maxi(h // 8, 4)
+	var scale_w: int = maxi(w / 8, 4)
+	var scale_h: int = maxi(h / 8, 4)
 	for y in range(h):
 		for x in range(w):
-			var row = y // scale_h
-			var offset = (scale_w // 2) * (row % 2)
+			var row = y / scale_h
+			var offset = (scale_w / 2) * (row % 2)
 			var sx = (x + offset) % scale_w
 			var sy = y % scale_h
 			var cx = float(sx) / scale_w - 0.5
@@ -157,19 +157,19 @@ static func _draw_scales(img: Image, w: int, h: int, c1: Color, c2: Color) -> vo
 				img.set_pixel(x, y, c2)
 
 static func _draw_flagstone(img: Image, w: int, h: int, stone_color: Color, mortar_color: Color) -> void:
-	var slab_w: int = maxi(w // 4, 8)
-	var slab_h: int = maxi(h // 4, 8)
+	var slab_w: int = maxi(w / 4, 8)
+	var slab_h: int = maxi(h / 4, 8)
 	var mortar: int = 2
 	for y in range(h):
 		for x in range(w):
-			var row = y // slab_h
+			var row = y / slab_h
 			var offset = int(slab_w * 0.4) * (row % 2)
 			var sx = (x + offset) % slab_w
 			var sy = y % slab_h
 			if sx < mortar or sy < mortar:
 				img.set_pixel(x, y, mortar_color)
 			else:
-				var slab_id = (x // slab_w) * 31 + row * 17
+				var slab_id = (x / slab_w) * 31 + row * 17
 				var variation = (slab_id % 5) * 0.02 - 0.04
 				var c = Color(
 					clampf(stone_color.r + variation, 0.0, 1.0),
@@ -179,12 +179,12 @@ static func _draw_flagstone(img: Image, w: int, h: int, stone_color: Color, mort
 				img.set_pixel(x, y, c)
 
 static func _draw_cobblestone(img: Image, w: int, h: int, stone_color: Color, mortar_color: Color) -> void:
-	var stone_size: int = maxi(w // 8, 4)
+	var stone_size: int = maxi(w / 8, 4)
 	var mortar: int = 2
 	for y in range(h):
 		for x in range(w):
-			var row = y // stone_size
-			var offset = (stone_size // 2) * (row % 2)
+			var row = y / stone_size
+			var offset = (stone_size / 2) * (row % 2)
 			var sx = (x + offset) % stone_size
 			var sy = y % stone_size
 			var cx = float(sx) / stone_size - 0.5
@@ -193,7 +193,7 @@ static func _draw_cobblestone(img: Image, w: int, h: int, stone_color: Color, mo
 			if dist > 0.38:
 				img.set_pixel(x, y, mortar_color)
 			else:
-				var slab_id = ((x + offset) // stone_size) * 13 + row * 7
+				var slab_id = ((x + offset) / stone_size) * 13 + row * 7
 				var variation = (slab_id % 7) * 0.015 - 0.045
 				var c = Color(
 					clampf(stone_color.r + variation, 0.0, 1.0),
@@ -203,19 +203,19 @@ static func _draw_cobblestone(img: Image, w: int, h: int, stone_color: Color, mo
 				img.set_pixel(x, y, c)
 
 static func _draw_ashlar(img: Image, w: int, h: int, stone_color: Color, mortar_color: Color) -> void:
-	var block_w: int = maxi(w // 4, 8)
-	var block_h: int = maxi(h // 6, 4)
+	var block_w: int = maxi(w / 4, 8)
+	var block_h: int = maxi(h / 6, 4)
 	var mortar: int = 2
 	for y in range(h):
 		for x in range(w):
-			var row = y // block_h
-			var offset = (block_w // 2) * (row % 2)
+			var row = y / block_h
+			var offset = (block_w / 2) * (row % 2)
 			var bx = (x + offset) % block_w
 			var by = y % block_h
 			if bx < mortar or by < mortar:
 				img.set_pixel(x, y, mortar_color)
 			else:
-				var block_id = ((x + offset) // block_w) * 23 + row * 11
+				var block_id = ((x + offset) / block_w) * 23 + row * 11
 				var variation = (block_id % 5) * 0.015 - 0.03
 				var c = Color(
 					clampf(stone_color.r + variation, 0.0, 1.0),
@@ -225,13 +225,13 @@ static func _draw_ashlar(img: Image, w: int, h: int, stone_color: Color, mortar_
 				img.set_pixel(x, y, c)
 
 static func _draw_slabs(img: Image, w: int, h: int, slab_color: Color, gap_color: Color) -> void:
-	var panel_w: int = maxi(w // 3, 8)
-	var panel_h: int = maxi(h // 3, 8)
+	var panel_w: int = maxi(w / 3, 8)
+	var panel_h: int = maxi(h / 3, 8)
 	var gap: int = 2
 	for y in range(h):
 		for x in range(w):
-			var row = y // panel_h
-			var offset = (panel_w // 3) * (row % 2)
+			var row = y / panel_h
+			var offset = (panel_w / 3) * (row % 2)
 			var px = (x + offset) % panel_w
 			var py = y % panel_h
 			if px < gap or py < gap:
