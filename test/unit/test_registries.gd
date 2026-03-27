@@ -30,3 +30,26 @@ func test_weapon_registry_elements():
     assert_eq(WeaponRegistry.get_weapon(1).element, ElementNames.FIRE)
     assert_eq(WeaponRegistry.get_weapon(2).element, ElementNames.ICE)
     assert_eq(WeaponRegistry.get_weapon(3).element, ElementNames.WATER)
+
+func test_modifier_registry_has_6_modifiers():
+    assert_eq(ModifierRegistry.get_all_names().size(), 6)
+
+func test_modifier_registry_get_normal():
+    var m = ModifierRegistry.get_modifier(Modifiers.NORMAL)
+    assert_not_null(m)
+    assert_eq(m.grid_width, 12)
+
+func test_modifier_registry_get_dense():
+    var m = ModifierRegistry.get_modifier(Modifiers.DENSE)
+    assert_not_null(m)
+    assert_eq(m.monsters_per_room, 2)
+
+func test_modifier_registry_boss_has_pin_override():
+    var m = ModifierRegistry.get_modifier(Modifiers.BOSS)
+    assert_not_null(m)
+    assert_true(m.pin_rooms_override.is_valid())
+
+func test_modifier_registry_spawnable_excludes_boss():
+    var spawnable = ModifierRegistry.get_spawnable_names()
+    assert_false(Modifiers.BOSS in spawnable)
+    assert_true(Modifiers.NORMAL in spawnable)
