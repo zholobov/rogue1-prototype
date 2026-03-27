@@ -78,6 +78,8 @@ func _equip_weapon(index: int) -> void:
     if index >= WeaponRegistry.weapon_count():
         return
     _current_weapon_index = index
+    if RunManager:
+        RunManager.selected_weapon_index = index
     var weapon_def = WeaponRegistry.get_weapon(index)
     var weapon := get_component(C_Weapon) as C_Weapon
     var ps := get_component(C_PlayerStats) as C_PlayerStats
@@ -126,7 +128,9 @@ func apply_upgrades() -> void:
         health.max_health = Config.player_max_health + ps.max_health_bonus
         health.current_health = health.max_health
 
-    # Re-equip current weapon to apply fire_rate/proj_speed/damage bonuses
+    # Restore weapon selection from run state
+    if RunManager:
+        _current_weapon_index = RunManager.selected_weapon_index
     _equip_weapon(_current_weapon_index)
 
     # Special abilities — add components if upgrade acquired

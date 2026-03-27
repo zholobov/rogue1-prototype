@@ -15,6 +15,7 @@ var active_upgrades: Array = []
 var stats: RunStats = RunStats.new()
 var map: RunMap
 var last_selected_node_index: int = 0
+var selected_weapon_index: int = 0
 
 func _process(delta: float) -> void:
     if state == State.LEVEL or state == State.BOSS:
@@ -26,6 +27,7 @@ func start_run() -> void:
     currency = 0
     active_upgrades.clear()
     last_selected_node_index = 0
+    selected_weapon_index = 0
     # Apply permanent meta-upgrades
     if MetaSave:
         active_upgrades.append_array(MetaSave.get_starting_upgrades())
