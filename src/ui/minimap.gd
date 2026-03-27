@@ -38,10 +38,10 @@ func apply_theme() -> void:
     queue_redraw()
 
 func _draw() -> void:
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
 
     # Semi-transparent background
-    var bg_color = Color(theme.ui_background_color.r, theme.ui_background_color.g, theme.ui_background_color.b, 0.7)
+    var bg_color = Color(active_theme.ui_background_color.r, active_theme.ui_background_color.g, active_theme.ui_background_color.b, 0.7)
     draw_rect(Rect2(Vector2.ZERO, Vector2(MAP_SIZE, MAP_SIZE)), bg_color)
 
     if _grid.is_empty():
@@ -55,16 +55,16 @@ func _draw() -> void:
             var color: Color
             match tile:
                 "room", "spawn":
-                    color = theme.ui_minimap_room
+                    color = active_theme.ui_minimap_room
                 "corridor_h", "corridor_v", "door":
                     # Slightly darker than room
                     color = Color(
-                        theme.ui_minimap_room.r - 0.03,
-                        theme.ui_minimap_room.g - 0.03,
-                        theme.ui_minimap_room.b - 0.03
+                        active_theme.ui_minimap_room.r - 0.03,
+                        active_theme.ui_minimap_room.g - 0.03,
+                        active_theme.ui_minimap_room.b - 0.03
                     )
                 "wall":
-                    color = theme.ui_minimap_wall
+                    color = active_theme.ui_minimap_wall
                 _:
                     continue  # "empty" — skip
             draw_rect(Rect2(x * _cell_size, y * _cell_size, _cell_size, _cell_size), color)
@@ -74,7 +74,7 @@ func _draw() -> void:
     for monster in monsters:
         if is_instance_valid(monster) and monster is Node3D:
             var dot_pos = _world_to_map(monster.global_position)
-            draw_circle(dot_pos, 2.0, theme.health_bar_low_color)
+            draw_circle(dot_pos, 2.0, active_theme.health_bar_low_color)
 
     # Player dot + view cone
     var players = get_tree().get_nodes_in_group("players")
@@ -87,17 +87,17 @@ func _draw() -> void:
                 var facing_angle = -player.rotation.y  # Godot Y rotation, negated for 2D
                 var cone_length = 18.0
                 var cone_half_angle = 0.45  # ~25 degrees half-angle
-                var cone_color = Color(theme.health_bar_foreground, 0.2)
+                var cone_color = Color(active_theme.health_bar_foreground, 0.2)
                 var tip = dot_pos
                 var left_pt = tip + Vector2(sin(facing_angle - cone_half_angle), -cos(facing_angle - cone_half_angle)) * cone_length
                 var right_pt = tip + Vector2(sin(facing_angle + cone_half_angle), -cos(facing_angle + cone_half_angle)) * cone_length
                 draw_colored_polygon(PackedVector2Array([tip, left_pt, right_pt]), cone_color)
                 # Player dot on top
-                draw_circle(dot_pos, 3.0, theme.health_bar_foreground)
+                draw_circle(dot_pos, 3.0, active_theme.health_bar_foreground)
                 break
 
     # Border
-    draw_rect(Rect2(Vector2.ZERO, Vector2(MAP_SIZE, MAP_SIZE)), theme.ui_minimap_wall, false, 2.0)
+    draw_rect(Rect2(Vector2.ZERO, Vector2(MAP_SIZE, MAP_SIZE)), active_theme.ui_minimap_wall, false, 2.0)
 
 func _world_to_map(world_pos: Vector3) -> Vector2:
     var mx = (world_pos.x / (_grid_width * _tile_size)) * MAP_SIZE

@@ -9,7 +9,7 @@ func query() -> QueryBuilder:
     # This system doesn't iterate — it's called on-demand from collision handlers
     return q.with_all([C_Health, C_Conditions])
 
-func process(entities: Array[Entity], _components: Array, _delta: float) -> void:
+func process(_entities: Array[Entity], _components: Array, _delta: float) -> void:
     # No-op: damage is applied via apply_damage() called from collision
     pass
 

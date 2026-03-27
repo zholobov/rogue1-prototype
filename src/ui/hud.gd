@@ -507,8 +507,8 @@ func _update_health(player: PlayerEntity) -> void:
 	var ratio = float(current) / float(maxi(max_hp, 1))
 	_health_bar_fill.size.x = _health_bar_bg.size.x * ratio
 
-	var theme = ThemeManager.active_theme
-	_health_bar_fill.color = theme.health_bar_foreground.lerp(theme.health_bar_low_color, 1.0 - ratio)
+	var active_theme = ThemeManager.active_theme
+	_health_bar_fill.color = active_theme.health_bar_foreground.lerp(active_theme.health_bar_low_color, 1.0 - ratio)
 
 	if _prev_health >= 0 and current < _prev_health:
 		_trigger_damage_flash()
@@ -519,15 +519,15 @@ func _update_weapon(player: PlayerEntity) -> void:
 	if not weapon:
 		return
 	var idx = player._current_weapon_index
-	var theme = ThemeManager.active_theme
+	var active_theme = ThemeManager.active_theme
 
 	for i in range(_weapon_slots.size()):
 		if i == idx:
-			_weapon_slots[i].color = theme.ui_accent_color
-			_weapon_slot_labels[i].add_theme_color_override("font_color", theme.ui_background_color)
+			_weapon_slots[i].color = active_theme.ui_accent_color
+			_weapon_slot_labels[i].add_theme_color_override("font_color", active_theme.ui_background_color)
 		else:
-			_weapon_slots[i].color = theme.ui_panel_color
-			_weapon_slot_labels[i].add_theme_color_override("font_color", theme.ui_text_color)
+			_weapon_slots[i].color = active_theme.ui_panel_color
+			_weapon_slot_labels[i].add_theme_color_override("font_color", active_theme.ui_text_color)
 
 	var preset_name = "Custom"
 	if idx < Config.weapon_presets.size():
@@ -584,18 +584,18 @@ func _update_boss_bar() -> void:
 		return
 	var ratio = float(health.current_health) / float(maxi(health.max_health, 1))
 	_boss_bar_fill.anchor_right = ratio
-	var theme = ThemeManager.active_theme
-	_boss_bar_fill.color = theme.health_bar_foreground.lerp(theme.health_bar_low_color, 1.0 - ratio)
+	var active_theme = ThemeManager.active_theme
+	_boss_bar_fill.color = active_theme.health_bar_foreground.lerp(active_theme.health_bar_low_color, 1.0 - ratio)
 
 # ========== KILL FEED ==========
 
 func _add_kill_feed_entry(entry_text: String) -> void:
-	var theme = ThemeManager.active_theme
+	var active_theme = ThemeManager.active_theme
 	var label = Label.new()
 	label.text = entry_text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	label.add_theme_font_size_override("font_size", 11)
-	label.add_theme_color_override("font_color", theme.ui_kill_feed_color)
+	label.add_theme_color_override("font_color", active_theme.ui_kill_feed_color)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_kill_feed_container.add_child(label)
 	_kill_feed_container.move_child(label, 0)
@@ -624,23 +624,23 @@ func _on_theme_changed(_theme: ThemeData) -> void:
 	_apply_theme()
 
 func _apply_theme() -> void:
-	var theme = ThemeManager.active_theme
+	var active_theme = ThemeManager.active_theme
 
-	_health_bar_bg.color = theme.health_bar_background
-	_health_label.add_theme_color_override("font_color", theme.ui_text_color)
-	_health_title.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.6))
+	_health_bar_bg.color = active_theme.health_bar_background
+	_health_label.add_theme_color_override("font_color", active_theme.ui_text_color)
+	_health_title.add_theme_color_override("font_color", Color(active_theme.ui_text_color, 0.6))
 
-	_weapon_panel_bg.color = theme.ui_panel_color
-	_weapon_title.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.6))
-	_weapon_name_label.add_theme_color_override("font_color", theme.ui_text_color)
-	_weapon_element_label.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.7))
+	_weapon_panel_bg.color = active_theme.ui_panel_color
+	_weapon_title.add_theme_color_override("font_color", Color(active_theme.ui_text_color, 0.6))
+	_weapon_name_label.add_theme_color_override("font_color", active_theme.ui_text_color)
+	_weapon_element_label.add_theme_color_override("font_color", Color(active_theme.ui_text_color, 0.7))
 
-	_boss_name_label.add_theme_color_override("font_color", theme.ui_accent_color)
-	_boss_bar_bg.color = theme.health_bar_background
+	_boss_name_label.add_theme_color_override("font_color", active_theme.ui_accent_color)
+	_boss_bar_bg.color = active_theme.health_bar_background
 
 	_ability_dash.apply_theme()
 	_ability_aoe.apply_theme()
 	_ability_life.apply_theme()
 	_crosshair.apply_theme()
 	_minimap.apply_theme()
-	_fps_label.add_theme_color_override("font_color", Color(theme.ui_text_color, 0.5))
+	_fps_label.add_theme_color_override("font_color", Color(active_theme.ui_text_color, 0.5))

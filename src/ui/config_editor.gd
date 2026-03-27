@@ -244,8 +244,8 @@ func _on_theme_changed(_theme: Variant) -> void:
 func _apply_theme() -> void:
     if not ThemeManager:
         return
-    var theme = ThemeManager.active_theme
+    var active_theme = ThemeManager.active_theme
     for key in _controls:
         var control = _controls[key]
         if control.get_parent() and control.get_parent().get_child(0) is Label:
-            control.get_parent().get_child(0).add_theme_color_override("font_color", theme.ui_text_color)
+            control.get_parent().get_child(0).add_theme_color_override("font_color", active_theme.ui_text_color)

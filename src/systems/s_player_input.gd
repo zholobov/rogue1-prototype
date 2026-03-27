@@ -4,7 +4,7 @@ extends System
 func query() -> QueryBuilder:
 	return q.with_all([C_PlayerInput, C_Velocity, C_NetworkIdentity, C_Weapon])
 
-func process(entities: Array[Entity], _components: Array, delta: float) -> void:
+func process(entities: Array[Entity], _components: Array, _delta: float) -> void:
 	for entity in entities:
 		if not is_instance_valid(entity):
 			print("[S_PlayerInput] Skipping freed entity")

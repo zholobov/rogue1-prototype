@@ -11,7 +11,7 @@ var _recoil_tweens: Dictionary = {}  # entity instance_id -> Tween
 func query() -> QueryBuilder:
     return q.with_all([C_WeaponVisual])
 
-func process(entities: Array[Entity], _components: Array, delta: float) -> void:
+func process(entities: Array[Entity], _components: Array, _delta: float) -> void:
     for entity in entities:
         if not is_instance_valid(entity):
             continue

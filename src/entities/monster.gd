@@ -237,9 +237,9 @@ func _process(_delta: float) -> void:
     if health.current_health == _last_health:
         # Still need to billboard if visible
         if _health_bar_visible:
-            var camera = get_viewport().get_camera_3d()
-            if camera:
-                _health_bar_node.look_at(camera.global_position)
+            var cam = get_viewport().get_camera_3d()
+            if cam:
+                _health_bar_node.look_at(cam.global_position)
         return
     _last_health = health.current_health
 

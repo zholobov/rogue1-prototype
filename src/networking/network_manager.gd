@@ -4,7 +4,8 @@ extends Node
 signal player_connected(peer_id: int)
 signal player_disconnected(peer_id: int)
 signal connection_established()
-signal _connection_failed()
+@warning_ignore("unused_signal")
+signal connection_failed()
 
 @export var signaling_url: String = "ws://localhost:9090"
 @export var ice_servers: Array[Dictionary] = [
