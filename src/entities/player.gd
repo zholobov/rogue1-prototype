@@ -70,21 +70,21 @@ func _input(event: InputEvent) -> void:
     if event.is_action_pressed("ui_cancel"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-    for i in range(Config.weapon_presets.size()):
+    for i in range(WeaponRegistry.weapon_count()):
         if event.is_action_pressed("weapon_%d" % (i + 1)):
             _equip_weapon(i)
 
 func _equip_weapon(index: int) -> void:
-    if index >= Config.weapon_presets.size():
+    if index >= WeaponRegistry.weapon_count():
         return
     _current_weapon_index = index
-    var preset = Config.weapon_presets[index]
+    var weapon_def = WeaponRegistry.get_weapon(index)
     var weapon := get_component(C_Weapon) as C_Weapon
     var ps := get_component(C_PlayerStats) as C_PlayerStats
-    weapon.damage = int(preset.damage * (ps.damage_mult if ps else 1.0))
-    weapon.fire_rate = preset.fire_rate * (1.0 / (1.0 + (ps.fire_rate_bonus if ps else 0.0)))
-    weapon.projectile_speed = preset.speed * (1.0 + (ps.proj_speed_bonus if ps else 0.0))
-    weapon.element = preset.element
+    weapon.damage = int(weapon_def.damage * (ps.damage_mult if ps else 1.0))
+    weapon.fire_rate = weapon_def.fire_rate * (1.0 / (1.0 + (ps.fire_rate_bonus if ps else 0.0)))
+    weapon.projectile_speed = weapon_def.speed * (1.0 + (ps.proj_speed_bonus if ps else 0.0))
+    weapon.element = weapon_def.element
     weapon.cooldown_remaining = 0.0
 
     var wv := get_component(C_WeaponVisual) as C_WeaponVisual

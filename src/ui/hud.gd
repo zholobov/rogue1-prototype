@@ -530,8 +530,9 @@ func _update_weapon(player: PlayerEntity) -> void:
 			_weapon_slot_labels[i].add_theme_color_override("font_color", active_theme.ui_text_color)
 
 	var preset_name = "Custom"
-	if idx < Config.weapon_presets.size():
-		preset_name = Config.weapon_presets[idx].name
+	var weapon_def = WeaponRegistry.get_weapon(idx)
+	if weapon_def:
+		preset_name = weapon_def.weapon_name
 	_weapon_name_label.text = preset_name
 	_weapon_element_label.text = weapon.element if weapon.element != "" else "Standard"
 

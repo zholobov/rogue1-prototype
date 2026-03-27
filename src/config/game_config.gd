@@ -43,11 +43,3 @@ extends Node
 @export_group("Debug")
 @export var god_mode: bool = true
 
-# Non-UI properties (complex types, not auto-discovered)
-var weapon_presets: Array[Dictionary] = [
-	{"name": "Pistol", "damage": 10, "fire_rate": 0.3, "speed": 40.0, "element": ""},
-	{"name": "Flamethrower", "damage": 5, "fire_rate": 0.1, "speed": 25.0, "element": "fire"},
-	{"name": "Ice Rifle", "damage": 15, "fire_rate": 0.8, "speed": 35.0, "element": "ice"},
-	{"name": "Water Gun", "damage": 3, "fire_rate": 0.05, "speed": 30.0, "element": "water"},
-]
-var monster_weapon_presets: Array[int] = [0, 1, 2, 3]
