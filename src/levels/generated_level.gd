@@ -273,6 +273,8 @@ func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
 	if Net.is_active:
 		_request_projectile.rpc_id(1, spawn_pos, direction, weapon.projectile_speed,
 			weapon.damage, weapon.element, owner_body.get_instance_id())
+		# Spawn predicted local-only projectile for instant feedback
+		_spawn_predicted_projectile(spawn_pos, direction, weapon.projectile_speed, weapon.element)
 	else:
 		_spawn_projectile(spawn_pos, direction, weapon.projectile_speed,
 			weapon.damage, weapon.element, owner_body.get_instance_id())
@@ -286,6 +288,18 @@ func _request_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, 
 	if not Net.is_host:
 		return
 	_spawn_projectile(pos, dir, speed, damage, element, owner_id)
+
+func _spawn_predicted_projectile(pos: Vector3, dir: Vector3, speed: float, element: String) -> void:
+	var ghost = Node3D.new()
+	ghost.name = "PredictedProjectile"
+	ghost.global_position = pos
+	ghost.set_meta("direction", dir)
+	ghost.set_meta("speed", speed)
+	ghost.set_meta("lifetime", 0.3)  # Short-lived — authoritative one takes over
+	add_child(ghost)
+	var trail = VfxFactory.create_trail(element)
+	ghost.add_child(trail)
+	ghost.set_script(preload("res://src/entities/predicted_projectile.gd"))
 
 func _spawn_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, element: String, owner_id: int) -> void:
 	var projectile = ProjectileScene.instantiate()
