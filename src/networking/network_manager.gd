@@ -7,7 +7,7 @@ signal connection_established()
 @warning_ignore("unused_signal")
 signal connection_failed()
 
-@export var signaling_url: String = "ws://localhost:9090"
+@export var signaling_url: String = "wss://server.zholobov.org"
 @export var ice_servers: Array[Dictionary] = [
 	{"urls": ["stun:stun.l.google.com:19302"]}
 ]
@@ -16,6 +16,12 @@ var signaling: SignalingClient
 var rtc_mp: WebRTCMultiplayerPeer
 var peers: Dictionary = {}  # peer_id -> WebRTCPeerConnection
 var my_peer_id: int = 0
+
+var is_host: bool:
+	get: return my_peer_id == 1
+
+var is_active: bool:
+	get: return multiplayer.has_multiplayer_peer() and multiplayer.get_unique_id() != 0
 
 func _ready() -> void:
 	signaling = SignalingClient.new()

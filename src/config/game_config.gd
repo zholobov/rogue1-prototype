@@ -11,7 +11,7 @@ extends Node
 @export_range(10, 1000, 10) var player_max_health: int = 100
 
 @export_group("Multiplayer")
-@export_range(1, 8, 1) var max_players: int = 4
+@export_range(1, 10, 1) var max_players: int = 10
 
 @export_group("Grid")
 @export_range(4, 32, 1) var level_grid_width: int = 12
