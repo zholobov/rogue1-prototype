@@ -306,6 +306,24 @@ func _spawn_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, el
 	_projectile_container.add_child(projectile)
 	projectile.global_position = pos
 	projectile.setup(dir, speed, damage, element, owner_id)
+	# Broadcast fire VFX to all clients (muzzle flash + weapon recoil)
+	if Net.is_active and Net.is_host:
+		_show_remote_fire_vfx.rpc(pos, owner_id)
+	else:
+		var flash = VfxFactory.create_muzzle_flash(pos)
+		add_child(flash)
+
+@rpc("authority", "call_remote", "unreliable")
+func _show_remote_fire_vfx(pos: Vector3, owner_id: int) -> void:
+	var flash = VfxFactory.create_muzzle_flash(pos)
+	add_child(flash)
+	# Trigger weapon recoil on the firing player's model
+	for child in _player_container.get_children():
+		if is_instance_valid(child) and child.get_instance_id() == owner_id:
+			var wv = child.get_component(C_WeaponVisual)
+			if wv:
+				wv.just_fired = true
+			break
 
 func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int) -> void:
 	if Net.is_active and not Net.is_host:
