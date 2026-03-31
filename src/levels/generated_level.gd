@@ -3,6 +3,7 @@ extends Node3D
 const HUDScene = preload("res://src/ui/hud.tscn")
 const ProjectileScene = preload("res://src/entities/projectile.tscn")
 const MonsterScene = preload("res://src/entities/monster.tscn")
+const PlayerScene = preload("res://src/entities/player.tscn")
 
 var weapon_system: S_Weapon
 var level_data: Dictionary = {}
@@ -12,6 +13,11 @@ var _is_boss_level: bool = false
 var _damage_accum: Dictionary = {}   # rounded pos key -> {amount: int, time: float}
 const DAMAGE_NUMBER_INTERVAL := 0.3  # seconds between damage numbers per location
 var _hud: Control
+var _player_container: Node3D
+var _monster_container: Node3D
+var _projectile_container: Node3D
+var _player_spawner: MultiplayerSpawner
+var _alive_players: int = 0
 
 func _ready():
 	print("[GeneratedLevel] _ready() started")
@@ -54,6 +60,37 @@ func _ready():
 	add_child(world)
 	ECS.world = world
 	print("[GeneratedLevel] ECS world created")
+
+	# Multiplayer: create entity containers and spawners
+	_player_container = Node3D.new()
+	_player_container.name = "Players"
+	add_child(_player_container)
+
+	_monster_container = Node3D.new()
+	_monster_container.name = "Monsters"
+	add_child(_monster_container)
+
+	_projectile_container = Node3D.new()
+	_projectile_container.name = "Projectiles"
+	add_child(_projectile_container)
+
+	_player_spawner = MultiplayerSpawner.new()
+	_player_spawner.name = "PlayerSpawner"
+	_player_spawner.spawn_path = NodePath("../Players")
+	_player_spawner.add_spawnable_scene(PlayerScene.resource_path)
+	add_child(_player_spawner)
+
+	var monster_spawner = MultiplayerSpawner.new()
+	monster_spawner.name = "MonsterSpawner"
+	monster_spawner.spawn_path = NodePath("../Monsters")
+	monster_spawner.add_spawnable_scene(MonsterScene.resource_path)
+	add_child(monster_spawner)
+
+	var projectile_spawner = MultiplayerSpawner.new()
+	projectile_spawner.name = "ProjectileSpawner"
+	projectile_spawner.spawn_path = NodePath("../Projectiles")
+	projectile_spawner.add_spawnable_scene(ProjectileScene.resource_path)
+	add_child(projectile_spawner)
 
 	# Register all systems
 	ECS.world.add_system(S_PlayerInput.new())
@@ -126,7 +163,21 @@ func get_player_spawn() -> Vector3:
 	var cz = level_data.height * Config.level_tile_size / 2.0
 	return Vector3(cx, 1.0, cz)
 
+func spawn_player(peer_id: int, is_local: bool) -> void:
+	_alive_players += 1
+	var player = PlayerScene.instantiate()
+	player.name = "Player_%d" % peer_id
+
+	var spawn_pos = get_player_spawn()
+	player.position = spawn_pos + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
+
+	_player_container.add_child(player)
+	player.setup(peer_id, is_local)
+	player.apply_upgrades()
+
 func _spawn_monsters() -> void:
+	if Net.is_active and not Net.is_host:
+		return
 	monsters_remaining = 0
 	var spawn_points = get_spawn_points()
 	for i in range(1, spawn_points.size()):
@@ -149,7 +200,7 @@ func _spawn_monsters() -> void:
 						break
 			var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
 			monster.position = spawn_points[i] + offset
-			add_child(monster)
+			_monster_container.add_child(monster)
 			# Apply horde modifier HP scaling (monster.ecs_entity is set in MonsterEntity._ready)
 			if Config.monster_hp_mult != 1.0 and monster.ecs_entity:
 				var health := monster.ecs_entity.get_component(C_Health) as C_Health
@@ -178,11 +229,13 @@ func _spawn_monsters() -> void:
 			monsters_remaining += 1
 
 func _spawn_boss() -> void:
+	if Net.is_active and not Net.is_host:
+		return
 	var boss = MonsterScene.instantiate()
 	var cx = level_data.width * Config.level_tile_size / 2.0
 	var cz = level_data.height * Config.level_tile_size / 2.0
 	boss.position = Vector3(cx, 1.0, cz)
-	add_child(boss)
+	_monster_container.add_child(boss)
 	boss.setup_as_boss(RunManager.stats.loop if RunManager else 0)
 	monsters_remaining += 1
 	print("[GeneratedLevel] Boss spawned at center (%s)" % str(boss.position))
@@ -200,7 +253,6 @@ func _physics_process(delta: float) -> void:
 func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
 	if not is_instance_valid(owner_body) or not owner_body.is_inside_tree():
 		return
-	var projectile = ProjectileScene.instantiate()
 	var camera = owner_body.get_node_or_null("Camera3D") as Camera3D
 	if not camera:
 		return
@@ -212,25 +264,35 @@ func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
 		spawn_pos = camera.global_position + (-camera.global_transform.basis.z * 1.0)
 	else:
 		return
-	add_child(projectile)
-	projectile.global_position = spawn_pos
-	projectile.setup(
-		-camera.global_transform.basis.z,
-		weapon.projectile_speed,
-		weapon.damage,
-		weapon.element,
-		owner_body.get_instance_id()
-	)
+	var direction = -camera.global_transform.basis.z
 
-	# Muzzle flash
+	if Net.is_active:
+		_request_projectile.rpc_id(1, spawn_pos, direction, weapon.projectile_speed,
+			weapon.damage, weapon.element, owner_body.get_instance_id())
+	else:
+		_spawn_projectile(spawn_pos, direction, weapon.projectile_speed,
+			weapon.damage, weapon.element, owner_body.get_instance_id())
+
+	# Muzzle flash (local visual, always show)
 	var flash = VfxFactory.create_muzzle_flash(spawn_pos)
 	add_child(flash)
 
-func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int) -> void:
+@rpc("any_peer", "reliable")
+func _request_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, element: String, owner_id: int) -> void:
+	if not Net.is_host:
+		return
+	_spawn_projectile(pos, dir, speed, damage, element, owner_id)
+
+func _spawn_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, element: String, owner_id: int) -> void:
 	var projectile = ProjectileScene.instantiate()
-	add_child(projectile)
+	_projectile_container.add_child(projectile)
 	projectile.global_position = pos
-	projectile.setup(direction, speed, damage, "", owner_id)
+	projectile.setup(dir, speed, damage, element, owner_id)
+
+func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int) -> void:
+	if Net.is_active and not Net.is_host:
+		return
+	_spawn_projectile(pos, direction, speed, damage, "", owner_id)
 
 	var flash = VfxFactory.create_muzzle_flash(pos)
 	add_child(flash)

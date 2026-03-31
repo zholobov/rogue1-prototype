@@ -1,7 +1,6 @@
 extends Node
 
 const GeneratedLevel = preload("res://src/levels/generated_level.tscn")
-const PlayerScene = preload("res://src/entities/player.tscn")
 const LobbyScene = preload("res://src/ui/lobby_ui.tscn")
 
 var current_scene: Node = null
@@ -100,24 +99,11 @@ func _start_level() -> void:
 	current_scene = level
 
 	if is_solo:
-		_spawn_player(level, 1, true)
+		level.spawn_player(1, true)
 	else:
-		_spawn_player(level, Net.my_peer_id, true)
+		level.spawn_player(Net.my_peer_id, true)
 		for peer_id in Net.peers:
-			_spawn_player(level, peer_id, false)
-
-func _spawn_player(level: Node3D, peer_id: int, is_local: bool) -> void:
-	var player = PlayerScene.instantiate()
-	player.name = "Player_%d" % peer_id
-
-	var spawn_pos = Vector3(0, 1, 0)
-	if level.has_method("get_player_spawn"):
-		spawn_pos = level.get_player_spawn()
-
-	player.position = spawn_pos + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
-	level.add_child(player)
-	player.setup(peer_id, is_local)
-	player.apply_upgrades()
+			level.spawn_player(peer_id, false)
 
 func _show_reward() -> void:
 	var reward = RewardScreen.new()
