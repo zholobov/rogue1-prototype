@@ -22,6 +22,8 @@ func _process(delta: float) -> void:
         stats.time_elapsed += delta
 
 func start_run() -> void:
+    if Net.is_active and not Net.is_host:
+        return
     stats.reset()
     current_depth = 0
     currency = 0
@@ -36,6 +38,8 @@ func start_run() -> void:
     _change_state(State.MAP)
 
 func select_map_node(node_index: int) -> void:
+    if Net.is_active and not Net.is_host:
+        return
     last_selected_node_index = node_index
     map.visit_node(current_depth, node_index)
     var node = map.get_node(current_depth, node_index)
@@ -51,6 +55,8 @@ func select_map_node(node_index: int) -> void:
         _change_state(State.LEVEL)
 
 func on_level_cleared() -> void:
+    if Net.is_active and not Net.is_host:
+        return
     stats.levels_cleared += 1
     add_currency(50)
     if not stats.took_damage_this_level:
@@ -65,6 +71,8 @@ func on_level_cleared() -> void:
         _change_state(State.REWARD)
 
 func on_player_died() -> void:
+    if Net.is_active and not Net.is_host:
+        return
     run_ended.emit(stats)
     if MetaSave:
         MetaSave.on_run_ended(stats)

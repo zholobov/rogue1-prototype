@@ -11,6 +11,16 @@ func _ready():
 	_show_lobby()
 
 func _on_state_changed(new_state: int) -> void:
+	# Host broadcasts state changes to clients
+	if Net.is_active and Net.is_host:
+		_sync_state_change.rpc(new_state)
+	_apply_state_change(new_state)
+
+@rpc("authority", "call_local", "reliable")
+func _sync_state_change(new_state: int) -> void:
+	_apply_state_change(new_state)
+
+func _apply_state_change(new_state: int) -> void:
 	_clear_current()
 
 	match new_state:
@@ -19,7 +29,6 @@ func _on_state_changed(new_state: int) -> void:
 		RunManager.State.MAP:
 			_show_map()
 		RunManager.State.LEVEL, RunManager.State.BOSS:
-			# BOSS plays as normal level for now — real boss fight added in Plan 4B
 			_start_level()
 		RunManager.State.REWARD:
 			_show_reward()
@@ -91,7 +100,33 @@ func _show_map() -> void:
 	current_scene = map_screen
 
 func _on_map_node_selected(node_index: int) -> void:
+	if Net.is_active and not Net.is_host:
+		return
 	RunManager.select_map_node(node_index)
+	if Net.is_active and Net.is_host:
+		_sync_level_config.rpc(
+			Config.level_seed,
+			Config.level_grid_width,
+			Config.level_grid_height,
+			Config.monster_hp_mult,
+			Config.monster_damage_mult,
+			Config.monsters_per_room,
+			Config.max_monsters_per_level,
+			Config.light_range_mult,
+			Config.current_modifier
+		)
+
+@rpc("authority", "reliable")
+func _sync_level_config(seed_val: int, width: int, height: int, hp_mult: float, dmg_mult: float, mpr: int, max_m: int, light: float, modifier: StringName) -> void:
+	Config.level_seed = seed_val
+	Config.level_grid_width = width
+	Config.level_grid_height = height
+	Config.monster_hp_mult = hp_mult
+	Config.monster_damage_mult = dmg_mult
+	Config.monsters_per_room = mpr
+	Config.max_monsters_per_level = max_m
+	Config.light_range_mult = light
+	Config.current_modifier = modifier
 
 func _start_level() -> void:
 	var level = GeneratedLevel.instantiate()
