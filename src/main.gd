@@ -8,7 +8,15 @@ var is_solo: bool = false
 
 func _ready():
 	RunManager.state_changed.connect(_on_state_changed)
+	multiplayer.server_disconnected.connect(_on_host_disconnected)
 	_show_lobby()
+
+func _on_host_disconnected() -> void:
+	_clear_current()
+	Net.disconnect_all()
+	is_solo = false
+	RunManager.return_to_lobby()
+	print("[Main] Host disconnected — returning to lobby")
 
 func _on_state_changed(new_state: int) -> void:
 	# Host broadcasts state changes to clients

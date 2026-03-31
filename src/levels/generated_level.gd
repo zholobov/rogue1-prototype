@@ -139,6 +139,10 @@ func _ready():
 	# Floating damage numbers
 	DamageEvents.damage_dealt.connect(_on_damage_dealt)
 
+	# Handle player disconnects
+	if Net.is_active:
+		Net.player_disconnected.connect(_on_player_disconnected)
+
 	# Spawn monsters at spawn points
 	_spawn_monsters()
 	_is_boss_level = RunManager != null and RunManager.state == RunManager.State.BOSS
@@ -334,6 +338,17 @@ func _on_player_died() -> void:
 	_alive_players -= 1
 	if _alive_players <= 0 and RunManager:
 		RunManager.on_player_died()
+
+func _on_player_disconnected(peer_id: int) -> void:
+	if not Net.is_host:
+		return
+	for child in _player_container.get_children():
+		if child.name == "Player_%d" % peer_id:
+			if child.ecs_entity and ECS.world:
+				ECS.world.remove_entity(child.ecs_entity)
+			child.queue_free()
+			_alive_players -= 1
+			break
 
 func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
 	# Rate-limit: accumulate damage per location, show combined number every 0.3s
