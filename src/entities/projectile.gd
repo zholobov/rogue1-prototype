@@ -4,62 +4,62 @@ extends Area3D
 var ecs_entity: Entity
 
 func _ready():
-    ecs_entity = Entity.new()
-    ecs_entity.name = "ECSEntity"
-    add_child(ecs_entity)
+	ecs_entity = Entity.new()
+	ecs_entity.name = "ECSEntity"
+	add_child(ecs_entity)
 
-    if ECS.world:
-        ECS.world.add_entity(ecs_entity)
+	if ECS.world:
+		ECS.world.add_entity(ecs_entity)
 
-    ecs_entity.add_component(C_Projectile.new())
-    ecs_entity.add_component(C_DamageDealer.new())
-    ecs_entity.add_component(C_Lifetime.new())
+	ecs_entity.add_component(C_Projectile.new())
+	ecs_entity.add_component(C_DamageDealer.new())
+	ecs_entity.add_component(C_Lifetime.new())
 
-    body_entered.connect(_on_body_entered)
+	body_entered.connect(_on_body_entered)
 
-    # Multiplayer sync: position (host-authoritative)
-    var sync = MultiplayerSynchronizer.new()
-    sync.name = "ProjectileSync"
-    var config = SceneReplicationConfig.new()
-    config.add_property(NodePath(".:position"))
-    sync.replication_config = config
-    sync.replication_interval = 1.0 / 20.0
-    add_child(sync)
+	# Multiplayer sync: position (host-authoritative)
+	var sync = MultiplayerSynchronizer.new()
+	sync.name = "ProjectileSync"
+	var config = SceneReplicationConfig.new()
+	config.add_property(NodePath(".:position"))
+	sync.replication_config = config
+	sync.replication_interval = 1.0 / 20.0
+	add_child(sync)
 
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> void:
-    var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
-    proj.direction = dir
-    proj.speed = spd
-    proj.element = elem
-    proj.damage = dmg
-    proj.owner_id = owner_id
+	var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+	proj.direction = dir
+	proj.speed = spd
+	proj.element = elem
+	proj.damage = dmg
+	proj.owner_id = owner_id
 
-    var dd := ecs_entity.get_component(C_DamageDealer) as C_DamageDealer
-    dd.damage = dmg
-    dd.element = elem
-    dd.owner_entity_id = owner_id
+	var dd := ecs_entity.get_component(C_DamageDealer) as C_DamageDealer
+	dd.damage = dmg
+	dd.element = elem
+	dd.owner_entity_id = owner_id
 
-    # Attach trail particles
-    var trail = VfxFactory.create_trail(elem)
-    add_child(trail)
+	# Attach trail particles
+	var trail = VfxFactory.create_trail(elem)
+	add_child(trail)
 
 func _physics_process(delta: float) -> void:
-    if Net.is_active and not Net.is_host:
-        return
-    var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
-    position += proj.direction * proj.speed * delta
+	if Net.is_active and not Net.is_host:
+		return
+	var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+	position += proj.direction * proj.speed * delta
 
 func _on_body_entered(body: Node) -> void:
-    # Only host processes collisions
-    if Net.is_active and not Net.is_host:
-        return
+	# Only host processes collisions
+	if Net.is_active and not Net.is_host:
+		return
 
-    var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
-    # Spawn impact particles at collision point
-    var impact = VfxFactory.create_impact(global_position, proj.direction, proj.element)
-    get_tree().current_scene.add_child(impact)
+	var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+	# Spawn impact particles at collision point
+	var impact = VfxFactory.create_impact(global_position, proj.direction, proj.element)
+	get_tree().current_scene.add_child(impact)
 
-    if body is CharacterBody3D and body.has_method("get_component"):
-        if body.get_instance_id() != proj.owner_id:
-            S_Damage.apply_damage(body.ecs_entity, proj.damage, proj.element)
-    queue_free()
+	if body is CharacterBody3D and body.has_method("get_component"):
+		if body.get_instance_id() != proj.owner_id:
+			S_Damage.apply_damage(body.ecs_entity, proj.damage, proj.element)
+	queue_free()
