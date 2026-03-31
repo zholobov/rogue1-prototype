@@ -9,6 +9,8 @@ func query() -> QueryBuilder:
     return q.with_all([C_MonsterAI, C_Velocity, C_Health])
 
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
+    if Net.is_active and not Net.is_host:
+        return
     # Cache player positions ONCE per frame
     _cached_player_nodes.clear()
     _cached_player_positions.clear()

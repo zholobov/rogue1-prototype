@@ -5,6 +5,8 @@ func query() -> QueryBuilder:
     return q.with_all([C_Lifetime])
 
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
+    if Net.is_active and not Net.is_host:
+        return
     for entity in entities:
         if not is_instance_valid(entity):
             continue
