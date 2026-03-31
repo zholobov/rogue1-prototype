@@ -331,13 +331,33 @@ func _on_actor_died(entity: Entity) -> void:
 				RunManager.on_level_cleared()
 
 	elif tag.actor_type == C_ActorTag.ActorType.PLAYER:
-		if not Config.god_mode and RunManager:
-			_on_player_died()
+		if not Config.god_mode:
+			# Check if the dead player was the local player — start spectating
+			var net_id := entity.get_component(C_NetworkIdentity) as C_NetworkIdentity
+			if net_id and net_id.is_local:
+				_start_spectating(entity)
+			if RunManager:
+				_on_player_died()
 
 func _on_player_died() -> void:
 	_alive_players -= 1
 	if _alive_players <= 0 and RunManager:
 		RunManager.on_player_died()
+
+func _start_spectating(dead_entity: Entity) -> void:
+	var dead_body = dead_entity.get_parent()
+	# Find a living teammate to spectate
+	for child in _player_container.get_children():
+		if child == dead_body or not is_instance_valid(child):
+			continue
+		if not child.ecs_entity:
+			continue
+		var health := child.ecs_entity.get_component(C_Health) as C_Health
+		if health and health.current_health > 0:
+			var cam = child.get_node_or_null("Camera3D") as Camera3D
+			if cam:
+				cam.make_current()
+			break
 
 func _on_player_disconnected(peer_id: int) -> void:
 	if not Net.is_host:
