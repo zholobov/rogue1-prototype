@@ -6,8 +6,8 @@ var display_name: String = "NORMAL"
 
 # WFC tile weights
 var tile_weights: Dictionary = {
-	"room": 1.5, "spawn": 1.5, "cor": 0.4,
-	"door": 0.2, "wall": 3.5, "empty": 1.0
+    "room": 1.5, "spawn": 1.5, "cor": 0.4,
+    "door": 0.2, "wall": 3.5, "empty": 1.0
 }
 
 # Grid size

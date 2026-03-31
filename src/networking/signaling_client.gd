@@ -14,66 +14,66 @@ var _connected := false
 var _pending_lobby: String = ""
 
 func connect_to_server(url: String) -> Error:
-	var err = ws.connect_to_url(url)
-	if err != OK:
-		push_error("SignalingClient: Failed to connect to %s: %s" % [url, err])
-	return err
+    var err = ws.connect_to_url(url)
+    if err != OK:
+        push_error("SignalingClient: Failed to connect to %s: %s" % [url, err])
+    return err
 
 func poll() -> void:
-	ws.poll()
-	var state = ws.get_ready_state()
-	if state == WebSocketPeer.STATE_OPEN:
-		if not _connected:
-			_connected = true
-			if not _pending_lobby.is_empty():
-				_send({"type": "join", "lobby": _pending_lobby})
-				_pending_lobby = ""
-		while ws.get_available_packet_count() > 0:
-			var msg = ws.get_packet().get_string_from_utf8()
-			_handle_message(msg)
-	elif state == WebSocketPeer.STATE_CLOSED:
-		if _connected:
-			_connected = false
-			push_warning("SignalingClient: Connection closed")
+    ws.poll()
+    var state = ws.get_ready_state()
+    if state == WebSocketPeer.STATE_OPEN:
+        if not _connected:
+            _connected = true
+            if not _pending_lobby.is_empty():
+                _send({"type": "join", "lobby": _pending_lobby})
+                _pending_lobby = ""
+        while ws.get_available_packet_count() > 0:
+            var msg = ws.get_packet().get_string_from_utf8()
+            _handle_message(msg)
+    elif state == WebSocketPeer.STATE_CLOSED:
+        if _connected:
+            _connected = false
+            push_warning("SignalingClient: Connection closed")
 
 func join_lobby(lobby_id: String) -> void:
-	if _connected:
-		_send({"type": "join", "lobby": lobby_id})
-	else:
-		_pending_lobby = lobby_id
+    if _connected:
+        _send({"type": "join", "lobby": lobby_id})
+    else:
+        _pending_lobby = lobby_id
 
 func send_offer(peer_id: int, offer: String) -> void:
-	_send({"type": "offer", "peer_id": peer_id, "sdp": offer})
+    _send({"type": "offer", "peer_id": peer_id, "sdp": offer})
 
 func send_answer(peer_id: int, answer: String) -> void:
-	_send({"type": "answer", "peer_id": peer_id, "sdp": answer})
+    _send({"type": "answer", "peer_id": peer_id, "sdp": answer})
 
 func send_candidate(peer_id: int, mid: String, index: int, sdp: String) -> void:
-	_send({"type": "candidate", "peer_id": peer_id, "mid": mid, "index": index, "sdp": sdp})
+    _send({"type": "candidate", "peer_id": peer_id, "mid": mid, "index": index, "sdp": sdp})
 
 func _send(data: Dictionary) -> void:
-	ws.send_text(JSON.stringify(data))
+    ws.send_text(JSON.stringify(data))
 
 func _handle_message(msg: String) -> void:
-	var parsed = JSON.parse_string(msg)
-	if parsed == null:
-		return
-	match parsed.get("type", ""):
-		"peer_connected":
-			peer_connected.emit(int(parsed["peer_id"]))
-		"peer_disconnected":
-			peer_disconnected.emit(int(parsed["peer_id"]))
-		"offer":
-			offer_received.emit(int(parsed["peer_id"]), parsed["sdp"])
-		"answer":
-			answer_received.emit(int(parsed["peer_id"]), parsed["sdp"])
-		"candidate":
-			candidate_received.emit(int(parsed["peer_id"]), parsed["mid"], int(parsed["index"]), parsed["sdp"])
-		"joined":
-			_connected = true
-			lobby_joined.emit(int(parsed["peer_id"]))
-		"sealed":
-			lobby_sealed.emit()
+    var parsed = JSON.parse_string(msg)
+    if parsed == null:
+        return
+    match parsed.get("type", ""):
+        "peer_connected":
+            peer_connected.emit(int(parsed["peer_id"]))
+        "peer_disconnected":
+            peer_disconnected.emit(int(parsed["peer_id"]))
+        "offer":
+            offer_received.emit(int(parsed["peer_id"]), parsed["sdp"])
+        "answer":
+            answer_received.emit(int(parsed["peer_id"]), parsed["sdp"])
+        "candidate":
+            candidate_received.emit(int(parsed["peer_id"]), parsed["mid"], int(parsed["index"]), parsed["sdp"])
+        "joined":
+            _connected = true
+            lobby_joined.emit(int(parsed["peer_id"]))
+        "sealed":
+            lobby_sealed.emit()
 
 func close() -> void:
-	ws.close()
+    ws.close()

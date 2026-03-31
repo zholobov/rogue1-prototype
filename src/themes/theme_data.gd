@@ -15,16 +15,16 @@ extends Resource
 @export var highlight: Color = Color(1.0, 1.0, 0.0)
 @export var danger: Color = Color(1.0, 0.0, 0.0)
 @export var rarity_colors: Dictionary = {
-	"common": Color(0.8, 0.8, 0.8),
-	"rare": Color(0.3, 0.5, 1.0),
-	"epic": Color(0.7, 0.2, 1.0),
+    "common": Color(0.8, 0.8, 0.8),
+    "rare": Color(0.3, 0.5, 1.0),
+    "epic": Color(0.7, 0.2, 1.0),
 }
 @export var element_colors: Dictionary = {
-	ElementNames.NONE: Color(1.0, 1.0, 1.0),
-	ElementNames.FIRE: Color(1.0, 0.27, 0.0),
-	ElementNames.ICE: Color(0.0, 0.87, 1.0),
-	ElementNames.WATER: Color(0.0, 0.4, 1.0),
-	ElementNames.OIL: Color(0.33, 0.42, 0.18),
+    ElementNames.NONE: Color(1.0, 1.0, 1.0),
+    ElementNames.FIRE: Color(1.0, 0.27, 0.0),
+    ElementNames.ICE: Color(0.0, 0.87, 1.0),
+    ElementNames.WATER: Color(0.0, 0.4, 1.0),
+    ElementNames.OIL: Color(0.33, 0.42, 0.18),
 }
 
 # --- Environment ---
@@ -125,19 +125,19 @@ extends Resource
 @export var wall_style: String = WallStyles.DEFAULT
 @export var sky_config: Dictionary = {}
 @export var light_source_style: String = LightStyles.FLOATING  # "floating", "torch", "mushroom", "crystal"
-@export var floor_style: String = FloorStyles.PLAIN	 # "plain", "cracked_slab"
-@export var beam_style: String = WallStyles.DEFAULT	 # "default", "ornate", "none"
+@export var floor_style: String = FloorStyles.PLAIN  # "plain", "cracked_slab"
+@export var beam_style: String = WallStyles.DEFAULT  # "default", "ornate", "none"
 
 # --- Helper methods ---
 
 func get_palette_array() -> Array[Color]:
-	return [primary, secondary, tertiary, highlight, danger]
+    return [primary, secondary, tertiary, highlight, danger]
 
 func get_random_palette_color() -> Color:
-	var arr = get_palette_array()
-	return arr[randi() % arr.size()]
+    var arr = get_palette_array()
+    return arr[randi() % arr.size()]
 
 func get_element_color(element: String) -> Color:
-	if element_colors.has(element):
-		return element_colors[element]
-	return Color.WHITE
+    if element_colors.has(element):
+        return element_colors[element]
+    return Color.WHITE

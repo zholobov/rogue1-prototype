@@ -10,10 +10,10 @@ var took_damage_this_level: bool = false
 var total_currency_earned: int = 0
 
 func reset() -> void:
-	kills = 0
-	damage_dealt = 0
-	time_elapsed = 0.0
-	levels_cleared = 0
-	loop = 0
-	took_damage_this_level = false
-	total_currency_earned = 0
+    kills = 0
+    damage_dealt = 0
+    time_elapsed = 0.0
+    levels_cleared = 0
+    loop = 0
+    took_damage_this_level = false
+    total_currency_earned = 0

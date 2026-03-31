@@ -20,420 +20,420 @@ var _player_spawner: MultiplayerSpawner
 var _alive_players: int = 0
 
 func _ready():
-	print("[GeneratedLevel] _ready() started")
+    print("[GeneratedLevel] _ready() started")
 
-	var theme = ThemeManager.active_theme
-	var env = Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = theme.background_color
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = theme.ambient_color
-	env.ambient_light_energy = theme.ambient_energy
-	env.fog_enabled = true
-	env.fog_light_color = theme.fog_color
-	env.fog_density = theme.fog_density
-	env.fog_depth_begin = theme.fog_depth_begin
-	env.fog_depth_end = theme.fog_depth_end
-	env.fog_sky_affect = 0.0
-	var world_env = WorldEnvironment.new()
-	world_env.environment = env
-	# Open sky for biomes without ceiling
-	if not theme.has_ceiling and theme.sky_config.size() > 0:
-		var sky_cfg = theme.sky_config
-		var sky_mat = ProceduralSkyMaterial.new()
-		sky_mat.sky_top_color = sky_cfg.get("sky_top_color", Color(0.05, 0.05, 0.1))
-		sky_mat.sky_horizon_color = sky_cfg.get("sky_horizon_color", Color(0.1, 0.15, 0.2))
-		sky_mat.ground_bottom_color = sky_cfg.get("ground_bottom_color", Color(0.02, 0.02, 0.02))
-		sky_mat.ground_horizon_color = sky_cfg.get("ground_horizon_color", Color(0.1, 0.1, 0.1))
-		sky_mat.sun_angle_max = sky_cfg.get("sun_angle_max", 30.0)
-		sky_mat.sun_curve = 0.1
-		var sky = Sky.new()
-		sky.sky_material = sky_mat
-		env.sky = sky
-		env.background_mode = Environment.BG_SKY
+    var theme = ThemeManager.active_theme
+    var env = Environment.new()
+    env.background_mode = Environment.BG_COLOR
+    env.background_color = theme.background_color
+    env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+    env.ambient_light_color = theme.ambient_color
+    env.ambient_light_energy = theme.ambient_energy
+    env.fog_enabled = true
+    env.fog_light_color = theme.fog_color
+    env.fog_density = theme.fog_density
+    env.fog_depth_begin = theme.fog_depth_begin
+    env.fog_depth_end = theme.fog_depth_end
+    env.fog_sky_affect = 0.0
+    var world_env = WorldEnvironment.new()
+    world_env.environment = env
+    # Open sky for biomes without ceiling
+    if not theme.has_ceiling and theme.sky_config.size() > 0:
+        var sky_cfg = theme.sky_config
+        var sky_mat = ProceduralSkyMaterial.new()
+        sky_mat.sky_top_color = sky_cfg.get("sky_top_color", Color(0.05, 0.05, 0.1))
+        sky_mat.sky_horizon_color = sky_cfg.get("sky_horizon_color", Color(0.1, 0.15, 0.2))
+        sky_mat.ground_bottom_color = sky_cfg.get("ground_bottom_color", Color(0.02, 0.02, 0.02))
+        sky_mat.ground_horizon_color = sky_cfg.get("ground_horizon_color", Color(0.1, 0.1, 0.1))
+        sky_mat.sun_angle_max = sky_cfg.get("sun_angle_max", 30.0)
+        sky_mat.sun_curve = 0.1
+        var sky = Sky.new()
+        sky.sky_material = sky_mat
+        env.sky = sky
+        env.background_mode = Environment.BG_SKY
 
-	add_child(world_env)
+    add_child(world_env)
 
-	# Create and register the ECS world
-	var world = World.new()
-	world.name = "World"
-	add_child(world)
-	ECS.world = world
-	print("[GeneratedLevel] ECS world created")
+    # Create and register the ECS world
+    var world = World.new()
+    world.name = "World"
+    add_child(world)
+    ECS.world = world
+    print("[GeneratedLevel] ECS world created")
 
-	# Multiplayer: create entity containers and spawners
-	_player_container = Node3D.new()
-	_player_container.name = "Players"
-	add_child(_player_container)
+    # Multiplayer: create entity containers and spawners
+    _player_container = Node3D.new()
+    _player_container.name = "Players"
+    add_child(_player_container)
 
-	_monster_container = Node3D.new()
-	_monster_container.name = "Monsters"
-	add_child(_monster_container)
+    _monster_container = Node3D.new()
+    _monster_container.name = "Monsters"
+    add_child(_monster_container)
 
-	_projectile_container = Node3D.new()
-	_projectile_container.name = "Projectiles"
-	add_child(_projectile_container)
+    _projectile_container = Node3D.new()
+    _projectile_container.name = "Projectiles"
+    add_child(_projectile_container)
 
-	_player_spawner = MultiplayerSpawner.new()
-	_player_spawner.name = "PlayerSpawner"
-	_player_spawner.spawn_path = NodePath("../Players")
-	_player_spawner.add_spawnable_scene(PlayerScene.resource_path)
-	add_child(_player_spawner)
+    _player_spawner = MultiplayerSpawner.new()
+    _player_spawner.name = "PlayerSpawner"
+    _player_spawner.spawn_path = NodePath("../Players")
+    _player_spawner.add_spawnable_scene(PlayerScene.resource_path)
+    add_child(_player_spawner)
 
-	var monster_spawner = MultiplayerSpawner.new()
-	monster_spawner.name = "MonsterSpawner"
-	monster_spawner.spawn_path = NodePath("../Monsters")
-	monster_spawner.add_spawnable_scene(MonsterScene.resource_path)
-	add_child(monster_spawner)
+    var monster_spawner = MultiplayerSpawner.new()
+    monster_spawner.name = "MonsterSpawner"
+    monster_spawner.spawn_path = NodePath("../Monsters")
+    monster_spawner.add_spawnable_scene(MonsterScene.resource_path)
+    add_child(monster_spawner)
 
-	var projectile_spawner = MultiplayerSpawner.new()
-	projectile_spawner.name = "ProjectileSpawner"
-	projectile_spawner.spawn_path = NodePath("../Projectiles")
-	projectile_spawner.add_spawnable_scene(ProjectileScene.resource_path)
-	add_child(projectile_spawner)
+    var projectile_spawner = MultiplayerSpawner.new()
+    projectile_spawner.name = "ProjectileSpawner"
+    projectile_spawner.spawn_path = NodePath("../Projectiles")
+    projectile_spawner.add_spawnable_scene(ProjectileScene.resource_path)
+    add_child(projectile_spawner)
 
-	# Register all systems
-	ECS.world.add_system(S_PlayerInput.new())
-	ECS.world.add_system(S_Movement.new())
-	ECS.world.add_system(S_Conditions.new())
-	ECS.world.add_system(S_Lifetime.new())
-	death_system = S_Death.new()
-	death_system.actor_died.connect(_on_actor_died)
-	ECS.world.add_system(death_system)
-	var lifesteal_system = S_Lifesteal.new()
-	death_system.actor_died.connect(lifesteal_system.on_actor_died)
-	ECS.world.add_system(lifesteal_system)
-	ECS.world.add_system(S_HpRegen.new())
-	ECS.world.add_system(S_MonsterAI.new())
-	var boss_ai_system = S_BossAI.new()
-	boss_ai_system.boss_projectile_requested.connect(_on_boss_projectile_requested)
-	ECS.world.add_system(boss_ai_system)
+    # Register all systems
+    ECS.world.add_system(S_PlayerInput.new())
+    ECS.world.add_system(S_Movement.new())
+    ECS.world.add_system(S_Conditions.new())
+    ECS.world.add_system(S_Lifetime.new())
+    death_system = S_Death.new()
+    death_system.actor_died.connect(_on_actor_died)
+    ECS.world.add_system(death_system)
+    var lifesteal_system = S_Lifesteal.new()
+    death_system.actor_died.connect(lifesteal_system.on_actor_died)
+    ECS.world.add_system(lifesteal_system)
+    ECS.world.add_system(S_HpRegen.new())
+    ECS.world.add_system(S_MonsterAI.new())
+    var boss_ai_system = S_BossAI.new()
+    boss_ai_system.boss_projectile_requested.connect(_on_boss_projectile_requested)
+    ECS.world.add_system(boss_ai_system)
 
-	ECS.world.add_system(S_Dash.new())
-	ECS.world.add_system(S_AoEBlast.new())
+    ECS.world.add_system(S_Dash.new())
+    ECS.world.add_system(S_AoEBlast.new())
 
-	weapon_system = S_Weapon.new()
-	weapon_system.projectile_requested.connect(_on_projectile_requested)
-	ECS.world.add_system(weapon_system)
-	ECS.world.add_system(S_WeaponVisual.new())
-	print("[GeneratedLevel] Systems registered")
+    weapon_system = S_Weapon.new()
+    weapon_system.projectile_requested.connect(_on_projectile_requested)
+    ECS.world.add_system(weapon_system)
+    ECS.world.add_system(S_WeaponVisual.new())
+    print("[GeneratedLevel] Systems registered")
 
-	# Generate level
-	var gen = LevelGenerator.new()
-	var seed_val = Config.level_seed if Config.level_seed != 0 else randi()
-	level_data = gen.generate(Config.level_grid_width, Config.level_grid_height, seed_val, Config.level_tile_size)
-	add_child(level_data.geometry)
+    # Generate level
+    var gen = LevelGenerator.new()
+    var seed_val = Config.level_seed if Config.level_seed != 0 else randi()
+    level_data = gen.generate(Config.level_grid_width, Config.level_grid_height, seed_val, Config.level_tile_size)
+    add_child(level_data.geometry)
 
-	print("[GeneratedLevel] Level generated with seed: %d, spawn_points: %d" % [level_data.seed, level_data.spawn_points.size()])
-	for i in range(level_data.spawn_points.size()):
-		print("[GeneratedLevel]   spawn[%d] = %s" % [i, str(level_data.spawn_points[i])])
+    print("[GeneratedLevel] Level generated with seed: %d, spawn_points: %d" % [level_data.seed, level_data.spawn_points.size()])
+    for i in range(level_data.spawn_points.size()):
+        print("[GeneratedLevel]   spawn[%d] = %s" % [i, str(level_data.spawn_points[i])])
 
-	# HUD
-	_hud = HUDScene.instantiate()
-	add_child(_hud)
-	_hud.setup_minimap(level_data)
+    # HUD
+    _hud = HUDScene.instantiate()
+    add_child(_hud)
+    _hud.setup_minimap(level_data)
 
-	# Kill feed
-	death_system.actor_died.connect(_hud.on_actor_died)
+    # Kill feed
+    death_system.actor_died.connect(_hud.on_actor_died)
 
-	# Floating damage numbers
-	DamageEvents.damage_dealt.connect(_on_damage_dealt)
+    # Floating damage numbers
+    DamageEvents.damage_dealt.connect(_on_damage_dealt)
 
-	# Handle player disconnects
-	if Net.is_active:
-		Net.player_disconnected.connect(_on_player_disconnected)
+    # Handle player disconnects
+    if Net.is_active:
+        Net.player_disconnected.connect(_on_player_disconnected)
 
-	# Spawn monsters at spawn points
-	_spawn_monsters()
-	_is_boss_level = RunManager != null and RunManager.state == RunManager.State.BOSS
-	if _is_boss_level:
-		_spawn_boss()
-	if monsters_remaining <= 0:
-		call_deferred("_auto_clear")
-	print("[GeneratedLevel] _ready() completed")
+    # Spawn monsters at spawn points
+    _spawn_monsters()
+    _is_boss_level = RunManager != null and RunManager.state == RunManager.State.BOSS
+    if _is_boss_level:
+        _spawn_boss()
+    if monsters_remaining <= 0:
+        call_deferred("_auto_clear")
+    print("[GeneratedLevel] _ready() completed")
 
 func get_spawn_points() -> Array[Vector3]:
-	var points: Array[Vector3] = []
-	for child in _find_in_group(level_data.geometry, "spawn_point"):
-		points.append(child.global_position)
-	return points
+    var points: Array[Vector3] = []
+    for child in _find_in_group(level_data.geometry, "spawn_point"):
+        points.append(child.global_position)
+    return points
 
 func get_player_spawn() -> Vector3:
-	var points = get_spawn_points()
-	if points.size() > 0:
-		return points[0]
-	# Fallback to center of grid (avoids border walls)
-	var cx = level_data.width * Config.level_tile_size / 2.0
-	var cz = level_data.height * Config.level_tile_size / 2.0
-	return Vector3(cx, 1.0, cz)
+    var points = get_spawn_points()
+    if points.size() > 0:
+        return points[0]
+    # Fallback to center of grid (avoids border walls)
+    var cx = level_data.width * Config.level_tile_size / 2.0
+    var cz = level_data.height * Config.level_tile_size / 2.0
+    return Vector3(cx, 1.0, cz)
 
 func spawn_player(peer_id: int, is_local: bool) -> void:
-	_alive_players += 1
-	var player = PlayerScene.instantiate()
-	player.name = "Player_%d" % peer_id
+    _alive_players += 1
+    var player = PlayerScene.instantiate()
+    player.name = "Player_%d" % peer_id
 
-	var spawn_pos = get_player_spawn()
-	player.position = spawn_pos + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
+    var spawn_pos = get_player_spawn()
+    player.position = spawn_pos + Vector3(randf_range(-2, 2), 0, randf_range(-2, 2))
 
-	_player_container.add_child(player)
-	player.setup(peer_id, is_local)
-	player.apply_upgrades()
+    _player_container.add_child(player)
+    player.setup(peer_id, is_local)
+    player.apply_upgrades()
 
 func _spawn_monsters() -> void:
-	if Net.is_active and not Net.is_host:
-		return
-	monsters_remaining = 0
-	var spawn_points = get_spawn_points()
-	for i in range(1, spawn_points.size()):
-		for _m in range(Config.monsters_per_room):
-			if Config.max_monsters_per_level > 0 and monsters_remaining >= Config.max_monsters_per_level:
-				break
-			var monster = MonsterScene.instantiate()
-			# Pick monster variant using weighted random from theme
-			var spawnable = ThemeManager.get_spawnable_variants()
-			if spawnable.size() > 0:
-				var total_weight = 0.0
-				for v in spawnable:
-					total_weight += v.spawn_weight
-				var roll = randf() * total_weight
-				var cumulative = 0.0
-				for v in spawnable:
-					cumulative += v.spawn_weight
-					if roll < cumulative:
-						monster.visual_variant = v.variant_key
-						break
-			var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
-			monster.position = spawn_points[i] + offset
-			_monster_container.add_child(monster)
-			# Apply horde modifier HP scaling (monster.ecs_entity is set in MonsterEntity._ready)
-			if Config.monster_hp_mult != 1.0 and monster.ecs_entity:
-				var health := monster.ecs_entity.get_component(C_Health) as C_Health
-				if health:
-					health.max_health = int(health.max_health * Config.monster_hp_mult)
-					health.current_health = health.max_health
-			if Config.monster_damage_mult != 1.0 and monster.ecs_entity:
-				var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
-				if ai:
-					ai.attack_damage = int(ai.attack_damage * Config.monster_damage_mult)
-			if randf() < Config.monster_weapon_chance and monster.ecs_entity:
-				var weapon_index := randi() % WeaponRegistry.weapon_count()
-				var weapon_def = WeaponRegistry.get_weapon(weapon_index)
-				var boss_ai := C_BossAI.new()
-				boss_ai.projectile_damage = Config.monster_ranged_damage
-				boss_ai.ranged_cooldown = Config.monster_ranged_cooldown
-				boss_ai.projectile_speed = weapon_def.speed
-				monster.ecs_entity.add_component(boss_ai)
-				var wv := C_WeaponVisual.new()
-				wv.weapon_index = weapon_index
-				wv.element = weapon_def.element
-				monster.ecs_entity.add_component(wv)
-				var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
-				if ai:
-					ai.attack_range = 8.0
-			monsters_remaining += 1
+    if Net.is_active and not Net.is_host:
+        return
+    monsters_remaining = 0
+    var spawn_points = get_spawn_points()
+    for i in range(1, spawn_points.size()):
+        for _m in range(Config.monsters_per_room):
+            if Config.max_monsters_per_level > 0 and monsters_remaining >= Config.max_monsters_per_level:
+                break
+            var monster = MonsterScene.instantiate()
+            # Pick monster variant using weighted random from theme
+            var spawnable = ThemeManager.get_spawnable_variants()
+            if spawnable.size() > 0:
+                var total_weight = 0.0
+                for v in spawnable:
+                    total_weight += v.spawn_weight
+                var roll = randf() * total_weight
+                var cumulative = 0.0
+                for v in spawnable:
+                    cumulative += v.spawn_weight
+                    if roll < cumulative:
+                        monster.visual_variant = v.variant_key
+                        break
+            var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
+            monster.position = spawn_points[i] + offset
+            _monster_container.add_child(monster)
+            # Apply horde modifier HP scaling (monster.ecs_entity is set in MonsterEntity._ready)
+            if Config.monster_hp_mult != 1.0 and monster.ecs_entity:
+                var health := monster.ecs_entity.get_component(C_Health) as C_Health
+                if health:
+                    health.max_health = int(health.max_health * Config.monster_hp_mult)
+                    health.current_health = health.max_health
+            if Config.monster_damage_mult != 1.0 and monster.ecs_entity:
+                var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
+                if ai:
+                    ai.attack_damage = int(ai.attack_damage * Config.monster_damage_mult)
+            if randf() < Config.monster_weapon_chance and monster.ecs_entity:
+                var weapon_index := randi() % WeaponRegistry.weapon_count()
+                var weapon_def = WeaponRegistry.get_weapon(weapon_index)
+                var boss_ai := C_BossAI.new()
+                boss_ai.projectile_damage = Config.monster_ranged_damage
+                boss_ai.ranged_cooldown = Config.monster_ranged_cooldown
+                boss_ai.projectile_speed = weapon_def.speed
+                monster.ecs_entity.add_component(boss_ai)
+                var wv := C_WeaponVisual.new()
+                wv.weapon_index = weapon_index
+                wv.element = weapon_def.element
+                monster.ecs_entity.add_component(wv)
+                var ai := monster.ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
+                if ai:
+                    ai.attack_range = 8.0
+            monsters_remaining += 1
 
 func _spawn_boss() -> void:
-	if Net.is_active and not Net.is_host:
-		return
-	var boss = MonsterScene.instantiate()
-	var cx = level_data.width * Config.level_tile_size / 2.0
-	var cz = level_data.height * Config.level_tile_size / 2.0
-	boss.position = Vector3(cx, 1.0, cz)
-	_monster_container.add_child(boss)
-	boss.setup_as_boss(RunManager.stats.loop if RunManager else 0)
-	monsters_remaining += 1
-	print("[GeneratedLevel] Boss spawned at center (%s)" % str(boss.position))
-	if _hud:
-		_hud.show_boss_bar(boss.ecs_entity)
+    if Net.is_active and not Net.is_host:
+        return
+    var boss = MonsterScene.instantiate()
+    var cx = level_data.width * Config.level_tile_size / 2.0
+    var cz = level_data.height * Config.level_tile_size / 2.0
+    boss.position = Vector3(cx, 1.0, cz)
+    _monster_container.add_child(boss)
+    boss.setup_as_boss(RunManager.stats.loop if RunManager else 0)
+    monsters_remaining += 1
+    print("[GeneratedLevel] Boss spawned at center (%s)" % str(boss.position))
+    if _hud:
+        _hud.show_boss_bar(boss.ecs_entity)
 
 func _auto_clear() -> void:
-	print("[GeneratedLevel] No monsters — auto-clearing level")
-	if RunManager:
-		RunManager.on_level_cleared()
+    print("[GeneratedLevel] No monsters — auto-clearing level")
+    if RunManager:
+        RunManager.on_level_cleared()
 
 func _physics_process(delta: float) -> void:
-	ECS.process(delta)
+    ECS.process(delta)
 
 func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
-	if not is_instance_valid(owner_body) or not owner_body.is_inside_tree():
-		return
-	var camera = owner_body.get_node_or_null("Camera3D") as Camera3D
-	if not camera:
-		return
-	var muzzle = owner_body.get_node_or_null("Camera3D/WeaponViewmodel/MuzzlePoint")
-	var spawn_pos: Vector3
-	if muzzle and muzzle.is_inside_tree():
-		spawn_pos = muzzle.global_position
-	elif camera.is_inside_tree():
-		spawn_pos = camera.global_position + (-camera.global_transform.basis.z * 1.0)
-	else:
-		return
-	var direction = -camera.global_transform.basis.z
+    if not is_instance_valid(owner_body) or not owner_body.is_inside_tree():
+        return
+    var camera = owner_body.get_node_or_null("Camera3D") as Camera3D
+    if not camera:
+        return
+    var muzzle = owner_body.get_node_or_null("Camera3D/WeaponViewmodel/MuzzlePoint")
+    var spawn_pos: Vector3
+    if muzzle and muzzle.is_inside_tree():
+        spawn_pos = muzzle.global_position
+    elif camera.is_inside_tree():
+        spawn_pos = camera.global_position + (-camera.global_transform.basis.z * 1.0)
+    else:
+        return
+    var direction = -camera.global_transform.basis.z
 
-	if Net.is_active:
-		_request_projectile.rpc_id(1, spawn_pos, direction, weapon.projectile_speed,
-			weapon.damage, weapon.element, owner_body.get_instance_id())
-		# Spawn predicted local-only projectile for instant feedback
-		_spawn_predicted_projectile(spawn_pos, direction, weapon.projectile_speed, weapon.element)
-	else:
-		_spawn_projectile(spawn_pos, direction, weapon.projectile_speed,
-			weapon.damage, weapon.element, owner_body.get_instance_id())
+    if Net.is_active:
+        _request_projectile.rpc_id(1, spawn_pos, direction, weapon.projectile_speed,
+            weapon.damage, weapon.element, owner_body.get_instance_id())
+        # Spawn predicted local-only projectile for instant feedback
+        _spawn_predicted_projectile(spawn_pos, direction, weapon.projectile_speed, weapon.element)
+    else:
+        _spawn_projectile(spawn_pos, direction, weapon.projectile_speed,
+            weapon.damage, weapon.element, owner_body.get_instance_id())
 
-	# Muzzle flash (local visual, always show)
-	var flash = VfxFactory.create_muzzle_flash(spawn_pos)
-	add_child(flash)
+    # Muzzle flash (local visual, always show)
+    var flash = VfxFactory.create_muzzle_flash(spawn_pos)
+    add_child(flash)
 
 @rpc("any_peer", "reliable")
 func _request_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, element: String, owner_id: int) -> void:
-	if not Net.is_host:
-		return
-	_spawn_projectile(pos, dir, speed, damage, element, owner_id)
+    if not Net.is_host:
+        return
+    _spawn_projectile(pos, dir, speed, damage, element, owner_id)
 
 func _spawn_predicted_projectile(pos: Vector3, dir: Vector3, speed: float, element: String) -> void:
-	var ghost = Node3D.new()
-	ghost.name = "PredictedProjectile"
-	ghost.global_position = pos
-	ghost.set_meta("direction", dir)
-	ghost.set_meta("speed", speed)
-	ghost.set_meta("lifetime", 0.3)  # Short-lived — authoritative one takes over
-	add_child(ghost)
-	var trail = VfxFactory.create_trail(element)
-	ghost.add_child(trail)
-	ghost.set_script(preload("res://src/entities/predicted_projectile.gd"))
+    var ghost = Node3D.new()
+    ghost.name = "PredictedProjectile"
+    ghost.global_position = pos
+    ghost.set_meta("direction", dir)
+    ghost.set_meta("speed", speed)
+    ghost.set_meta("lifetime", 0.3)  # Short-lived — authoritative one takes over
+    add_child(ghost)
+    var trail = VfxFactory.create_trail(element)
+    ghost.add_child(trail)
+    ghost.set_script(preload("res://src/entities/predicted_projectile.gd"))
 
 func _spawn_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, element: String, owner_id: int) -> void:
-	var projectile = ProjectileScene.instantiate()
-	_projectile_container.add_child(projectile)
-	projectile.global_position = pos
-	projectile.setup(dir, speed, damage, element, owner_id)
-	# Broadcast fire VFX to all clients (muzzle flash + weapon recoil)
-	if Net.is_active and Net.is_host:
-		_show_remote_fire_vfx.rpc(pos, owner_id)
-	else:
-		var flash = VfxFactory.create_muzzle_flash(pos)
-		add_child(flash)
+    var projectile = ProjectileScene.instantiate()
+    _projectile_container.add_child(projectile)
+    projectile.global_position = pos
+    projectile.setup(dir, speed, damage, element, owner_id)
+    # Broadcast fire VFX to all clients (muzzle flash + weapon recoil)
+    if Net.is_active and Net.is_host:
+        _show_remote_fire_vfx.rpc(pos, owner_id)
+    else:
+        var flash = VfxFactory.create_muzzle_flash(pos)
+        add_child(flash)
 
 @rpc("authority", "call_remote", "unreliable")
 func _show_remote_fire_vfx(pos: Vector3, owner_id: int) -> void:
-	var flash = VfxFactory.create_muzzle_flash(pos)
-	add_child(flash)
-	# Trigger weapon recoil on the firing player's model
-	for child in _player_container.get_children():
-		if is_instance_valid(child) and child.get_instance_id() == owner_id:
-			var wv = child.get_component(C_WeaponVisual)
-			if wv:
-				wv.just_fired = true
-			break
+    var flash = VfxFactory.create_muzzle_flash(pos)
+    add_child(flash)
+    # Trigger weapon recoil on the firing player's model
+    for child in _player_container.get_children():
+        if is_instance_valid(child) and child.get_instance_id() == owner_id:
+            var wv = child.get_component(C_WeaponVisual)
+            if wv:
+                wv.just_fired = true
+            break
 
 func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int) -> void:
-	if Net.is_active and not Net.is_host:
-		return
-	_spawn_projectile(pos, direction, speed, damage, "", owner_id)
+    if Net.is_active and not Net.is_host:
+        return
+    _spawn_projectile(pos, direction, speed, damage, "", owner_id)
 
-	var flash = VfxFactory.create_muzzle_flash(pos)
-	add_child(flash)
+    var flash = VfxFactory.create_muzzle_flash(pos)
+    add_child(flash)
 
 func _on_actor_died(entity: Entity) -> void:
-	# Only host processes deaths
-	if Net.is_active and not Net.is_host:
-		return
+    # Only host processes deaths
+    if Net.is_active and not Net.is_host:
+        return
 
-	var tag := entity.get_component(C_ActorTag) as C_ActorTag
-	if not tag:
-		return
+    var tag := entity.get_component(C_ActorTag) as C_ActorTag
+    if not tag:
+        return
 
-	if tag.actor_type == C_ActorTag.ActorType.MONSTER:
-		var health := entity.get_component(C_Health) as C_Health
-		if health and RunManager:
-			RunManager.register_kill(health.max_health)
+    if tag.actor_type == C_ActorTag.ActorType.MONSTER:
+        var health := entity.get_component(C_Health) as C_Health
+        if health and RunManager:
+            RunManager.register_kill(health.max_health)
 
-		monsters_remaining -= 1
+        monsters_remaining -= 1
 
-		# Boss death = immediate level clear (only actual boss, not armed regular monsters)
-		var boss_ai = entity.get_component(C_BossAI)
-		if boss_ai and boss_ai.is_boss:
-			print("[GeneratedLevel] Boss defeated!")
-			if RunManager:
-				RunManager.on_level_cleared()
-			return
+        # Boss death = immediate level clear (only actual boss, not armed regular monsters)
+        var boss_ai = entity.get_component(C_BossAI)
+        if boss_ai and boss_ai.is_boss:
+            print("[GeneratedLevel] Boss defeated!")
+            if RunManager:
+                RunManager.on_level_cleared()
+            return
 
-		if monsters_remaining <= 0 and not _is_boss_level:
-			print("[GeneratedLevel] All monsters defeated!")
-			if RunManager:
-				RunManager.on_level_cleared()
+        if monsters_remaining <= 0 and not _is_boss_level:
+            print("[GeneratedLevel] All monsters defeated!")
+            if RunManager:
+                RunManager.on_level_cleared()
 
-	elif tag.actor_type == C_ActorTag.ActorType.PLAYER:
-		if not Config.god_mode:
-			# Check if the dead player was the local player — start spectating
-			var net_id := entity.get_component(C_NetworkIdentity) as C_NetworkIdentity
-			if net_id and net_id.is_local:
-				_start_spectating(entity)
-			if RunManager:
-				_on_player_died()
+    elif tag.actor_type == C_ActorTag.ActorType.PLAYER:
+        if not Config.god_mode:
+            # Check if the dead player was the local player — start spectating
+            var net_id := entity.get_component(C_NetworkIdentity) as C_NetworkIdentity
+            if net_id and net_id.is_local:
+                _start_spectating(entity)
+            if RunManager:
+                _on_player_died()
 
 func _on_player_died() -> void:
-	_alive_players -= 1
-	if _alive_players <= 0 and RunManager:
-		RunManager.on_player_died()
+    _alive_players -= 1
+    if _alive_players <= 0 and RunManager:
+        RunManager.on_player_died()
 
 func _start_spectating(dead_entity: Entity) -> void:
-	var dead_body = dead_entity.get_parent()
-	# Find a living teammate to spectate
-	for child in _player_container.get_children():
-		if child == dead_body or not is_instance_valid(child):
-			continue
-		if not child.ecs_entity:
-			continue
-		var health := child.ecs_entity.get_component(C_Health) as C_Health
-		if health and health.current_health > 0:
-			var cam = child.get_node_or_null("Camera3D") as Camera3D
-			if cam:
-				cam.make_current()
-			break
+    var dead_body = dead_entity.get_parent()
+    # Find a living teammate to spectate
+    for child in _player_container.get_children():
+        if child == dead_body or not is_instance_valid(child):
+            continue
+        if not child.ecs_entity:
+            continue
+        var health := child.ecs_entity.get_component(C_Health) as C_Health
+        if health and health.current_health > 0:
+            var cam = child.get_node_or_null("Camera3D") as Camera3D
+            if cam:
+                cam.make_current()
+            break
 
 func _on_player_disconnected(peer_id: int) -> void:
-	if not Net.is_host:
-		return
-	for child in _player_container.get_children():
-		if child.name == "Player_%d" % peer_id:
-			if child.ecs_entity and ECS.world:
-				ECS.world.remove_entity(child.ecs_entity)
-			child.queue_free()
-			_alive_players -= 1
-			break
+    if not Net.is_host:
+        return
+    for child in _player_container.get_children():
+        if child.name == "Player_%d" % peer_id:
+            if child.ecs_entity and ECS.world:
+                ECS.world.remove_entity(child.ecs_entity)
+            child.queue_free()
+            _alive_players -= 1
+            break
 
 func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
-	# Rate-limit: accumulate damage per location, show combined number every 0.3s
-	var key = Vector3i(roundi(pos.x * 2), roundi(pos.y * 2), roundi(pos.z * 2))
-	var now = Time.get_ticks_msec() / 1000.0
-	if _damage_accum.has(key):
-		var entry = _damage_accum[key]
-		entry.amount += amount
-		entry.element = element
-		if now - entry.time < DAMAGE_NUMBER_INTERVAL:
-			return  # Accumulate, don't spawn yet
-		# Time to show accumulated damage
-		amount = entry.amount
-		_damage_accum.erase(key)
-	else:
-		_damage_accum[key] = {"amount": amount, "time": now, "element": element}
+    # Rate-limit: accumulate damage per location, show combined number every 0.3s
+    var key = Vector3i(roundi(pos.x * 2), roundi(pos.y * 2), roundi(pos.z * 2))
+    var now = Time.get_ticks_msec() / 1000.0
+    if _damage_accum.has(key):
+        var entry = _damage_accum[key]
+        entry.amount += amount
+        entry.element = element
+        if now - entry.time < DAMAGE_NUMBER_INTERVAL:
+            return  # Accumulate, don't spawn yet
+        # Time to show accumulated damage
+        amount = entry.amount
+        _damage_accum.erase(key)
+    else:
+        _damage_accum[key] = {"amount": amount, "time": now, "element": element}
 
-	var ft = DamageNumberFactory.create(element)
-	get_tree().current_scene.add_child(ft)
-	ft.show_text(pos, "-%d" % amount)
+    var ft = DamageNumberFactory.create(element)
+    get_tree().current_scene.add_child(ft)
+    ft.show_text(pos, "-%d" % amount)
 
-	# Clean up old entries that were never flushed
-	var stale_keys: Array = []
-	for k in _damage_accum:
-		if now - _damage_accum[k].time > 1.0:
-			stale_keys.append(k)
-	for k in stale_keys:
-		_damage_accum.erase(k)
+    # Clean up old entries that were never flushed
+    var stale_keys: Array = []
+    for k in _damage_accum:
+        if now - _damage_accum[k].time > 1.0:
+            stale_keys.append(k)
+    for k in stale_keys:
+        _damage_accum.erase(k)
 
 func _find_in_group(node: Node, group: String) -> Array[Node]:
-	var found: Array[Node] = []
-	for child in node.get_children():
-		if child.is_in_group(group):
-			found.append(child)
-		found.append_array(_find_in_group(child, group))
-	return found
+    var found: Array[Node] = []
+    for child in node.get_children():
+        if child.is_in_group(group):
+            found.append(child)
+        found.append_array(_find_in_group(child, group))
+    return found

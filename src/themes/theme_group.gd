@@ -6,11 +6,11 @@ var description: String = ""
 var biomes: Array = []
 
 func get_random_biome() -> ThemeData:
-	if biomes.is_empty():
-		return null
-	return biomes[randi() % biomes.size()]
+    if biomes.is_empty():
+        return null
+    return biomes[randi() % biomes.size()]
 
 func get_biome(index: int) -> ThemeData:
-	if index >= 0 and index < biomes.size():
-		return biomes[index]
-	return biomes[0] if not biomes.is_empty() else null
+    if index >= 0 and index < biomes.size():
+        return biomes[index]
+    return biomes[0] if not biomes.is_empty() else null
