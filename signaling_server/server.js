@@ -1,7 +1,15 @@
+const http = require("http");
 const WebSocket = require("ws");
 
-const PORT = process.env.PORT || 9090;
-const wss = new WebSocket.Server({ port: PORT });
+const PORT = process.env.PORT || 3000;
+
+// HTTP health-check for Cloudflare tunnel monitoring
+const httpServer = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("ok");
+});
+
+const wss = new WebSocket.Server({ server: httpServer });
 
 // lobby_id -> Map<peer_id, WebSocket>
 const lobbies = new Map();
@@ -77,4 +85,6 @@ function send(ws, data) {
   }
 }
 
-console.log(`Signaling server listening on port ${PORT}`);
+httpServer.listen(PORT, () => {
+  console.log(`Signaling server listening on port ${PORT}`);
+});
