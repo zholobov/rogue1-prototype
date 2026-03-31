@@ -14,6 +14,10 @@ func process(_entities: Array[Entity], _components: Array, _delta: float) -> voi
     pass
 
 static func apply_damage(target_entity: Entity, damage: int, element: String) -> void:
+    # In multiplayer, only host applies damage
+    if Net.is_active and not Net.is_host:
+        return
+
     var health := target_entity.get_component(C_Health) as C_Health
     if not health:
         return

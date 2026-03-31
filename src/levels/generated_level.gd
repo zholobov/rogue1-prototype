@@ -298,6 +298,10 @@ func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int
 	add_child(flash)
 
 func _on_actor_died(entity: Entity) -> void:
+	# Only host processes deaths
+	if Net.is_active and not Net.is_host:
+		return
+
 	var tag := entity.get_component(C_ActorTag) as C_ActorTag
 	if not tag:
 		return
@@ -324,7 +328,12 @@ func _on_actor_died(entity: Entity) -> void:
 
 	elif tag.actor_type == C_ActorTag.ActorType.PLAYER:
 		if not Config.god_mode and RunManager:
-			RunManager.on_player_died()
+			_on_player_died()
+
+func _on_player_died() -> void:
+	_alive_players -= 1
+	if _alive_players <= 0 and RunManager:
+		RunManager.on_player_died()
 
 func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
 	# Rate-limit: accumulate damage per location, show combined number every 0.3s
