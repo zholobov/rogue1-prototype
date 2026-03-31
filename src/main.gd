@@ -5,6 +5,7 @@ const LobbyScene = preload("res://src/ui/lobby_ui.tscn")
 
 var current_scene: Node = null
 var is_solo: bool = false
+var _peers_finished: Dictionary = {}  # peer_id -> bool, for reward/shop wait-for-all
 
 func _ready():
 	RunManager.state_changed.connect(_on_state_changed)
@@ -149,13 +150,47 @@ func _start_level() -> void:
 			level.spawn_player(peer_id, false)
 
 func _show_reward() -> void:
+	_reset_peers_finished()
 	var reward = RewardScreen.new()
 	reward.upgrade_picked.connect(_on_upgrade_picked)
 	add_child(reward)
 	current_scene = reward
 
 func _on_upgrade_picked(upgrade: UpgradeData) -> void:
-	RunManager.pick_upgrade(upgrade)
+	if is_solo:
+		RunManager.pick_upgrade(upgrade)
+		return
+	# In multiplayer, each player picks locally, then notifies host
+	RunManager.active_upgrades.append(upgrade)
+	if Net.is_active:
+		_notify_reward_done.rpc_id(1, Net.my_peer_id)
+
+@rpc("any_peer", "reliable")
+func _notify_reward_done(peer_id: int) -> void:
+	if not Net.is_host:
+		return
+	_peers_finished[peer_id] = true
+	_check_all_finished(RunManager.State.REWARD)
+
+func _reset_peers_finished() -> void:
+	_peers_finished.clear()
+	if Net.is_active and Net.is_host:
+		_peers_finished[Net.my_peer_id] = false
+		for pid in Net.peers:
+			_peers_finished[pid] = false
+
+func _check_all_finished(from_state: int) -> void:
+	for pid in _peers_finished:
+		if not _peers_finished[pid]:
+			return
+	# All players done — advance state (skip pick_upgrade to avoid appending null)
+	if from_state == RunManager.State.REWARD:
+		if RunManager.current_depth > 0 and RunManager.current_depth % Config.shop_frequency == 0:
+			RunManager._change_state(RunManager.State.SHOP)
+		else:
+			RunManager._change_state(RunManager.State.MAP)
+	elif from_state == RunManager.State.SHOP:
+		RunManager.finish_shopping()
 
 func _show_game_over() -> void:
 	var screen = GameOverScreen.new()
@@ -180,11 +215,23 @@ func _on_end_run() -> void:
 	RunManager.end_run()
 
 func _show_shop() -> void:
+	_reset_peers_finished()
 	var shop = ShopScreen.new()
 	shop.shop_finished.connect(_on_shop_finished)
 	add_child(shop)
 	current_scene = shop
 
 func _on_shop_finished() -> void:
-	RunManager.finish_shopping()
+	if is_solo:
+		RunManager.finish_shopping()
+		return
+	if Net.is_active:
+		_notify_shop_done.rpc_id(1, Net.my_peer_id)
+
+@rpc("any_peer", "reliable")
+func _notify_shop_done(peer_id: int) -> void:
+	if not Net.is_host:
+		return
+	_peers_finished[peer_id] = true
+	_check_all_finished(RunManager.State.SHOP)
 
