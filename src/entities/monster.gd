@@ -31,6 +31,16 @@ func _ready():
     _setup_health_bar()
     add_to_group("monsters")
 
+    # Multiplayer sync: position, rotation (host-authoritative)
+    var sync = MultiplayerSynchronizer.new()
+    sync.name = "MonsterSync"
+    var config = SceneReplicationConfig.new()
+    config.add_property(NodePath(".:position"))
+    config.add_property(NodePath(".:rotation"))
+    sync.replication_config = config
+    sync.replication_interval = 1.0 / 20.0
+    add_child(sync)
+
 func _setup_visuals() -> void:
     var theme := ThemeManager.active_theme
     var accent = theme.get_random_palette_color()
@@ -175,6 +185,10 @@ func get_component(component_class) -> Component:
     return ecs_entity.get_component(component_class)
 
 func _physics_process(delta: float) -> void:
+    # Only host runs monster physics — clients get position from sync
+    if Net.is_active and not Net.is_host:
+        return
+
     var vel_comp := ecs_entity.get_component(C_Velocity) as C_Velocity
 
     if not is_on_floor():

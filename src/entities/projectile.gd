@@ -17,6 +17,15 @@ func _ready():
 
     body_entered.connect(_on_body_entered)
 
+    # Multiplayer sync: position (host-authoritative)
+    var sync = MultiplayerSynchronizer.new()
+    sync.name = "ProjectileSync"
+    var config = SceneReplicationConfig.new()
+    config.add_property(NodePath(".:position"))
+    sync.replication_config = config
+    sync.replication_interval = 1.0 / 20.0
+    add_child(sync)
+
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> void:
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     proj.direction = dir
@@ -35,10 +44,16 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> v
     add_child(trail)
 
 func _physics_process(delta: float) -> void:
+    if Net.is_active and not Net.is_host:
+        return
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     position += proj.direction * proj.speed * delta
 
 func _on_body_entered(body: Node) -> void:
+    # Only host processes collisions
+    if Net.is_active and not Net.is_host:
+        return
+
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     # Spawn impact particles at collision point
     var impact = VfxFactory.create_impact(global_position, proj.direction, proj.element)

@@ -33,6 +33,16 @@ func _ready():
 
     add_to_group("players")
 
+    # Multiplayer sync: position and rotation
+    var sync = MultiplayerSynchronizer.new()
+    sync.name = "PlayerSync"
+    var config = SceneReplicationConfig.new()
+    config.add_property(NodePath(".:position"))
+    config.add_property(NodePath(".:rotation"))
+    sync.replication_config = config
+    sync.replication_interval = 1.0 / 20.0
+    add_child(sync)
+
 func get_component(component_class) -> Component:
     return ecs_entity.get_component(component_class)
 
