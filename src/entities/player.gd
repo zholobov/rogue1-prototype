@@ -6,6 +6,7 @@ extends CharacterBody3D
 
 var ecs_entity: Entity
 var _current_weapon_index: int = 0
+var synced_conditions: Array = []
 var synced_health: int = 100:
 	set(val):
 		synced_health = val
@@ -47,16 +48,23 @@ func _ready():
     config.add_property(NodePath(".:position"))
     config.add_property(NodePath(".:rotation"))
     config.add_property(NodePath(".:synced_health"))
+    config.add_property(NodePath(".:synced_conditions"))
     sync.replication_config = config
     sync.replication_interval = 1.0 / 20.0
     add_child(sync)
 
 func _process(_delta: float) -> void:
-    # Host pushes health to synced property for replication
+    # Host pushes health and conditions to synced properties for replication
     if not Net.is_active or Net.is_host:
         var health := get_component(C_Health) as C_Health
         if health:
             synced_health = health.current_health
+        var conds := get_component(C_Conditions) as C_Conditions
+        if conds:
+            var names: Array = []
+            for c in conds.active:
+                names.append(c.name)
+            synced_conditions = names
 
 func get_component(component_class) -> Component:
     return ecs_entity.get_component(component_class)
