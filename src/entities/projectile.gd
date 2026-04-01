@@ -4,7 +4,6 @@ extends Area3D
 var ecs_entity: Entity
 var _dying := false
 var _logged_physics := false
-var _physics_frame := 0
 
 func _ready():
     ecs_entity = Entity.new()
@@ -70,11 +69,7 @@ func _physics_process(delta: float) -> void:
         return
     if proj.speed == 0:
         return
-    var old_pos = position
     position += proj.direction * proj.speed * delta
-    _physics_frame += 1
-    if _physics_frame <= 3 or _physics_frame % 60 == 0:
-        GameLog.info("[Projectile] frame=%d pos=%s->%s delta=%s" % [_physics_frame, str(old_pos), str(position), str(delta)])
 
 func _expire() -> void:
     if _dying:

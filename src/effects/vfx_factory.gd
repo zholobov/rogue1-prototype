@@ -102,9 +102,9 @@ static func create_muzzle_flash(pos: Vector3) -> GPUParticles3D:
     particles.amount = 6
     particles.lifetime = 0.05
     particles.explosiveness = 1.0
-    particles.finished.connect(particles.queue_free)
     particles.process_material = res.mat
     particles.draw_pass_1 = res.mesh
+    _auto_free(particles, 0.5)
     return particles
 
 static func create_trail(element: String) -> GPUParticles3D:
@@ -127,7 +127,7 @@ static func create_impact(pos: Vector3, direction: Vector3, element: String) -> 
     particles.amount = 10
     particles.lifetime = 0.2
     particles.explosiveness = 1.0
-    particles.finished.connect(particles.queue_free)
+    _auto_free(particles, 0.5)
 
     # Impact needs a unique process material because direction varies per impact
     var mat = ParticleProcessMaterial.new()
@@ -141,3 +141,11 @@ static func create_impact(pos: Vector3, direction: Vector3, element: String) -> 
     particles.process_material = mat
     particles.draw_pass_1 = res.mesh
     return particles
+
+static func _auto_free(node: Node, delay: float) -> void:
+    node.tree_entered.connect(func():
+        node.get_tree().create_timer(delay).timeout.connect(func():
+            if is_instance_valid(node):
+                node.queue_free()
+        )
+    )
