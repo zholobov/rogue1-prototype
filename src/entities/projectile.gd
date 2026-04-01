@@ -3,6 +3,7 @@ extends Area3D
 
 var ecs_entity: Entity
 var _dying := false
+var _logged_physics := false
 
 func _ready():
     ecs_entity = Entity.new()
@@ -51,12 +52,20 @@ func setup_client(dir: Vector3, spd: float, elem: String) -> void:
     add_child(trail)
 
 func _physics_process(delta: float) -> void:
+    if not _logged_physics:
+        _logged_physics = true
+        var valid = is_instance_valid(ecs_entity)
+        var proj_check = ecs_entity.get_component(C_Projectile) if valid else null
+        GameLog.info("[Projectile] _physics_process first call: entity_valid=%s, component=%s, speed=%s, dir=%s" % [
+            str(valid),
+            str(proj_check != null),
+            str(proj_check.speed) if proj_check else "N/A",
+            str(proj_check.direction) if proj_check else "N/A"
+        ])
     if not is_instance_valid(ecs_entity):
         return
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     if not proj:
-        if Engine.get_frames_drawn() % 60 == 0:
-            GameLog.info("[Projectile] get_component returned null! components: %s" % str(ecs_entity.components.keys()))
         return
     if proj.speed == 0:
         return
