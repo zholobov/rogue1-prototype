@@ -2,6 +2,7 @@ class_name ProjectileEntity
 extends Area3D
 
 var ecs_entity: Entity
+var _dying := false
 
 func _ready():
     ecs_entity = Entity.new()
@@ -13,9 +14,11 @@ func _ready():
 
     ecs_entity.add_component(C_Projectile.new())
     ecs_entity.add_component(C_DamageDealer.new())
-    ecs_entity.add_component(C_Lifetime.new())
 
     body_entered.connect(_on_body_entered)
+
+    # Self-destruct timer (works on both host and client)
+    get_tree().create_timer(5.0).timeout.connect(_expire)
 
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> void:
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
@@ -45,14 +48,25 @@ func setup_client(dir: Vector3, spd: float, elem: String) -> void:
 
 func _physics_process(delta: float) -> void:
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
-    if proj.speed == 0:
+    if not proj or proj.speed == 0:
         return
     position += proj.direction * proj.speed * delta
+
+func _expire() -> void:
+    if _dying:
+        return
+    _dying = true
+    if ECS.world and is_instance_valid(ecs_entity):
+        ECS.world.remove_entity(ecs_entity)
+    queue_free()
 
 func _on_body_entered(body: Node) -> void:
     # Only host processes collisions
     if Net.is_active and not Net.is_host:
         return
+    if _dying:
+        return
+    _dying = true
 
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     # Spawn impact particles at collision point
@@ -62,4 +76,7 @@ func _on_body_entered(body: Node) -> void:
     if body is CharacterBody3D and body.has_method("get_component"):
         if body.get_instance_id() != proj.owner_id:
             S_Damage.apply_damage(body.ecs_entity, proj.damage, proj.element)
+
+    if ECS.world and is_instance_valid(ecs_entity):
+        ECS.world.remove_entity(ecs_entity)
     queue_free()
