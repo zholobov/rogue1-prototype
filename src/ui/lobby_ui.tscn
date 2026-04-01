@@ -71,29 +71,40 @@ layout_mode = 2
 text = "MULTIPLAYER"
 horizontal_alignment = 1
 
-[node name="LobbyInput" type="LineEdit" parent="MarginContainer/RootVBox/Columns/RightColumn"]
-layout_mode = 2
-placeholder_text = "Lobby ID"
-
 [node name="HostButton" type="Button" parent="MarginContainer/RootVBox/Columns/RightColumn"]
 layout_mode = 2
-text = "Host"
+text = "Host Game"
 
-[node name="JoinButton" type="Button" parent="MarginContainer/RootVBox/Columns/RightColumn"]
+[node name="JoinSeparator" type="Label" parent="MarginContainer/RootVBox/Columns/RightColumn"]
+layout_mode = 2
+text = "── or join existing ──"
+horizontal_alignment = 1
+
+[node name="JoinRow" type="HBoxContainer" parent="MarginContainer/RootVBox/Columns/RightColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LobbyInput" type="LineEdit" parent="MarginContainer/RootVBox/Columns/RightColumn/JoinRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Lobby ID"
+
+[node name="JoinButton" type="Button" parent="MarginContainer/RootVBox/Columns/RightColumn/JoinRow"]
 layout_mode = 2
 text = "Join"
 
-[node name="StartButton" type="Button" parent="MarginContainer/RootVBox/Columns/RightColumn"]
-layout_mode = 2
-text = "Start Game"
-visible = false
-
 [node name="StatusLabel" type="Label" parent="MarginContainer/RootVBox/Columns/RightColumn"]
 layout_mode = 2
-text = "Enter lobby ID or host a new one"
+text = ""
 horizontal_alignment = 1
 
 [node name="PlayerList" type="ItemList" parent="MarginContainer/RootVBox/Columns/RightColumn"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 100)
 size_flags_vertical = 3
+visible = false
+
+[node name="StartButton" type="Button" parent="MarginContainer/RootVBox/Columns/RightColumn"]
+layout_mode = 2
+text = "Start Game"
+visible = false

@@ -5,8 +5,8 @@ var _modifiers: Dictionary = {}  # StringName -> ModifierDefinition
 func _ready() -> void:
     _register_modifiers()
 
-func get_modifier(name: StringName) -> ModifierDefinition:
-    return _modifiers.get(name)
+func get_modifier(modifier_name: StringName) -> ModifierDefinition:
+    return _modifiers.get(modifier_name)
 
 func get_all_names() -> Array:
     return _modifiers.keys()
@@ -116,7 +116,7 @@ func _register_modifiers() -> void:
     boss.room_count_range = Vector2i(1, 1)
     boss.room_min_dist = 0
     boss.map_weight = 0.0
-    boss.pin_rooms_override = func(rng: RandomNumberGenerator, width: int, height: int) -> Dictionary:
+    boss.pin_rooms_override = func(_rng: RandomNumberGenerator, width: int, height: int) -> Dictionary:
         var pinned: Dictionary = {}
         var cx = int(width / 2.0)
         var cy = int(height / 2.0)

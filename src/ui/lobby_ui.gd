@@ -5,13 +5,19 @@ signal meta_upgrades_pressed()
 signal themes_pressed()
 signal playground_pressed()
 
-@onready var lobby_input: LineEdit = $MarginContainer/RootVBox/Columns/RightColumn/LobbyInput
+@onready var lobby_input: LineEdit = $MarginContainer/RootVBox/Columns/RightColumn/JoinRow/LobbyInput
 @onready var solo_button: Button = $MarginContainer/RootVBox/Columns/LeftColumn/SoloButton
 @onready var host_button: Button = $MarginContainer/RootVBox/Columns/RightColumn/HostButton
-@onready var join_button: Button = $MarginContainer/RootVBox/Columns/RightColumn/JoinButton
+@onready var join_button: Button = $MarginContainer/RootVBox/Columns/RightColumn/JoinRow/JoinButton
 @onready var start_button: Button = $MarginContainer/RootVBox/Columns/RightColumn/StartButton
 @onready var status_label: Label = $MarginContainer/RootVBox/Columns/RightColumn/StatusLabel
 @onready var player_list: ItemList = $MarginContainer/RootVBox/Columns/RightColumn/PlayerList
+@onready var join_separator: Label = $MarginContainer/RootVBox/Columns/RightColumn/JoinSeparator
+@onready var join_row: HBoxContainer = $MarginContainer/RootVBox/Columns/RightColumn/JoinRow
+
+var _lobby_code_row: HBoxContainer
+var _lobby_code_label: Label
+var _lobby_code: String = ""
 
 func _ready():
     var bg = ColorRect.new()
@@ -41,6 +47,27 @@ func _ready():
         header.add_theme_color_override("font_color", active_theme.ui_accent_color)
 
     $MarginContainer/RootVBox/Title.add_theme_font_size_override("font_size", 20)
+    join_separator.add_theme_font_size_override("font_size", 11)
+    join_separator.add_theme_color_override("font_color", Color(active_theme.ui_text_color, 0.5))
+
+    # Build lobby code display (hidden until connected)
+    _lobby_code_row = HBoxContainer.new()
+    _lobby_code_row.add_theme_constant_override("separation", 8)
+    _lobby_code_row.visible = false
+    var right_col = $MarginContainer/RootVBox/Columns/RightColumn
+    right_col.add_child(_lobby_code_row)
+    right_col.move_child(_lobby_code_row, 1)  # After MultiplayerHeader
+
+    _lobby_code_label = Label.new()
+    _lobby_code_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _lobby_code_label.add_theme_font_size_override("font_size", 14)
+    _lobby_code_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _lobby_code_row.add_child(_lobby_code_label)
+
+    var copy_btn = Button.new()
+    copy_btn.text = "Copy"
+    copy_btn.pressed.connect(_on_copy_lobby_code)
+    _lobby_code_row.add_child(copy_btn)
 
     # Left column: solo features
     var left = $MarginContainer/RootVBox/Columns/LeftColumn
@@ -88,6 +115,7 @@ func _on_host():
     if lobby_id.is_empty():
         lobby_id = "lobby-%d" % randi()
         lobby_input.text = lobby_id
+    _lobby_code = lobby_id
     status_label.text = "Creating lobby: %s..." % lobby_id
     Net.join_lobby(lobby_id)
 
@@ -96,14 +124,19 @@ func _on_join():
     if lobby_id.is_empty():
         status_label.text = "Enter a lobby ID"
         return
+    _lobby_code = lobby_id
     status_label.text = "Joining lobby: %s..." % lobby_id
     Net.join_lobby(lobby_id)
 
 func _on_connected():
-    status_label.text = "Connected! Peer ID: %d" % Net.my_peer_id
+    _lobby_code_label.text = _lobby_code
+    _lobby_code_row.visible = true
+    status_label.text = "Share this code with your friend"
+    player_list.visible = true
     player_list.add_item("You (Peer %d)" % Net.my_peer_id)
     host_button.visible = false
-    join_button.visible = false
+    join_separator.visible = false
+    join_row.visible = false
     solo_button.visible = false
     start_button.visible = true
 
@@ -113,6 +146,10 @@ func _on_start():
 @rpc("any_peer", "call_local", "reliable")
 func _start_game_rpc():
     game_started.emit(false)
+
+func _on_copy_lobby_code():
+    DisplayServer.clipboard_set(_lobby_code)
+    status_label.text = "Copied to clipboard!"
 
 func _on_player_connected(peer_id: int):
     player_list.add_item("Peer %d" % peer_id)

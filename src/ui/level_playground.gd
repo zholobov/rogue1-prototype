@@ -177,7 +177,7 @@ func _build_sections() -> Array:
     var sections = ConfigSectionBuilder.from_object(Config)
 
     # Add tile weights (derived from TileRules, not a Config property)
-    var modifier = Config.current_modifier if Config.current_modifier != "" else Modifiers.NORMAL
+    var modifier: StringName = StringName(Config.current_modifier) if Config.current_modifier != "" else Modifiers.NORMAL
     var weights = TileRules.get_profile_weights(modifier)
     sections.append({
         "title": "Tile Weights",
