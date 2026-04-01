@@ -10,6 +10,7 @@ var level_data: Dictionary = {}
 var monsters_remaining: int = 0
 var death_system: S_Death
 var _is_boss_level: bool = false
+var _proj_counter: int = 0
 var _damage_accum: Dictionary = {}   # rounded pos key -> {amount: int, time: float}
 const DAMAGE_NUMBER_INTERVAL := 0.3  # seconds between damage numbers per location
 var _hud: Control
@@ -204,6 +205,7 @@ func _spawn_monsters() -> void:
                         break
             var offset = Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
             monster.position = spawn_points[i] + offset
+            monster.name = "Monster_%d" % monsters_remaining
             _monster_container.add_child(monster)
             # Apply horde modifier HP scaling (monster.ecs_entity is set in MonsterEntity._ready)
             if Config.monster_hp_mult != 1.0 and monster.ecs_entity:
@@ -236,6 +238,7 @@ func _spawn_boss() -> void:
     if Net.is_active and not Net.is_host:
         return
     var boss = MonsterScene.instantiate()
+    boss.name = "Boss"
     var cx = level_data.width * Config.level_tile_size / 2.0
     var cz = level_data.height * Config.level_tile_size / 2.0
     boss.position = Vector3(cx, 1.0, cz)
@@ -303,15 +306,25 @@ func _spawn_predicted_projectile(pos: Vector3, dir: Vector3, speed: float, eleme
 
 func _spawn_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, element: String, owner_id: int) -> void:
     var projectile = ProjectileScene.instantiate()
+    projectile.name = "Proj_%d" % _proj_counter
+    _proj_counter += 1
     _projectile_container.add_child(projectile)
     projectile.global_position = pos
     projectile.setup(dir, speed, damage, element, owner_id)
-    # Broadcast fire VFX to all clients (muzzle flash + weapon recoil)
+    # Sync projectile setup to clients so they can move it locally
     if Net.is_active and Net.is_host:
+        _sync_projectile.rpc(projectile.name, pos, dir, speed, element)
         _show_remote_fire_vfx.rpc(pos, owner_id)
     else:
         var flash = VfxFactory.create_muzzle_flash(pos)
         add_child(flash)
+
+@rpc("authority", "reliable")
+func _sync_projectile(proj_name: String, pos: Vector3, dir: Vector3, speed: float, element: String) -> void:
+    var proj = _projectile_container.get_node_or_null(proj_name)
+    if proj and proj is ProjectileEntity:
+        proj.global_position = pos
+        proj.setup_client(dir, speed, element)
 
 @rpc("authority", "call_remote", "unreliable")
 func _show_remote_fire_vfx(pos: Vector3, owner_id: int) -> void:
