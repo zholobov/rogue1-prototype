@@ -10,6 +10,9 @@ func _ready():
     layer = 100
     _build_ui()
 
+func is_open() -> bool:
+    return _visible
+
 func info(msg: String) -> void:
     print(msg)
     _entries.append(msg)
@@ -88,8 +91,6 @@ func _toggle():
     if _visible:
         _update_text()
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-    else:
-        Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and event.keycode == KEY_QUOTELEFT:

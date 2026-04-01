@@ -98,7 +98,8 @@ func _input(event: InputEvent) -> void:
         camera.rotation.x = clampf(camera.rotation.x, -deg_to_rad(70), deg_to_rad(70))
 
     if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-        Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+        if not GameLog.is_open():
+            Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
     if event.is_action_pressed("ui_cancel"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
