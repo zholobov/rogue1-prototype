@@ -107,6 +107,23 @@ func _ready():
     playground_btn.pressed.connect(_on_playground)
     left.add_child(playground_btn)
 
+    # Version label at bottom-right
+    var version_label = Label.new()
+    version_label.text = VersionInfo.version_string
+    version_label.anchor_left = 1.0
+    version_label.anchor_top = 1.0
+    version_label.anchor_right = 1.0
+    version_label.anchor_bottom = 1.0
+    version_label.offset_left = -300
+    version_label.offset_top = -24
+    version_label.offset_right = -8
+    version_label.offset_bottom = -4
+    version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    version_label.add_theme_font_size_override("font_size", 9)
+    version_label.add_theme_color_override("font_color", Color(active_theme.ui_text_color, 0.3))
+    version_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(version_label)
+
 func _on_solo():
     game_started.emit(true)
 
@@ -141,10 +158,24 @@ func _on_connected():
     start_button.visible = true
 
 func _on_start():
+    print("[Lobby] Start pressed. Multiplayer ID: %d, has_peer: %s" % [
+        multiplayer.get_unique_id(),
+        str(multiplayer.has_multiplayer_peer())
+    ])
+    var peer = multiplayer.multiplayer_peer
+    if peer:
+        print("[Lobby] Peer type: %s, state: %d, transfer_mode: %d" % [
+            peer.get_class(), peer.get_connection_status(), peer.get_transfer_mode()
+        ])
+    else:
+        print("[Lobby] No multiplayer peer!")
+    print("[Lobby] Calling _start_game_rpc.rpc()")
     _start_game_rpc.rpc()
+    print("[Lobby] rpc() returned")
 
 @rpc("any_peer", "call_local", "reliable")
 func _start_game_rpc():
+    print("[Lobby] _start_game_rpc called! Emitting game_started(false)")
     game_started.emit(false)
 
 func _on_copy_lobby_code():

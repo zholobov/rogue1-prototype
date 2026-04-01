@@ -44,12 +44,21 @@ func _init_rtc() -> void:
 func _process(_delta: float) -> void:
     if signaling:
         signaling.poll()
+    # Log WebRTC peer connection states periodically
+    if Engine.get_frames_drawn() % 300 == 0 and peers.size() > 0:
+        for peer_id in peers:
+            var peer = peers[peer_id]
+            print("[Net] Peer %d connection_state: %d" % [peer_id, peer.get_connection_state()])
+        if rtc_mp:
+            print("[Net] MultiplayerPeer status: %d" % rtc_mp.get_connection_status())
 
 func _create_peer(peer_id: int) -> WebRTCPeerConnection:
     var peer = WebRTCPeerConnection.new()
-    peer.initialize({"iceServers": ice_servers})
+    var err = peer.initialize({"iceServers": ice_servers})
+    print("[Net] WebRTCPeerConnection.initialize() = %d" % err)
     peer.session_description_created.connect(
         func(type: String, sdp: String):
+            print("[Net] SDP created: type=%s, len=%d" % [type, sdp.length()])
             peer.set_local_description(type, sdp)
             if type == "offer":
                 signaling.send_offer(peer_id, sdp)
@@ -58,6 +67,7 @@ func _create_peer(peer_id: int) -> WebRTCPeerConnection:
     )
     peer.ice_candidate_created.connect(
         func(mid: String, index: int, sdp: String):
+            print("[Net] ICE candidate created for peer %d: mid=%s" % [peer_id, mid])
             signaling.send_candidate(peer_id, mid, index, sdp)
     )
     peers[peer_id] = peer
@@ -66,14 +76,17 @@ func _create_peer(peer_id: int) -> WebRTCPeerConnection:
 
 func _on_lobby_joined(peer_id: int) -> void:
     my_peer_id = peer_id
+    print("[Net] Joined lobby as peer %d" % peer_id)
     rtc_mp.create_mesh(peer_id)
     multiplayer.multiplayer_peer = rtc_mp
     connection_established.emit()
 
 func _on_signaling_peer_connected(peer_id: int) -> void:
+    print("[Net] Signaling: peer %d connected, creating WebRTC peer" % peer_id)
     var peer = _create_peer(peer_id)
     # Higher ID creates the offer
     if my_peer_id > peer_id:
+        print("[Net] I'm higher ID (%d > %d), creating offer" % [my_peer_id, peer_id])
         peer.create_offer()
     player_connected.emit(peer_id)
 
@@ -84,15 +97,18 @@ func _on_signaling_peer_disconnected(peer_id: int) -> void:
     player_disconnected.emit(peer_id)
 
 func _on_offer_received(peer_id: int, offer: String) -> void:
+    print("[Net] Offer received from peer %d, len=%d" % [peer_id, offer.length()])
     if not peers.has(peer_id):
         _create_peer(peer_id)
     peers[peer_id].set_remote_description("offer", offer)
 
 func _on_answer_received(peer_id: int, answer: String) -> void:
+    print("[Net] Answer received from peer %d, len=%d" % [peer_id, answer.length()])
     if peers.has(peer_id):
         peers[peer_id].set_remote_description("answer", answer)
 
 func _on_candidate_received(peer_id: int, mid: String, index: int, sdp: String) -> void:
+    print("[Net] ICE candidate received from peer %d: mid=%s" % [peer_id, mid])
     if peers.has(peer_id):
         peers[peer_id].add_ice_candidate(mid, index, sdp)
 

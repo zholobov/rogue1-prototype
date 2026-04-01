@@ -290,6 +290,22 @@ func _build_fps_counter() -> void:
     _fps_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(_fps_label)
 
+    var version_label = Label.new()
+    version_label.text = VersionInfo.version_string
+    version_label.anchor_left = 1.0
+    version_label.anchor_top = 1.0
+    version_label.anchor_right = 1.0
+    version_label.anchor_bottom = 1.0
+    version_label.offset_left = -200
+    version_label.offset_top = -18
+    version_label.offset_right = -8
+    version_label.offset_bottom = -2
+    version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    version_label.add_theme_font_size_override("font_size", 9)
+    version_label.add_theme_color_override("font_color", Color(ThemeManager.active_theme.ui_text_color, 0.25))
+    version_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(version_label)
+
 func _build_pause_menu() -> void:
     _pause_menu = PanelContainer.new()
     _pause_menu.set_anchors_preset(Control.PRESET_CENTER)
