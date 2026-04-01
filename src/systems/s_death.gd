@@ -13,7 +13,7 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
         var health := entity.get_component(C_Health) as C_Health
         if health.current_health <= 0:
             var parent = entity.get_parent()
-            print("[S_Death] Entity died: %s (parent: %s)" % [entity.name, parent.name if parent else "none"])
+            GameLog.info("[S_Death] Entity died: %s (parent: %s)" % [entity.name, parent.name if parent else "none"])
 
             # Floating kill text for monsters
             if parent is MonsterEntity and is_instance_valid(parent):

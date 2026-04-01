@@ -38,7 +38,11 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> v
     add_child(trail)
 
 func setup_client(dir: Vector3, spd: float, elem: String) -> void:
+    GameLog.info("[Projectile] setup_client called: dir=%s speed=%s" % [str(dir), str(spd)])
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+    if not proj:
+        GameLog.info("[Projectile] setup_client: get_component returned null!")
+        return
     proj.direction = dir
     proj.speed = spd
     proj.element = elem
@@ -47,8 +51,14 @@ func setup_client(dir: Vector3, spd: float, elem: String) -> void:
     add_child(trail)
 
 func _physics_process(delta: float) -> void:
+    if not is_instance_valid(ecs_entity):
+        return
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
-    if not proj or proj.speed == 0:
+    if not proj:
+        if Engine.get_frames_drawn() % 60 == 0:
+            GameLog.info("[Projectile] get_component returned null! components: %s" % str(ecs_entity.components.keys()))
+        return
+    if proj.speed == 0:
         return
     position += proj.direction * proj.speed * delta
 

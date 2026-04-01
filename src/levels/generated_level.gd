@@ -21,7 +21,7 @@ var _player_spawner: MultiplayerSpawner
 var _alive_players: int = 0
 
 func _ready():
-    print("[GeneratedLevel] _ready() started")
+    GameLog.info("[GeneratedLevel] _ready() started")
 
     var theme = ThemeManager.active_theme
     var env = Environment.new()
@@ -60,7 +60,7 @@ func _ready():
     world.name = "World"
     add_child(world)
     ECS.world = world
-    print("[GeneratedLevel] ECS world created")
+    GameLog.info("[GeneratedLevel] ECS world created")
 
     # Multiplayer: create entity containers and spawners
     _player_container = Node3D.new()
@@ -117,7 +117,7 @@ func _ready():
     weapon_system.projectile_requested.connect(_on_projectile_requested)
     ECS.world.add_system(weapon_system)
     ECS.world.add_system(S_WeaponVisual.new())
-    print("[GeneratedLevel] Systems registered")
+    GameLog.info("[GeneratedLevel] Systems registered")
 
     # Generate level
     var gen = LevelGenerator.new()
@@ -125,9 +125,9 @@ func _ready():
     level_data = gen.generate(Config.level_grid_width, Config.level_grid_height, seed_val, Config.level_tile_size)
     add_child(level_data.geometry)
 
-    print("[GeneratedLevel] Level generated with seed: %d, spawn_points: %d" % [level_data.seed, level_data.spawn_points.size()])
+    GameLog.info("[GeneratedLevel] Level generated with seed: %d, spawn_points: %d" % [level_data.seed, level_data.spawn_points.size()])
     for i in range(level_data.spawn_points.size()):
-        print("[GeneratedLevel]   spawn[%d] = %s" % [i, str(level_data.spawn_points[i])])
+        GameLog.info("[GeneratedLevel]   spawn[%d] = %s" % [i, str(level_data.spawn_points[i])])
 
     # HUD
     _hud = HUDScene.instantiate()
@@ -151,7 +151,7 @@ func _ready():
         _spawn_boss()
     if monsters_remaining <= 0:
         call_deferred("_auto_clear")
-    print("[GeneratedLevel] _ready() completed")
+    GameLog.info("[GeneratedLevel] _ready() completed")
 
 func get_spawn_points() -> Array[Vector3]:
     var points: Array[Vector3] = []
@@ -245,12 +245,12 @@ func _spawn_boss() -> void:
     _monster_container.add_child(boss)
     boss.setup_as_boss(RunManager.stats.loop if RunManager else 0)
     monsters_remaining += 1
-    print("[GeneratedLevel] Boss spawned at center (%s)" % str(boss.position))
+    GameLog.info("[GeneratedLevel] Boss spawned at center (%s)" % str(boss.position))
     if _hud:
         _hud.show_boss_bar(boss.ecs_entity)
 
 func _auto_clear() -> void:
-    print("[GeneratedLevel] No monsters — auto-clearing level")
+    GameLog.info("[GeneratedLevel] No monsters — auto-clearing level")
     if RunManager:
         RunManager.on_level_cleared()
 
@@ -370,13 +370,13 @@ func _on_actor_died(entity: Entity) -> void:
         # Boss death = immediate level clear (only actual boss, not armed regular monsters)
         var boss_ai = entity.get_component(C_BossAI)
         if boss_ai and boss_ai.is_boss:
-            print("[GeneratedLevel] Boss defeated!")
+            GameLog.info("[GeneratedLevel] Boss defeated!")
             if RunManager:
                 RunManager.on_level_cleared()
             return
 
         if monsters_remaining <= 0 and not _is_boss_level:
-            print("[GeneratedLevel] All monsters defeated!")
+            GameLog.info("[GeneratedLevel] All monsters defeated!")
             if RunManager:
                 RunManager.on_level_cleared()
 

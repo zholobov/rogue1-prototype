@@ -31,6 +31,7 @@ RunManager="*res://src/run/run_manager.gd"
 MetaSave="*res://src/run/meta_save.gd"
 DamageEvents="*res://src/events/damage_events.gd"
 VersionInfo="*res://src/config/version_info.gd"
+GameLog="*res://src/ui/game_log.gd"
 
 [display]
 

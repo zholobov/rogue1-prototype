@@ -17,12 +17,12 @@ func _on_host_disconnected() -> void:
     Net.disconnect_all()
     is_solo = false
     RunManager.return_to_lobby()
-    print("[Main] Host disconnected — returning to lobby")
+    GameLog.info("[Main] Host disconnected — returning to lobby")
 
 func _on_state_changed(new_state: int) -> void:
     if Net.is_active and Net.is_host:
         # RPC with call_local handles both local + remote
-        print("[Main] Broadcasting state %d to clients via RPC" % new_state)
+        GameLog.info("[Main] Broadcasting state %d to clients via RPC" % new_state)
         _sync_state_change.rpc(new_state)
     else:
         # Solo or guest fallback
@@ -69,7 +69,7 @@ func _show_lobby() -> void:
     current_scene = lobby
 
 func _on_game_started(solo: bool) -> void:
-    print("[Main] _on_game_started(solo=%s)" % str(solo))
+    GameLog.info("[Main] _on_game_started(solo=%s)" % str(solo))
     is_solo = solo
     RunManager.start_run()
 

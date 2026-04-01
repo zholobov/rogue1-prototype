@@ -7,7 +7,7 @@ func query() -> QueryBuilder:
 func process(entities: Array[Entity], _components: Array, _delta: float) -> void:
     for entity in entities:
         if not is_instance_valid(entity):
-            print("[S_PlayerInput] Skipping freed entity")
+            GameLog.info("[S_PlayerInput] Skipping freed entity")
             continue
         var net_id := entity.get_component(C_NetworkIdentity) as C_NetworkIdentity
         if not net_id.is_local:
