@@ -1,15 +1,13 @@
 extends Node
 
-var commit: String = "dev"
-var timestamp: String = ""
-var version_string: String = "dev"
+# Auto-updated by pre-commit hook
+const COMMIT := "592846f"
+const TIMESTAMP := "2026-04-01 04:02 UTC"
+
+var version_string: String
 
 func _ready() -> void:
-    var cfg = ConfigFile.new()
-    if cfg.load("res://version.cfg") == OK:
-        commit = cfg.get_value("version", "commit", "dev")
-        timestamp = cfg.get_value("version", "timestamp", "")
-    if timestamp != "":
-        version_string = "%s · %s" % [commit, timestamp]
+    if TIMESTAMP != "":
+        version_string = "%s · %s" % [COMMIT, TIMESTAMP]
     else:
-        version_string = commit
+        version_string = COMMIT
