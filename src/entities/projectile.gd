@@ -3,7 +3,6 @@ extends Area3D
 
 var ecs_entity: Entity
 var _dying := false
-var _logged_physics := false
 
 func _ready():
     ecs_entity = Entity.new()
@@ -18,10 +17,15 @@ func _ready():
 
     body_entered.connect(_on_body_entered)
 
+    # Hide until setup/setup_client is called (prevents flash at wrong position)
+    if Net.is_active:
+        visible = false
+
     # Self-destruct timer (works on both host and client)
     get_tree().create_timer(5.0).timeout.connect(_expire)
 
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> void:
+    visible = true
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     proj.direction = dir
     proj.speed = spd
@@ -39,10 +43,9 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> v
     add_child(trail)
 
 func setup_client(dir: Vector3, spd: float, elem: String) -> void:
-    GameLog.info("[Projectile] setup_client called: dir=%s speed=%s" % [str(dir), str(spd)])
+    visible = true
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     if not proj:
-        GameLog.info("[Projectile] setup_client: get_component returned null!")
         return
     proj.direction = dir
     proj.speed = spd
@@ -52,22 +55,10 @@ func setup_client(dir: Vector3, spd: float, elem: String) -> void:
     add_child(trail)
 
 func _physics_process(delta: float) -> void:
-    if not _logged_physics:
-        _logged_physics = true
-        var valid = is_instance_valid(ecs_entity)
-        var proj_check = ecs_entity.get_component(C_Projectile) if valid else null
-        GameLog.info("[Projectile] _physics_process first call: entity_valid=%s, component=%s, speed=%s, dir=%s" % [
-            str(valid),
-            str(proj_check != null),
-            str(proj_check.speed) if proj_check else "N/A",
-            str(proj_check.direction) if proj_check else "N/A"
-        ])
     if not is_instance_valid(ecs_entity):
         return
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
-    if not proj:
-        return
-    if proj.speed == 0:
+    if not proj or proj.speed == 0:
         return
     position += proj.direction * proj.speed * delta
 
