@@ -3,9 +3,6 @@ extends Area3D
 
 var ecs_entity: Entity
 var _dying := false
-# Movement vars (used directly, not via ECS, so client movement works reliably)
-var move_direction: Vector3 = Vector3.ZERO
-var move_speed: float = 0.0
 
 func _ready():
     ecs_entity = Entity.new()
@@ -24,9 +21,6 @@ func _ready():
     get_tree().create_timer(5.0).timeout.connect(_expire)
 
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> void:
-    move_direction = dir
-    move_speed = spd
-
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     proj.direction = dir
     proj.speed = spd
@@ -39,19 +33,24 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> v
     dd.element = elem
     dd.owner_entity_id = owner_id
 
+    # Attach trail particles
     var trail = VfxFactory.create_trail(elem)
     add_child(trail)
 
 func setup_client(dir: Vector3, spd: float, elem: String) -> void:
-    move_direction = dir
-    move_speed = spd
+    var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+    proj.direction = dir
+    proj.speed = spd
+    proj.element = elem
 
     var trail = VfxFactory.create_trail(elem)
     add_child(trail)
 
 func _physics_process(delta: float) -> void:
-    if move_speed > 0:
-        position += move_direction * move_speed * delta
+    var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+    if not proj or proj.speed == 0:
+        return
+    position += proj.direction * proj.speed * delta
 
 func _expire() -> void:
     if _dying:
@@ -62,6 +61,7 @@ func _expire() -> void:
     queue_free()
 
 func _on_body_entered(body: Node) -> void:
+    # Only host processes collisions
     if Net.is_active and not Net.is_host:
         return
     if _dying:
@@ -69,6 +69,7 @@ func _on_body_entered(body: Node) -> void:
     _dying = true
 
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
+    # Spawn impact particles at collision point
     var impact = VfxFactory.create_impact(global_position, proj.direction, proj.element)
     get_tree().current_scene.add_child(impact)
 
