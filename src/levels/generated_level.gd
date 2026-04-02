@@ -353,7 +353,6 @@ func _show_remote_fire_vfx(pos: Vector3, peer_id: int) -> void:
         var wv = player_node.get_component(C_WeaponVisual)
         if wv:
             wv.just_fired = true
-            break
 
 func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int) -> void:
     if Net.is_active and not Net.is_host:
