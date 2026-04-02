@@ -34,6 +34,7 @@ func _ready() -> void:
     signaling.lobby_joined.connect(_on_lobby_joined)
 
 func join_lobby(lobby_id: String) -> void:
+    GameLog.info("[Net] join_lobby(%s) called, url=%s" % [lobby_id, signaling_url])
     _init_rtc()
     signaling.connect_to_server(signaling_url)
     signaling.join_lobby(lobby_id)
@@ -50,6 +51,7 @@ func _create_peer(peer_id: int) -> WebRTCPeerConnection:
     peer.initialize({"iceServers": ice_servers})
     peer.session_description_created.connect(
         func(type: String, sdp: String):
+            GameLog.info("[Net] SDP created: type=%s len=%d" % [type, sdp.length()])
             peer.set_local_description(type, sdp)
             if type == "offer":
                 signaling.send_offer(peer_id, sdp)
@@ -58,6 +60,7 @@ func _create_peer(peer_id: int) -> WebRTCPeerConnection:
     )
     peer.ice_candidate_created.connect(
         func(mid: String, index: int, sdp: String):
+            GameLog.info("[Net] ICE candidate for peer %d" % peer_id)
             signaling.send_candidate(peer_id, mid, index, sdp)
     )
     peers[peer_id] = peer
@@ -72,14 +75,17 @@ func _on_lobby_joined(peer_id: int) -> void:
     connection_established.emit()
 
 func _on_signaling_peer_connected(peer_id: int) -> void:
-    GameLog.info("[Net] Signaling: peer %d connected, creating WebRTC peer" % peer_id)
+    GameLog.info("[Net] Signaling: peer %d connected (my_id=%d), creating WebRTC peer" % [peer_id, my_peer_id])
     var peer = _create_peer(peer_id)
-    # Higher ID creates the offer
     if my_peer_id > peer_id:
+        GameLog.info("[Net] Creating offer (I'm %d, peer is %d)" % [my_peer_id, peer_id])
         peer.create_offer()
+    else:
+        GameLog.info("[Net] Waiting for offer from peer %d" % peer_id)
     player_connected.emit(peer_id)
 
 func _on_signaling_peer_disconnected(peer_id: int) -> void:
+    GameLog.info("[Net] Signaling: peer %d disconnected" % peer_id)
     if peers.has(peer_id):
         peers[peer_id].close()
         peers.erase(peer_id)

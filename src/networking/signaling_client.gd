@@ -14,9 +14,10 @@ var _connected := false
 var _pending_lobby: String = ""
 
 func connect_to_server(url: String) -> Error:
+    GameLog.info("[Signaling] Connecting to %s..." % url)
     var err = ws.connect_to_url(url)
     if err != OK:
-        push_error("SignalingClient: Failed to connect to %s: %s" % [url, err])
+        GameLog.info("[Signaling] ERROR: connect_to_url failed: %d" % err)
     return err
 
 func poll() -> void:
@@ -25,21 +26,30 @@ func poll() -> void:
     if state == WebSocketPeer.STATE_OPEN:
         if not _connected:
             _connected = true
+            GameLog.info("[Signaling] WebSocket connected")
             if not _pending_lobby.is_empty():
+                GameLog.info("[Signaling] Sending join for lobby: %s" % _pending_lobby)
                 _send({"type": "join", "lobby": _pending_lobby})
                 _pending_lobby = ""
         while ws.get_available_packet_count() > 0:
             var msg = ws.get_packet().get_string_from_utf8()
+            GameLog.info("[Signaling] Received: %s" % msg.substr(0, 200))
             _handle_message(msg)
     elif state == WebSocketPeer.STATE_CLOSED:
         if _connected:
             _connected = false
-            push_warning("SignalingClient: Connection closed")
+            GameLog.info("[Signaling] WebSocket closed, code=%d reason=%s" % [ws.get_close_code(), ws.get_close_reason()])
+    elif state == WebSocketPeer.STATE_CLOSING:
+        pass  # waiting for close
+    elif state == WebSocketPeer.STATE_CONNECTING:
+        pass  # still connecting
 
 func join_lobby(lobby_id: String) -> void:
     if _connected:
+        GameLog.info("[Signaling] Already connected, sending join: %s" % lobby_id)
         _send({"type": "join", "lobby": lobby_id})
     else:
+        GameLog.info("[Signaling] Not connected yet, queuing lobby: %s" % lobby_id)
         _pending_lobby = lobby_id
 
 func send_offer(peer_id: int, offer: String) -> void:
