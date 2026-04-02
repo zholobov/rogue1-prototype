@@ -38,6 +38,10 @@ func _ready():
     _setup_visuals()
     _setup_health_bar()
     add_to_group("monsters")
+    tree_exiting.connect(func():
+        if ECS.world and is_instance_valid(ecs_entity):
+            ECS.world.remove_entity(ecs_entity)
+    )
 
     # Multiplayer sync: position, rotation (host-authoritative)
     var sync = MultiplayerSynchronizer.new()

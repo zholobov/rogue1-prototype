@@ -9,7 +9,6 @@ func query() -> QueryBuilder:
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
     for entity in entities:
         if not is_instance_valid(entity):
-            GameLog.info("[S_Weapon] Skipping freed entity")
             continue
         var weapon := entity.get_component(C_Weapon) as C_Weapon
         var net_id := entity.get_component(C_NetworkIdentity) as C_NetworkIdentity

@@ -49,6 +49,15 @@ func _ready():
     tag.team = 0
 
     add_to_group("players")
+    tree_exiting.connect(func():
+        GameLog.info("[Player] TREE_EXITING: name=%s, is_host=%s, mp_connected=%s" % [
+            name, str(Net.is_host),
+            str(multiplayer.has_multiplayer_peer() and multiplayer.multiplayer_peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED)
+        ])
+        # Cleanup: remove entity from ECS world to prevent freed-entity spam
+        if ECS.world and is_instance_valid(ecs_entity):
+            ECS.world.remove_entity(ecs_entity)
+    )
 
     # Multiplayer sync: position, rotation, health
     var sync = MultiplayerSynchronizer.new()

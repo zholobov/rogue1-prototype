@@ -10,6 +10,8 @@ var _peers_finished: Dictionary = {}  # peer_id -> bool, for reward/shop wait-fo
 func _ready():
     RunManager.state_changed.connect(_on_state_changed)
     multiplayer.server_disconnected.connect(_on_host_disconnected)
+    multiplayer.peer_disconnected.connect(func(id): GameLog.info("[Main] Peer %d disconnected" % id))
+    multiplayer.peer_connected.connect(func(id): GameLog.info("[Main] Peer %d connected" % id))
     _show_lobby()
 
 func _on_host_disconnected() -> void:
