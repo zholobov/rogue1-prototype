@@ -283,19 +283,19 @@ func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
         return
     var direction = -camera.global_transform.basis.z
 
+    var peer_id = multiplayer.get_unique_id() if Net.is_active else 1
+
     if Net.is_active:
         if Net.is_host:
-            # Host spawns directly — can't RPC to self
             _spawn_projectile(spawn_pos, direction, weapon.projectile_speed,
-                weapon.damage, weapon.element, owner_body.get_instance_id())
+                weapon.damage, weapon.element, peer_id)
         else:
             _request_projectile.rpc_id(1, spawn_pos, direction, weapon.projectile_speed,
-                weapon.damage, weapon.element, owner_body.get_instance_id())
-            # Spawn predicted local-only projectile for instant feedback
+                weapon.damage, weapon.element, peer_id)
             _spawn_predicted_projectile(spawn_pos, direction, weapon.projectile_speed, weapon.element)
     else:
         _spawn_projectile(spawn_pos, direction, weapon.projectile_speed,
-            weapon.damage, weapon.element, owner_body.get_instance_id())
+            weapon.damage, weapon.element, peer_id)
 
     # Muzzle flash (local visual, always show)
     var flash = VfxFactory.create_muzzle_flash(spawn_pos)
@@ -344,15 +344,15 @@ func _sync_projectile(proj_name: String, pos: Vector3, dir: Vector3, speed: floa
         GameLog.info("[Sync] MISS: %s not found, children=%d" % [proj_name, _projectile_container.get_child_count()])
 
 @rpc("authority", "call_remote", "unreliable")
-func _show_remote_fire_vfx(pos: Vector3, owner_id: int) -> void:
+func _show_remote_fire_vfx(pos: Vector3, peer_id: int) -> void:
     var flash = VfxFactory.create_muzzle_flash(pos)
     add_child(flash)
     # Trigger weapon recoil on the firing player's model
-    for child in _player_container.get_children():
-        if is_instance_valid(child) and child.get_instance_id() == owner_id:
-            var wv = child.get_component(C_WeaponVisual)
-            if wv:
-                wv.just_fired = true
+    var player_node = _player_container.get_node_or_null("Player_%d" % peer_id)
+    if player_node and is_instance_valid(player_node):
+        var wv = player_node.get_component(C_WeaponVisual)
+        if wv:
+            wv.just_fired = true
             break
 
 func _on_boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int) -> void:
