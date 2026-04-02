@@ -258,18 +258,8 @@ func _auto_clear() -> void:
     if RunManager:
         RunManager.on_level_cleared()
 
-var _diag_timer: float = 0.0
-
 func _physics_process(delta: float) -> void:
     ECS.process(delta)
-    _diag_timer += delta
-    if _diag_timer >= 3.0:
-        _diag_timer = 0.0
-        var predicted_count := 0
-        for child in get_children():
-            if child.name.begins_with("Predicted"):
-                predicted_count += 1
-        GameLog.info("[Level] Projectiles: %d in container, %d predicted" % [_projectile_container.get_child_count(), predicted_count])
 
 func _on_projectile_requested(owner_body: Node3D, weapon: C_Weapon) -> void:
     if not is_instance_valid(owner_body) or not owner_body.is_inside_tree():
@@ -343,7 +333,6 @@ func _sync_projectile(proj_name: String, pos: Vector3, dir: Vector3, speed: floa
     if proj and proj is ProjectileEntity:
         proj.global_position = pos
         proj.setup_client(dir, speed, element)
-        GameLog.info("[Sync] OK: found %s" % proj_name)
     else:
         GameLog.info("[Sync] MISS: %s not found, children=%d" % [proj_name, _projectile_container.get_child_count()])
 

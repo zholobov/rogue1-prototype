@@ -44,21 +44,12 @@ func _init_rtc() -> void:
 func _process(_delta: float) -> void:
     if signaling:
         signaling.poll()
-    # Log WebRTC peer connection states periodically
-    if Engine.get_frames_drawn() % 300 == 0 and peers.size() > 0:
-        for peer_id in peers:
-            var peer = peers[peer_id]
-            GameLog.info("[Net] Peer %d connection_state: %d" % [peer_id, peer.get_connection_state()])
-        if rtc_mp:
-            GameLog.info("[Net] MultiplayerPeer status: %d" % rtc_mp.get_connection_status())
 
 func _create_peer(peer_id: int) -> WebRTCPeerConnection:
     var peer = WebRTCPeerConnection.new()
-    var err = peer.initialize({"iceServers": ice_servers})
-    GameLog.info("[Net] WebRTCPeerConnection.initialize() = %d" % err)
+    peer.initialize({"iceServers": ice_servers})
     peer.session_description_created.connect(
         func(type: String, sdp: String):
-            GameLog.info("[Net] SDP created: type=%s, len=%d" % [type, sdp.length()])
             peer.set_local_description(type, sdp)
             if type == "offer":
                 signaling.send_offer(peer_id, sdp)
@@ -67,7 +58,6 @@ func _create_peer(peer_id: int) -> WebRTCPeerConnection:
     )
     peer.ice_candidate_created.connect(
         func(mid: String, index: int, sdp: String):
-            GameLog.info("[Net] ICE candidate created for peer %d: mid=%s" % [peer_id, mid])
             signaling.send_candidate(peer_id, mid, index, sdp)
     )
     peers[peer_id] = peer
@@ -86,7 +76,6 @@ func _on_signaling_peer_connected(peer_id: int) -> void:
     var peer = _create_peer(peer_id)
     # Higher ID creates the offer
     if my_peer_id > peer_id:
-        GameLog.info("[Net] I'm higher ID (%d > %d), creating offer" % [my_peer_id, peer_id])
         peer.create_offer()
     player_connected.emit(peer_id)
 
@@ -108,7 +97,6 @@ func _on_answer_received(peer_id: int, answer: String) -> void:
         peers[peer_id].set_remote_description("answer", answer)
 
 func _on_candidate_received(peer_id: int, mid: String, index: int, sdp: String) -> void:
-    GameLog.info("[Net] ICE candidate received from peer %d: mid=%s" % [peer_id, mid])
     if peers.has(peer_id):
         peers[peer_id].add_ice_candidate(mid, index, sdp)
 

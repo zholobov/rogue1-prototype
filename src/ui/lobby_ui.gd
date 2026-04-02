@@ -158,24 +158,10 @@ func _on_connected():
     start_button.visible = true
 
 func _on_start():
-    GameLog.info("[Lobby] Start pressed. Multiplayer ID: %d, has_peer: %s" % [
-        multiplayer.get_unique_id(),
-        str(multiplayer.has_multiplayer_peer())
-    ])
-    var peer = multiplayer.multiplayer_peer
-    if peer:
-        GameLog.info("[Lobby] Peer type: %s, state: %d, transfer_mode: %d" % [
-            peer.get_class(), peer.get_connection_status(), peer.get_transfer_mode()
-        ])
-    else:
-        GameLog.info("[Lobby] No multiplayer peer!")
-    GameLog.info("[Lobby] Calling _start_game_rpc.rpc()")
     _start_game_rpc.rpc()
-    GameLog.info("[Lobby] rpc() returned")
 
 @rpc("any_peer", "call_local", "reliable")
 func _start_game_rpc():
-    GameLog.info("[Lobby] _start_game_rpc called! Emitting game_started(false)")
     game_started.emit(false)
 
 func _on_copy_lobby_code():
