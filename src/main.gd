@@ -21,11 +21,22 @@ func _on_host_disconnected() -> void:
 
 func _on_state_changed(new_state: int) -> void:
     if Net.is_active and Net.is_host:
-        # RPC with call_local handles both local + remote
+        # Send level config BEFORE state change so client has correct seed
+        if new_state == RunManager.State.LEVEL or new_state == RunManager.State.BOSS:
+            _sync_level_config.rpc(
+                Config.level_seed,
+                Config.level_grid_width,
+                Config.level_grid_height,
+                Config.monster_hp_mult,
+                Config.monster_damage_mult,
+                Config.monsters_per_room,
+                Config.max_monsters_per_level,
+                Config.light_range_mult,
+                Config.current_modifier
+            )
         GameLog.info("[Main] Broadcasting state %d to clients via RPC" % new_state)
         _sync_state_change.rpc(new_state)
     else:
-        # Solo or guest fallback
         GameLog.info("[Main] Applying state %d locally" % new_state)
         _apply_state_change(new_state)
 
@@ -120,18 +131,6 @@ func _on_map_node_selected(node_index: int) -> void:
     if Net.is_active and not Net.is_host:
         return
     RunManager.select_map_node(node_index)
-    if Net.is_active and Net.is_host:
-        _sync_level_config.rpc(
-            Config.level_seed,
-            Config.level_grid_width,
-            Config.level_grid_height,
-            Config.monster_hp_mult,
-            Config.monster_damage_mult,
-            Config.monsters_per_room,
-            Config.max_monsters_per_level,
-            Config.light_range_mult,
-            Config.current_modifier
-        )
 
 @rpc("authority", "reliable")
 func _sync_level_config(seed_val: int, width: int, height: int, hp_mult: float, dmg_mult: float, mpr: int, max_m: int, light: float, modifier: StringName) -> void:
