@@ -3,7 +3,8 @@ extends Area3D
 
 var ecs_entity: Entity
 var _dying := false
-var _owner_body: Node3D  # For collision exception
+var _owner_peer_id: int = -1
+var _grace_timer: float = 0.2
 
 func _ready():
     ecs_entity = Entity.new()
@@ -27,6 +28,7 @@ func _ready():
 
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_peer_id: int) -> void:
     visible = true
+    _owner_peer_id = owner_peer_id
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     proj.direction = dir
     proj.speed = spd
@@ -38,9 +40,6 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_peer_id: int)
     dd.damage = dmg
     dd.element = elem
     dd.owner_entity_id = owner_peer_id
-
-    # Collision exception: ignore owner for 0.2s so projectile clears the body
-    _add_owner_exception(owner_peer_id)
 
     var trail = VfxFactory.create_trail(elem)
     add_child(trail)
@@ -57,22 +56,9 @@ func setup_client(dir: Vector3, spd: float, elem: String) -> void:
     var trail = VfxFactory.create_trail(elem)
     add_child(trail)
 
-func _add_owner_exception(peer_id: int) -> void:
-    var player_container = get_tree().current_scene.get_node_or_null("Players")
-    if not player_container:
-        return
-    var owner_node = player_container.get_node_or_null("Player_%d" % peer_id)
-    if owner_node and owner_node is CollisionObject3D:
-        _owner_body = owner_node
-        add_collision_exception_with(_owner_body)
-        # Remove exception after grace period — self-harm now possible
-        get_tree().create_timer(0.2).timeout.connect(_remove_owner_exception)
-
-func _remove_owner_exception() -> void:
-    if is_instance_valid(_owner_body) and not _dying:
-        remove_collision_exception_with(_owner_body)
-
 func _physics_process(delta: float) -> void:
+    if _grace_timer > 0:
+        _grace_timer -= delta
     if not is_instance_valid(ecs_entity):
         return
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
@@ -94,6 +80,13 @@ func _on_body_entered(body: Node) -> void:
         return
     if _dying:
         return
+
+    # Grace period: skip owner during first 0.2s so projectile clears the body
+    if _grace_timer > 0 and body is CharacterBody3D:
+        var player_name = "Player_%d" % _owner_peer_id
+        if body.name == player_name:
+            return
+
     _dying = true
 
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
