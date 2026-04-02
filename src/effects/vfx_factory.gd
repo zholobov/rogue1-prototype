@@ -3,7 +3,7 @@ extends RefCounted
 
 # Cached meshes — created once, reused for all particles
 static var _trail_mesh_cache: Dictionary = {}   # element -> mesh
-static var _muzzle_mesh: Mesh
+static var _muzzle_mesh: SphereMesh
 static var _impact_mesh_cache: Dictionary = {}  # element -> mesh
 
 static func clear_cache() -> void:
@@ -11,7 +11,7 @@ static func clear_cache() -> void:
     _muzzle_mesh = null
     _impact_mesh_cache.clear()
 
-static func _get_trail_mesh(element: String) -> Mesh:
+static func _get_trail_mesh(element: String) -> SphereMesh:
     if _trail_mesh_cache.has(element):
         return _trail_mesh_cache[element]
 
@@ -24,14 +24,15 @@ static func _get_trail_mesh(element: String) -> Mesh:
     draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
     draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 
-    var mesh = BoxMesh.new()
-    mesh.size = Vector3(0.03, 0.03, 0.03)
+    var mesh = SphereMesh.new()
+    mesh.radius = 0.02
+    mesh.height = 0.04
     mesh.material = draw_mat
 
     _trail_mesh_cache[element] = mesh
     return mesh
 
-static func _get_muzzle_mesh() -> Mesh:
+static func _get_muzzle_mesh() -> SphereMesh:
     if _muzzle_mesh:
         return _muzzle_mesh
 
@@ -42,8 +43,9 @@ static func _get_muzzle_mesh() -> Mesh:
     draw_mat.emission_energy_multiplier = 5.0
     draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 
-    _muzzle_mesh = PrismMesh.new()
-    _muzzle_mesh.size = Vector3(0.06, 0.06, 0.06)
+    _muzzle_mesh = SphereMesh.new()
+    _muzzle_mesh.radius = 0.03
+    _muzzle_mesh.height = 0.06
     _muzzle_mesh.material = draw_mat
     return _muzzle_mesh
 
