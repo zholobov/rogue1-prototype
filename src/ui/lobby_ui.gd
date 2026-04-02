@@ -175,7 +175,7 @@ func _on_connected():
 func _on_start():
     _start_game_rpc.rpc()
 
-@rpc("any_peer", "call_local", "reliable")
+@rpc("authority", "call_local", "reliable")
 func _start_game_rpc():
     game_started.emit(false)
 
