@@ -1,20 +1,13 @@
 class_name S_Damage
-extends System
+extends RefCounted
 
-## Processes damage when a projectile hits an actor.
-## Called from projectile collision, not from ECS query.
-## This system provides static helper methods for applying damage.
+## Static utility for applying damage. Not an ECS system — called directly
+## from collision handlers (projectile._on_body_entered, S_MonsterAI, etc.)
 
-func query() -> QueryBuilder:
-    # This system doesn't iterate — it's called on-demand from collision handlers
-    return q.with_all([C_Health, C_Conditions])
-
-func process(_entities: Array[Entity], _components: Array, _delta: float) -> void:
-    # No-op: damage is applied via apply_damage() called from collision
-    pass
-
-static func apply_damage(target_entity: Entity, damage: int, element: String) -> void:
-    # In multiplayer, only host applies damage
+static func apply_damage(target_entity: Entity, amount: int, element: String) -> void:
+    if not is_instance_valid(target_entity):
+        return
+    # Only host processes damage
     if Net.is_active and not Net.is_host:
         return
 
@@ -22,35 +15,31 @@ static func apply_damage(target_entity: Entity, damage: int, element: String) ->
     if not health:
         return
 
-    # God mode: skip damage for players
-    if Config.god_mode:
-        var tag := target_entity.get_component(C_ActorTag) as C_ActorTag
-        if tag and tag.actor_type == C_ActorTag.ActorType.PLAYER:
-            return
+    var actual_damage = amount
 
-    # Apply damage_mult for outgoing damage (attacker stats passed via damage param already scaled)
-    # Apply damage reduction from C_PlayerStats on target
-    var actual_damage = damage
-    var player_stats := target_entity.get_component(C_PlayerStats) as C_PlayerStats
-    if player_stats:
-        actual_damage = int(float(damage) * (1.0 - player_stats.damage_reduction))
-    actual_damage = maxi(actual_damage, 1)
+    # Elemental resistance/weakness
+    if element != "" and Elements:
+        var elem = Elements.get_element(element)
+        if elem:
+            var conditions := target_entity.get_component(C_Conditions) as C_Conditions
+            if conditions:
+                for cond in conditions.active:
+                    if cond.name == elem.strong_against:
+                        actual_damage = int(actual_damage * 1.5)
+                    elif cond.name == elem.weak_against:
+                        actual_damage = int(actual_damage * 0.5)
+
     health.current_health -= actual_damage
     health.current_health = maxi(health.current_health, 0)
 
-    # Track outgoing damage (only count damage TO monsters, not FROM them)
-    var dmg_target_tag := target_entity.get_component(C_ActorTag) as C_ActorTag
-    if dmg_target_tag and dmg_target_tag.actor_type == C_ActorTag.ActorType.MONSTER and RunManager:
-        RunManager.stats.damage_dealt += actual_damage
-    # Track player damage taken for no-damage bonus
-    if not Config.god_mode:
-        var dmg_tag := target_entity.get_component(C_ActorTag) as C_ActorTag
-        if dmg_tag and dmg_tag.actor_type == C_ActorTag.ActorType.PLAYER and RunManager:
-            RunManager.stats.took_damage_this_level = true
+    # Track damage for stats
+    var tag := target_entity.get_component(C_ActorTag) as C_ActorTag
+    if tag and tag.actor_type == C_ActorTag.ActorType.PLAYER and RunManager:
+        RunManager.stats.took_damage_this_level = true
 
-    # Visual hit flash on monsters
+    # Flash hit effect
     var parent = target_entity.get_parent()
-    if parent is MonsterEntity:
+    if parent and parent.has_method("flash_hit"):
         parent.flash_hit()
 
     # Apply elemental condition
@@ -72,21 +61,18 @@ static func apply_damage(target_entity: Entity, damage: int, element: String) ->
 static func _apply_element_to_conditions(conditions: C_Conditions, element: String, elem_data: ElementDefinition, duration_mult: float = 1.0) -> void:
     # Check for interactions with existing conditions
     for cond in conditions.active.duplicate():
-        var interaction = Elements.get_interaction(cond.name, element)
-        if interaction:
-            conditions.remove_condition(cond.name)
-            if interaction.result_condition != "":
-                conditions.add_condition(
-                    interaction.result_condition,
-                    interaction.duration * duration_mult,
-                    Elements.stacking_mode,
-                    interaction.damage_per_tick
-                )
-            return  # interaction consumed the element
+        if cond.name in elem_data.removes_conditions:
+            conditions.active.erase(cond)
+        elif cond.name in elem_data.amplifies_conditions:
+            cond.duration *= 1.5
 
-    # No interaction — apply base condition
-    conditions.add_condition(
-        elem_data.condition_name,
-        elem_data.condition_duration * duration_mult,
-        Elements.stacking_mode
-    )
+    # Apply new condition
+    if elem_data.condition_name != ConditionNames.NONE:
+        var new_cond = ConditionInstance.new()
+        new_cond.name = elem_data.condition_name
+        new_cond.element = element
+        new_cond.duration = elem_data.condition_duration * duration_mult
+        new_cond.damage_per_tick = elem_data.condition_damage
+        new_cond.tick_interval = elem_data.condition_tick_interval
+        new_cond.tick_timer = 0.0
+        conditions.active.append(new_cond)
