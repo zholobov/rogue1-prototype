@@ -23,6 +23,12 @@ func _on_state_changed(new_state: int) -> void:
     if Net.is_active and Net.is_host:
         # Send level config BEFORE state change so client has correct seed
         if new_state == RunManager.State.LEVEL or new_state == RunManager.State.BOSS:
+            # Pre-generate grid so it's available for the RPC
+            var gen = LevelGenerator.new()
+            var seed_val = Config.level_seed if Config.level_seed != 0 else randi()
+            Config.level_seed = seed_val
+            gen.tile_rules.setup_profile(Config.current_modifier)
+            Config.synced_grid = gen.generate_grid(gen.tile_rules, Config.level_grid_width, Config.level_grid_height, seed_val, Config.current_modifier)
             # Flatten the 2D grid for RPC
             var flat_grid: PackedStringArray = PackedStringArray()
             for row in Config.synced_grid:
