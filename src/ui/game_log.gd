@@ -1,12 +1,19 @@
 extends CanvasLayer
 
-var _entries: PackedStringArray = PackedStringArray()
+const CAPACITY := 1000
+
+# Ring buffer: pre-allocated, O(1) insert, O(1) implicit oldest removal
+var _buffer: PackedStringArray
+var _head: int = 0
+var _count: int = 0
+
 var _panel: PanelContainer
 var _text: RichTextLabel
 var _visible := false
-var _max_entries := 500
 
 func _ready():
+    _buffer = PackedStringArray()
+    _buffer.resize(CAPACITY)
     layer = 100
     _build_ui()
 
@@ -15,11 +22,23 @@ func is_open() -> bool:
 
 func info(msg: String) -> void:
     print(msg)
-    _entries.append(msg)
-    if _entries.size() > _max_entries:
-        _entries = _entries.slice(_entries.size() - _max_entries)
+    _buffer[_head] = msg
+    _head = (_head + 1) % CAPACITY
+    if _count < CAPACITY:
+        _count += 1
     if _text and _panel.visible:
         _update_text()
+
+func _get_ordered_entries() -> PackedStringArray:
+    if _count == 0:
+        return PackedStringArray()
+    if _count < CAPACITY:
+        return _buffer.slice(0, _count)
+    var result = PackedStringArray()
+    result.resize(_count)
+    for i in range(_count):
+        result[i] = _buffer[(_head + i) % CAPACITY]
+    return result
 
 func _build_ui():
     _panel = PanelContainer.new()
@@ -76,13 +95,14 @@ func _build_ui():
     add_child(_panel)
 
 func _update_text():
-    _text.text = "\n".join(_entries)
+    _text.text = "\n".join(_get_ordered_entries())
 
 func _on_copy():
-    DisplayServer.clipboard_set("\n".join(_entries))
+    DisplayServer.clipboard_set("\n".join(_get_ordered_entries()))
 
 func _on_clear():
-    _entries.clear()
+    _head = 0
+    _count = 0
     _text.text = ""
 
 func _toggle():
