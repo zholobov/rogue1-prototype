@@ -19,6 +19,9 @@ var my_peer_id: int = 0
 var _ws_timeout_timer: Timer
 var _pending_lobby_id: String = ""
 
+enum TransportMode { AUTOMATIC, HTTP_POLLING }
+var transport_mode: int = TransportMode.AUTOMATIC
+
 var is_host: bool:
     get: return my_peer_id == 1
 
@@ -41,13 +44,19 @@ func _setup_signaling(client: Node) -> void:
     signaling.lobby_joined.connect(_on_lobby_joined)
 
 func join_lobby(lobby_id: String) -> void:
-    GameLog.info("[Net] join_lobby(%s) called, url=%s" % [lobby_id, signaling_url])
+    GameLog.info("[Net] join_lobby(%s) called, url=%s, transport=%d" % [lobby_id, signaling_url, transport_mode])
     _pending_lobby_id = lobby_id
     _init_rtc()
-    signaling.connect_to_server(signaling_url)
-    signaling.join_lobby(lobby_id)
-    # Start WebSocket timeout — fall back to HTTP if WS doesn't connect in 5s
-    if signaling is SignalingClient:
+
+    if transport_mode == TransportMode.HTTP_POLLING:
+        GameLog.info("[Net] Using HTTP polling (forced)")
+        _setup_signaling(HTTPSignalingClient.new())
+        signaling.connect_to_server(signaling_url)
+        signaling.join_lobby(lobby_id)
+    else:
+        signaling.connect_to_server(signaling_url)
+        signaling.join_lobby(lobby_id)
+        # Start WebSocket timeout — fall back to HTTP if WS doesn't connect in 5s
         _ws_timeout_timer = Timer.new()
         _ws_timeout_timer.one_shot = true
         _ws_timeout_timer.wait_time = 5.0

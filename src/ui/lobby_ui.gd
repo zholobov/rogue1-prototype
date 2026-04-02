@@ -14,6 +14,7 @@ signal playground_pressed()
 @onready var player_list: ItemList = $MarginContainer/RootVBox/Columns/RightColumn/PlayerList
 @onready var join_separator: Label = $MarginContainer/RootVBox/Columns/RightColumn/JoinSeparator
 @onready var join_row: HBoxContainer = $MarginContainer/RootVBox/Columns/RightColumn/JoinRow
+@onready var transport_option: OptionButton = $MarginContainer/RootVBox/Columns/RightColumn/TransportRow/TransportOption
 
 var _lobby_code_row: HBoxContainer
 var _lobby_code_label: Label
@@ -49,6 +50,15 @@ func _ready():
     $MarginContainer/RootVBox/Title.add_theme_font_size_override("font_size", 20)
     join_separator.add_theme_font_size_override("font_size", 11)
     join_separator.add_theme_color_override("font_color", Color(active_theme.ui_text_color, 0.5))
+
+    # Transport selector
+    transport_option.add_item("Automatic", 0)
+    transport_option.add_item("HTTP Polling", 1)
+    transport_option.selected = 0
+    transport_option.add_theme_font_size_override("font_size", 11)
+    transport_option.item_selected.connect(func(idx):
+        Net.transport_mode = idx
+    )
 
     # Build lobby code display (hidden until connected)
     _lobby_code_row = HBoxContainer.new()

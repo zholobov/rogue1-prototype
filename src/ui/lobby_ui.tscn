@@ -71,6 +71,18 @@ layout_mode = 2
 text = "MULTIPLAYER"
 horizontal_alignment = 1
 
+[node name="TransportRow" type="HBoxContainer" parent="MarginContainer/RootVBox/Columns/RightColumn"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TransportLabel" type="Label" parent="MarginContainer/RootVBox/Columns/RightColumn/TransportRow"]
+layout_mode = 2
+text = "Transport:"
+
+[node name="TransportOption" type="OptionButton" parent="MarginContainer/RootVBox/Columns/RightColumn/TransportRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
 [node name="HostButton" type="Button" parent="MarginContainer/RootVBox/Columns/RightColumn"]
 layout_mode = 2
 text = "Host Game"
