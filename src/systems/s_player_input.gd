@@ -15,6 +15,16 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
         var pi := entity.get_component(C_PlayerInput) as C_PlayerInput
         var vel := entity.get_component(C_Velocity) as C_Velocity
 
+        # Block game input when UI overlay is active
+        if GameLog.input_blocked:
+            pi.move_direction = Vector2.ZERO
+            pi.jumping = false
+            vel.direction = Vector3.ZERO
+            vel.speed = 0.0
+            var weapon := entity.get_component(C_Weapon) as C_Weapon
+            weapon.is_firing = false
+            continue
+
         # Capture input
         pi.move_direction = Input.get_vector("left", "right", "forward", "back")
         pi.jumping = Input.is_action_just_pressed("jump")

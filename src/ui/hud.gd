@@ -353,12 +353,15 @@ func _toggle_pause_menu() -> void:
     _pause_menu.visible = _pause_visible
     if _pause_visible:
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+        GameLog.block_input()
     else:
         Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+        GameLog.unblock_input()
         # Also close config if open
         if _config_visible:
             _config_visible = false
             _config_panel.visible = false
+            GameLog.unblock_input()
 
 func _on_pause_resume() -> void:
     _toggle_pause_menu()
@@ -366,12 +369,15 @@ func _on_pause_resume() -> void:
 func _on_pause_config() -> void:
     _pause_visible = false
     _pause_menu.visible = false
+    GameLog.unblock_input()  # pause closing
     _config_visible = true
     _config_panel.visible = true
+    GameLog.block_input()  # config opening
 
 func _on_pause_exit() -> void:
     _pause_visible = false
     _pause_menu.visible = false
+    GameLog.unblock_input()
     Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
     if RunManager:
         RunManager.return_to_lobby()
@@ -465,8 +471,10 @@ func _unhandled_input(event: InputEvent) -> void:
             # Close config, show pause menu
             _config_visible = false
             _config_panel.visible = false
+            GameLog.unblock_input()  # config closing
             _pause_visible = true
             _pause_menu.visible = true
+            GameLog.block_input()  # pause opening
             get_viewport().set_input_as_handled()
         elif _pause_visible:
             # Close pause menu, resume game
@@ -476,6 +484,7 @@ func _unhandled_input(event: InputEvent) -> void:
             # Mouse free (player released it) — show pause menu
             _pause_visible = true
             _pause_menu.visible = true
+            GameLog.block_input()
             get_viewport().set_input_as_handled()
 
 # ========== PUBLIC API ==========

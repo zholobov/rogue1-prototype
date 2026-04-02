@@ -11,6 +11,18 @@ var _panel: PanelContainer
 var _text: RichTextLabel
 var _visible := false
 
+## Global input blocking: reference-counted so overlapping overlays work.
+## Call block_input() on open, unblock_input() on close.
+static var _block_count: int = 0
+static var input_blocked: bool:
+    get: return _block_count > 0
+
+static func block_input() -> void:
+    _block_count += 1
+
+static func unblock_input() -> void:
+    _block_count = maxi(0, _block_count - 1)
+
 func _ready():
     _buffer = PackedStringArray()
     _buffer.resize(CAPACITY)
@@ -111,6 +123,9 @@ func _toggle():
     if _visible:
         _update_text()
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+        block_input()
+    else:
+        unblock_input()
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and event.physical_keycode == KEY_QUOTELEFT:

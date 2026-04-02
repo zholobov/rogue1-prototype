@@ -173,9 +173,10 @@ func _input(event: InputEvent) -> void:
     if event.is_action_pressed("ui_cancel"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-    for i in range(WeaponRegistry.weapon_count()):
-        if event.is_action_pressed("weapon_%d" % (i + 1)):
-            _equip_weapon(i)
+    if not GameLog.input_blocked:
+        for i in range(WeaponRegistry.weapon_count()):
+            if event.is_action_pressed("weapon_%d" % (i + 1)):
+                _equip_weapon(i)
 
 func _unhandled_input(event: InputEvent) -> void:
     var net_id := get_component(C_NetworkIdentity) as C_NetworkIdentity
