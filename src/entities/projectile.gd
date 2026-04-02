@@ -3,6 +3,8 @@ extends Area3D
 
 var ecs_entity: Entity
 var _dying := false
+var _setup_called := false
+var _logged_ghost := false
 
 func _ready():
     ecs_entity = Entity.new()
@@ -21,10 +23,22 @@ func _ready():
     if Net.is_active:
         visible = false
 
+    # Step 1: Log spawn state
+    GameLog.info("[Projectile] _ready: name=%s is_host=%s visible=%s pos=%s" % [
+        name, str(Net.is_host), str(visible), str(position)])
+
+    # Step 3: Check if spawner overrides visible after _ready
+    call_deferred("_check_visible_override")
+
     # Self-destruct timer (works on both host and client)
     get_tree().create_timer(5.0).timeout.connect(_expire)
 
+func _check_visible_override() -> void:
+    if not _setup_called and visible:
+        GameLog.info("[Projectile] OVERRIDE DETECTED: visible=true after _ready set false! name=%s" % name)
+
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> void:
+    _setup_called = true
     visible = true
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     proj.direction = dir
@@ -43,6 +57,7 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> v
     add_child(trail)
 
 func setup_client(dir: Vector3, spd: float, elem: String) -> void:
+    _setup_called = true
     visible = true
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     if not proj:
@@ -59,6 +74,11 @@ func _physics_process(delta: float) -> void:
         return
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     if not proj or proj.speed == 0:
+        # Step 1: Detect ghost projectiles (visible, not moving, no setup)
+        if not _logged_ghost and visible and not _setup_called:
+            _logged_ghost = true
+            GameLog.info("[Projectile] GHOST: name=%s visible=%s speed=0 setup_called=%s pos=%s" % [
+                name, str(visible), str(_setup_called), str(global_position)])
         return
     position += proj.direction * proj.speed * delta
 

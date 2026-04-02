@@ -330,6 +330,9 @@ func _sync_projectile(proj_name: String, pos: Vector3, dir: Vector3, speed: floa
     if proj and proj is ProjectileEntity:
         proj.global_position = pos
         proj.setup_client(dir, speed, element)
+        GameLog.info("[Sync] OK: found %s" % proj_name)
+    else:
+        GameLog.info("[Sync] MISS: %s not found, children=%d" % [proj_name, _projectile_container.get_child_count()])
 
 @rpc("authority", "call_remote", "unreliable")
 func _show_remote_fire_vfx(pos: Vector3, owner_id: int) -> void:
