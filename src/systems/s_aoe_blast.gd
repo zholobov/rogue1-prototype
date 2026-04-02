@@ -34,7 +34,7 @@ func _deal_aoe_damage(center: Vector3, damage: int, radius: float) -> void:
                 S_Damage.apply_damage(monster.ecs_entity, damage, "")
 
     # Visual feedback: ring of particles
-    var particles = GPUParticles3D.new()
+    var particles = CPUParticles3D.new()
     particles.position = center
     particles.emitting = true
     particles.one_shot = true
@@ -42,16 +42,13 @@ func _deal_aoe_damage(center: Vector3, damage: int, radius: float) -> void:
     particles.lifetime = 0.3
     particles.explosiveness = 1.0
     particles.finished.connect(particles.queue_free)
-
-    var mat = ParticleProcessMaterial.new()
-    mat.direction = Vector3(0, 0.5, 0)
-    mat.spread = 180.0
-    mat.initial_velocity_min = 8.0
-    mat.initial_velocity_max = 12.0
-    mat.gravity = Vector3(0, -2, 0)
-    mat.scale_min = 0.08
-    mat.scale_max = 0.15
-    particles.process_material = mat
+    particles.direction = Vector3(0, 0.5, 0)
+    particles.spread = 180.0
+    particles.initial_velocity_min = 8.0
+    particles.initial_velocity_max = 12.0
+    particles.gravity = Vector3(0, -2, 0)
+    particles.scale_amount_min = 0.08
+    particles.scale_amount_max = 0.15
 
     var draw_mat = StandardMaterial3D.new()
     draw_mat.albedo_color = ThemeManager.active_theme.aoe_blast_color
@@ -64,6 +61,6 @@ func _deal_aoe_damage(center: Vector3, damage: int, radius: float) -> void:
     mesh.radius = 0.04
     mesh.height = 0.08
     mesh.material = draw_mat
-    particles.draw_pass_1 = mesh
+    particles.mesh = mesh
 
     tree.current_scene.add_child(particles)

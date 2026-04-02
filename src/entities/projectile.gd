@@ -26,7 +26,6 @@ func _ready():
 
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> void:
     visible = true
-    _color_mesh(Color.RED)
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     proj.direction = dir
     proj.speed = spd
@@ -45,7 +44,6 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_id: int) -> v
 
 func setup_client(dir: Vector3, spd: float, elem: String) -> void:
     visible = true
-    _color_mesh(Color.GREEN)
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     if not proj:
         return
@@ -55,16 +53,6 @@ func setup_client(dir: Vector3, spd: float, elem: String) -> void:
 
     var trail = VfxFactory.create_trail(elem)
     add_child(trail)
-
-func _color_mesh(color: Color) -> void:
-    var mesh_inst = get_node_or_null("MeshInstance3D")
-    if mesh_inst:
-        var mat = StandardMaterial3D.new()
-        mat.albedo_color = color
-        mat.emission_enabled = true
-        mat.emission = color
-        mat.emission_energy_multiplier = 2.0
-        mesh_inst.material_override = mat
 
 func _physics_process(delta: float) -> void:
     if not is_instance_valid(ecs_entity):
