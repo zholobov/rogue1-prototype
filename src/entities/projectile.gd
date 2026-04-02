@@ -18,6 +18,10 @@ func _ready():
     ecs_entity.add_component(C_DamageDealer.new())
 
     body_entered.connect(_on_body_entered)
+    tree_exiting.connect(func():
+        if not _dying:
+            GameLog.info("[Projectile] DESPAWN (spawner): name=%s" % name)
+    )
 
     # Hide until setup/setup_client is called (prevents flash at wrong position)
     if Net.is_active:
@@ -86,6 +90,7 @@ func _expire() -> void:
     if _dying:
         return
     _dying = true
+    GameLog.info("[Projectile] EXPIRE (timer): name=%s" % name)
     if ECS.world and is_instance_valid(ecs_entity):
         ECS.world.remove_entity(ecs_entity)
     queue_free()
@@ -97,6 +102,7 @@ func _on_body_entered(body: Node) -> void:
     if _dying:
         return
     _dying = true
+    GameLog.info("[Projectile] HIT (collision): name=%s" % name)
 
     var proj := ecs_entity.get_component(C_Projectile) as C_Projectile
     # Spawn impact particles at collision point
