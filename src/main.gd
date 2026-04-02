@@ -23,6 +23,11 @@ func _on_state_changed(new_state: int) -> void:
     if Net.is_active and Net.is_host:
         # Send level config BEFORE state change so client has correct seed
         if new_state == RunManager.State.LEVEL or new_state == RunManager.State.BOSS:
+            # Flatten the 2D grid for RPC
+            var flat_grid: PackedStringArray = PackedStringArray()
+            for row in Config.synced_grid:
+                for cell in row:
+                    flat_grid.append(cell)
             _sync_level_config.rpc(
                 Config.level_seed,
                 Config.level_grid_width,
@@ -32,7 +37,8 @@ func _on_state_changed(new_state: int) -> void:
                 Config.monsters_per_room,
                 Config.max_monsters_per_level,
                 Config.light_range_mult,
-                Config.current_modifier
+                Config.current_modifier,
+                flat_grid
             )
         GameLog.info("[Main] Broadcasting state %d to clients via RPC" % new_state)
         _sync_state_change.rpc(new_state)
@@ -133,7 +139,7 @@ func _on_map_node_selected(node_index: int) -> void:
     RunManager.select_map_node(node_index)
 
 @rpc("authority", "reliable")
-func _sync_level_config(seed_val: int, width: int, height: int, hp_mult: float, dmg_mult: float, mpr: int, max_m: int, light: float, modifier: StringName) -> void:
+func _sync_level_config(seed_val: int, width: int, height: int, hp_mult: float, dmg_mult: float, mpr: int, max_m: int, light: float, modifier: StringName, flat_grid: PackedStringArray) -> void:
     Config.level_seed = seed_val
     Config.level_grid_width = width
     Config.level_grid_height = height
@@ -143,6 +149,15 @@ func _sync_level_config(seed_val: int, width: int, height: int, hp_mult: float, 
     Config.max_monsters_per_level = max_m
     Config.light_range_mult = light
     Config.current_modifier = modifier
+    # Reconstruct 2D grid from flat array
+    Config.synced_grid = []
+    var idx := 0
+    for y in range(height):
+        var row: Array = []
+        for x in range(width):
+            row.append(flat_grid[idx])
+            idx += 1
+        Config.synced_grid.append(row)
 
 func _start_level() -> void:
     var level = GeneratedLevel.instantiate()

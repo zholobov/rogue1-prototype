@@ -119,10 +119,14 @@ func _ready():
     ECS.world.add_system(S_WeaponVisual.new())
     GameLog.info("[GeneratedLevel] Systems registered")
 
-    # Generate level
+    # Generate level (host generates grid; client uses host's grid)
     var gen = LevelGenerator.new()
     var seed_val = Config.level_seed if Config.level_seed != 0 else randi()
-    level_data = gen.generate(Config.level_grid_width, Config.level_grid_height, seed_val, Config.level_tile_size)
+    if Net.is_active and not Net.is_host and Config.synced_grid.size() > 0:
+        level_data = gen.build_from_grid(Config.synced_grid, Config.level_grid_width, Config.level_grid_height, seed_val, Config.level_tile_size)
+    else:
+        level_data = gen.generate(Config.level_grid_width, Config.level_grid_height, seed_val, Config.level_tile_size)
+        Config.synced_grid = level_data.grid
     add_child(level_data.geometry)
 
     GameLog.info("[GeneratedLevel] Level generated with seed: %d, spawn_points: %d" % [level_data.seed, level_data.spawn_points.size()])

@@ -43,3 +43,6 @@ extends Node
 @export_group("Debug")
 @export var god_mode: bool = true
 
+# Multiplayer: host-generated grid sent to clients (not exported)
+var synced_grid: Array = []
+

@@ -16,6 +16,14 @@ func generate(width: int, height: int, seed_val: int, tile_size: float = 4.0) ->
     tile_rules.setup_profile(modifier)
 
     var grid = generate_grid(tile_rules, width, height, seed_val, modifier)
+    return _build_level_data(grid, width, height, seed_val, tile_size)
+
+func build_from_grid(grid: Array, width: int, height: int, seed_val: int, tile_size: float = 4.0) -> Dictionary:
+    var modifier = Config.current_modifier
+    tile_rules.setup_profile(modifier)
+    return _build_level_data(grid, width, height, seed_val, tile_size)
+
+func _build_level_data(grid: Array, width: int, height: int, seed_val: int, tile_size: float) -> Dictionary:
     if not builder:
         builder = LevelBuilder.new()
     var geometry = builder.build(grid, tile_rules, tile_size)
