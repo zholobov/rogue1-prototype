@@ -172,10 +172,12 @@ func _start_level() -> void:
 
     if is_solo:
         level.spawn_player(1, true)
-    else:
+    elif Net.is_host:
+        # Host spawns all players — MultiplayerSpawner replicates to clients
         level.spawn_player(Net.my_peer_id, true)
         for peer_id in Net.peers:
             level.spawn_player(peer_id, false)
+    # Clients: players arrive via MultiplayerSpawner, auto-setup in _ready()
 
 func _show_reward() -> void:
     _reset_peers_finished()

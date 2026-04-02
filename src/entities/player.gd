@@ -56,11 +56,20 @@ func _ready():
     var config = SceneReplicationConfig.new()
     config.add_property(NodePath(".:position"))
     config.add_property(NodePath(".:rotation"))
+    config.add_property(NodePath("Camera3D:rotation"))
     config.add_property(NodePath(".:synced_health"))
     config.add_property(NodePath(".:synced_conditions"))
     sync.replication_config = config
     sync.replication_interval = 1.0 / 20.0
     add_child(sync)
+
+    # Auto-setup when spawned via MultiplayerSpawner (client receives from host)
+    if Net.is_active and not Net.is_host and name.begins_with("Player_"):
+        var peer_id = int(name.substr(7))
+        var is_local = (multiplayer.get_unique_id() == peer_id)
+        call_deferred("setup", peer_id, is_local)
+        if is_local:
+            call_deferred("apply_upgrades")
 
 func _process(_delta: float) -> void:
     # Host pushes health and conditions to synced properties for replication
