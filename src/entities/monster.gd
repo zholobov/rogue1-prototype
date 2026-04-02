@@ -9,6 +9,13 @@ var _health_bar_fg: MeshInstance3D
 var _health_bar_visible := false
 var visual_variant: String = "basic"
 var synced_conditions: Array = []  # Array of condition name strings for VFX sync
+var synced_health: int = 100:
+    set(val):
+        synced_health = val
+        if ecs_entity and Net.is_active and not Net.is_host:
+            var health := ecs_entity.get_component(C_Health) as C_Health
+            if health:
+                health.current_health = val
 
 func _ready():
     ecs_entity = Entity.new()
@@ -39,6 +46,7 @@ func _ready():
     config.add_property(NodePath(".:position"))
     config.add_property(NodePath(".:rotation"))
     config.add_property(NodePath(".:synced_conditions"))
+    config.add_property(NodePath(".:synced_health"))
     sync.replication_config = config
     sync.replication_interval = 1.0 / 20.0
     add_child(sync)
@@ -243,8 +251,11 @@ func _setup_health_bar() -> void:
 var _last_health: int = -1
 
 func _process(_delta: float) -> void:
-    # Host pushes condition names for VFX sync
+    # Host pushes health and condition names for sync
     if not Net.is_active or Net.is_host:
+        var health := ecs_entity.get_component(C_Health) as C_Health
+        if health:
+            synced_health = health.current_health
         var conds := ecs_entity.get_component(C_Conditions) as C_Conditions
         if conds:
             var names: Array = []

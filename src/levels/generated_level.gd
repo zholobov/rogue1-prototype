@@ -343,6 +343,16 @@ func _sync_projectile(proj_name: String, pos: Vector3, dir: Vector3, speed: floa
     else:
         GameLog.info("[Sync] MISS: %s not found, children=%d" % [proj_name, _projectile_container.get_child_count()])
 
+@rpc("authority", "call_remote", "reliable")
+func _sync_kill_event(is_boss: bool) -> void:
+    if _hud:
+        var text = "Defeated Boss" if is_boss else "Defeated Enemy"
+        _hud._add_kill_feed_entry(text)
+
+@rpc("authority", "call_remote", "unreliable")
+func _sync_damage_event(pos: Vector3, amount: int, element: String) -> void:
+    _on_damage_dealt(pos, amount, element)
+
 @rpc("authority", "call_remote", "unreliable")
 func _show_remote_fire_vfx(pos: Vector3, peer_id: int) -> void:
     var flash = VfxFactory.create_muzzle_flash(pos)
@@ -375,6 +385,11 @@ func _on_actor_died(entity: Entity) -> void:
         var health := entity.get_component(C_Health) as C_Health
         if health and RunManager:
             RunManager.register_kill(health.max_health)
+
+        # Broadcast kill to clients for kill feed
+        var is_boss = entity.get_component(C_BossAI) != null
+        if Net.is_active and Net.is_host:
+            _sync_kill_event.rpc(is_boss)
 
         monsters_remaining -= 1
 
@@ -432,6 +447,9 @@ func _on_player_disconnected(peer_id: int) -> void:
             break
 
 func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
+    # Broadcast to clients so they see damage numbers too
+    if Net.is_active and Net.is_host:
+        _sync_damage_event.rpc(pos, amount, element)
     # Rate-limit: accumulate damage per location, show combined number every 0.3s
     var key = Vector3i(roundi(pos.x * 2), roundi(pos.y * 2), roundi(pos.z * 2))
     var now = Time.get_ticks_msec() / 1000.0
