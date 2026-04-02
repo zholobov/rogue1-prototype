@@ -144,6 +144,7 @@ func _on_host():
         lobby_input.text = lobby_id
     _lobby_code = lobby_id
     status_label.text = "Creating lobby: %s..." % lobby_id
+    transport_option.disabled = true
     Net.join_lobby(lobby_id)
 
 func _on_join():
@@ -153,6 +154,7 @@ func _on_join():
         return
     _lobby_code = lobby_id
     status_label.text = "Joining lobby: %s..." % lobby_id
+    transport_option.disabled = true
     Net.join_lobby(lobby_id)
 
 func _on_connected():
