@@ -253,9 +253,9 @@ var _last_health: int = -1
 func _process(_delta: float) -> void:
     # Host pushes health and condition names for sync
     if not Net.is_active or Net.is_host:
-        var health := ecs_entity.get_component(C_Health) as C_Health
-        if health:
-            synced_health = health.current_health
+        var h := ecs_entity.get_component(C_Health) as C_Health
+        if h:
+            synced_health = h.current_health
         var conds := ecs_entity.get_component(C_Conditions) as C_Conditions
         if conds:
             var names: Array = []
