@@ -460,7 +460,7 @@ func _toggle_config_panel() -> void:
 func _unhandled_input(event: InputEvent) -> void:
     if not event is InputEventKey or not event.pressed:
         return
-    if event.keycode == KEY_ESCAPE:
+    if event.physical_keycode == KEY_ESCAPE:
         if _config_visible:
             # Close config, show pause menu
             _config_visible = false
