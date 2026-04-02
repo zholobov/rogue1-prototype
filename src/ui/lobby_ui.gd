@@ -155,7 +155,10 @@ func _on_connected():
     join_separator.visible = false
     join_row.visible = false
     solo_button.visible = false
-    start_button.visible = true
+    if Net.is_host:
+        start_button.visible = true
+    else:
+        status_label.text = "Waiting for host to start..."
 
 func _on_start():
     _start_game_rpc.rpc()
