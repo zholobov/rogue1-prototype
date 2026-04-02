@@ -308,16 +308,15 @@ func _request_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, 
     _spawn_projectile(pos, dir, speed, damage, element, owner_id)
 
 func _spawn_predicted_projectile(pos: Vector3, dir: Vector3, speed: float, element: String) -> void:
-    var ghost = Node3D.new()
+    var ghost = preload("res://src/entities/predicted_projectile.gd").new()
     ghost.name = "PredictedProjectile"
-    ghost.set_meta("direction", dir)
-    ghost.set_meta("speed", speed)
-    ghost.set_meta("lifetime", 0.3)  # Short-lived — authoritative one takes over
-    add_child(ghost)
-    ghost.global_position = pos
+    ghost.direction = dir
+    ghost.speed = speed
+    ghost.lifetime = 0.3  # Short-lived — authoritative one takes over
     var trail = VfxFactory.create_trail(element)
     ghost.add_child(trail)
-    ghost.set_script(preload("res://src/entities/predicted_projectile.gd"))
+    add_child(ghost)
+    ghost.global_position = pos
 
 func _spawn_projectile(pos: Vector3, dir: Vector3, speed: float, damage: int, element: String, owner_id: int) -> void:
     var projectile = ProjectileScene.instantiate()
