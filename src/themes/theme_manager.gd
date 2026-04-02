@@ -62,6 +62,9 @@ func _load_themes() -> void:
     neon_group.group_name = "Neon Dungeon"
     neon_group.description = "Glowing neon corridors"
     neon_group.biomes = [neon_biome]
+    neon_group.player_scene = preload("res://themes/neon/player.tscn")
+    neon_group.player_body_albedo = Color(0.05, 0.05, 0.08)
+    neon_group.player_body_emission = Color(0, 0.83, 1.0)
     available_groups.append(neon_group)
 
     var stone_biome = StoneTheme.create()
@@ -69,9 +72,15 @@ func _load_themes() -> void:
     stone_group.group_name = "Stone Dungeon"
     stone_group.description = "Ancient stone halls"
     stone_group.biomes = [stone_biome]
+    stone_group.player_scene = preload("res://themes/stone/player.tscn")
+    stone_group.player_body_albedo = Color(0.35, 0.28, 0.2)
+    stone_group.player_body_emission = Color(0.6, 0.4, 0.1)
     available_groups.append(stone_group)
 
     var folk_group = FolkTheme.create_group()
+    folk_group.player_scene = preload("res://themes/folk/player.tscn")
+    folk_group.player_body_albedo = Color(0.3, 0.2, 0.1)
+    folk_group.player_body_emission = Color(0.4, 0.25, 0.1)
     available_groups.append(folk_group)
 
     # Flat list for backward compat

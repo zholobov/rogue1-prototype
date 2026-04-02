@@ -6,6 +6,15 @@ extends CharacterBody3D
 
 var ecs_entity: Entity
 var _current_weapon_index: int = 0
+var _visual_root: Node3D
+var _body_material: StandardMaterial3D
+
+const PLAYER_COLORS := [
+    Color(0.0, 0.83, 1.0),   # cyan
+    Color(1.0, 0.4, 0.2),    # orange
+    Color(0.4, 1.0, 0.3),    # green
+    Color(1.0, 0.2, 0.8),    # pink
+]
 var synced_conditions: Array = []
 var synced_health: int = 100:
     set(val):
@@ -81,11 +90,57 @@ func setup(peer_id: int, is_local: bool) -> void:
         camera.make_current()
         Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
+    # Instantiate player model from theme
+    _setup_player_model(peer_id, is_local)
+
     var wv := get_component(C_WeaponVisual) as C_WeaponVisual
     if wv:
         wv.show_viewmodel = is_local
         wv.weapon_index = _current_weapon_index
         wv.element = get_component(C_Weapon).element if get_component(C_Weapon) else ""
+
+func _setup_player_model(peer_id: int, is_local: bool) -> void:
+    var group = ThemeManager.active_group
+    if not group or not group.player_scene:
+        return
+
+    _visual_root = group.player_scene.instantiate()
+    add_child(_visual_root)
+
+    # Apply player-specific color
+    var player_index = 0
+    if Net.is_active:
+        var all_peers = [Net.my_peer_id]
+        all_peers.append_array(Net.peers.keys())
+        all_peers.sort()
+        player_index = all_peers.find(peer_id) % PLAYER_COLORS.size()
+
+    var color = PLAYER_COLORS[player_index]
+    var body_mesh = _visual_root.get_node_or_null("BodyMesh")
+    if body_mesh and body_mesh is MeshInstance3D:
+        _body_material = StandardMaterial3D.new()
+        _body_material.albedo_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3)
+        _body_material.emission_enabled = true
+        _body_material.emission = color
+        _body_material.emission_energy_multiplier = 1.5
+        body_mesh.material_override = _body_material
+
+    # Name label
+    var name_anchor = _visual_root.get_node_or_null("NameAnchor")
+    var label = Label3D.new()
+    label.text = "Player %d" % peer_id
+    label.font_size = 32
+    label.pixel_size = 0.01
+    label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+    label.no_depth_test = true
+    label.modulate = Color(color, 0.9)
+    if is_local:
+        label.visible = false
+    if name_anchor:
+        name_anchor.add_child(label)
+    else:
+        label.position = Vector3(0, 1.0, 0)
+        _visual_root.add_child(label)
 
 func _input(event: InputEvent) -> void:
     var net_id := get_component(C_NetworkIdentity) as C_NetworkIdentity

@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[sub_resource type="BoxMesh" id="1"]
+size = Vector3(0.4, 1.4, 0.4)
+
+[sub_resource type="StandardMaterial3D" id="2"]
+albedo_color = Color(0.3, 0.2, 0.1, 1)
+emission_enabled = true
+emission = Color(0.4, 0.25, 0.1, 1)
+emission_energy_multiplier = 0.3
+
+[node name="PlayerModel" type="Node3D"]
+
+[node name="BodyMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("1")
+material_override = SubResource("2")
+
+[node name="WeaponMount" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 1.0, -0.3)
+
+[node name="NameAnchor" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)

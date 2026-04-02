@@ -4,6 +4,9 @@ extends RefCounted
 var group_name: String = ""
 var description: String = ""
 var biomes: Array = []
+var player_scene: PackedScene
+var player_body_albedo: Color = Color(0.4, 0.4, 0.5)
+var player_body_emission: Color = Color(0.2, 0.2, 0.3)
 
 func get_random_biome() -> ThemeData:
     if biomes.is_empty():
