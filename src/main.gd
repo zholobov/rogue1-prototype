@@ -26,6 +26,7 @@ func _on_state_changed(new_state: int) -> void:
         _sync_state_change.rpc(new_state)
     else:
         # Solo or guest fallback
+        GameLog.info("[Main] Applying state %d locally" % new_state)
         _apply_state_change(new_state)
 
 @rpc("authority", "call_local", "reliable")
@@ -71,6 +72,9 @@ func _show_lobby() -> void:
 func _on_game_started(solo: bool) -> void:
     GameLog.info("[Main] _on_game_started(solo=%s)" % str(solo))
     is_solo = solo
+    if solo and Net.is_active:
+        Net.disconnect_all()
+        multiplayer.multiplayer_peer = null
     RunManager.start_run()
 
 func _on_meta_upgrades() -> void:

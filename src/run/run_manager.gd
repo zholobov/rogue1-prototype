@@ -22,6 +22,7 @@ func _process(delta: float) -> void:
         stats.time_elapsed += delta
 
 func start_run() -> void:
+    GameLog.info("[RunManager] start_run() Net.is_active=%s Net.is_host=%s" % [str(Net.is_active), str(Net.is_host)])
     if Net.is_active and not Net.is_host:
         return
     stats.reset()
@@ -34,6 +35,7 @@ func start_run() -> void:
     if MetaSave:
         active_upgrades.append_array(MetaSave.get_starting_upgrades())
     map = RunMap.generate(Config.boss_depth)
+    GameLog.info("[RunManager] map generated, changing to MAP state")
     run_started.emit()
     _change_state(State.MAP)
 

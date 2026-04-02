@@ -97,16 +97,20 @@ func _input(event: InputEvent) -> void:
         camera.rotate_x(-event.relative.y * Config.mouse_sensitivity)
         camera.rotation.x = clampf(camera.rotation.x, -deg_to_rad(70), deg_to_rad(70))
 
-    if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-        if not GameLog.is_open():
-            Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
     if event.is_action_pressed("ui_cancel"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
     for i in range(WeaponRegistry.weapon_count()):
         if event.is_action_pressed("weapon_%d" % (i + 1)):
             _equip_weapon(i)
+
+func _unhandled_input(event: InputEvent) -> void:
+    var net_id := get_component(C_NetworkIdentity) as C_NetworkIdentity
+    if not net_id or not net_id.is_local:
+        return
+    # Recapture mouse only when clicking on the game world (no UI consumed the click)
+    if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+        Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _equip_weapon(index: int) -> void:
     if index >= WeaponRegistry.weapon_count():
