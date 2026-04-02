@@ -195,7 +195,10 @@ func _on_upgrade_picked(upgrade: UpgradeData) -> void:
     # In multiplayer, each player picks locally, then notifies host
     RunManager.active_upgrades.append(upgrade)
     if Net.is_active:
-        _notify_reward_done.rpc_id(1, Net.my_peer_id)
+        if Net.is_host:
+            _notify_reward_done(Net.my_peer_id)
+        else:
+            _notify_reward_done.rpc_id(1, Net.my_peer_id)
 
 @rpc("any_peer", "reliable")
 func _notify_reward_done(peer_id: int) -> void:
@@ -258,7 +261,10 @@ func _on_shop_finished() -> void:
         RunManager.finish_shopping()
         return
     if Net.is_active:
-        _notify_shop_done.rpc_id(1, Net.my_peer_id)
+        if Net.is_host:
+            _notify_shop_done(Net.my_peer_id)
+        else:
+            _notify_shop_done.rpc_id(1, Net.my_peer_id)
 
 @rpc("any_peer", "reliable")
 func _notify_shop_done(peer_id: int) -> void:
