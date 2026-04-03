@@ -80,7 +80,7 @@ func _setup_visuals() -> void:
             var mesh_node = _find_first_mesh(visual_root)
             if mesh_node:
                 var mat = StandardMaterial3D.new()
-                mat.albedo_color = Color(0.15, 0.15, 0.2)
+                mat.albedo_color = Color(0.3, 0.3, 0.35)
                 mat.roughness = 0.7
                 mesh_node.material_override = mat
                 _body_material = mat
