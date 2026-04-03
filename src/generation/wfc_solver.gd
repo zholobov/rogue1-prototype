@@ -14,7 +14,14 @@ const DIRS = [
 ]
 const DIR_NAMES = ["north", "south", "east", "west"]
 
+const MAX_RETRIES := 50
+
 func solve(rules: TileRules, width: int, height: int, seed_val: int, pinned: Dictionary = {}) -> Array:
+    return _solve_bounded(rules, width, height, seed_val, pinned, 0)
+
+func _solve_bounded(rules: TileRules, width: int, height: int, seed_val: int, pinned: Dictionary, attempt: int) -> Array:
+    if attempt >= MAX_RETRIES:
+        push_warning("WFCSolver: exceeded %d retries, returning partial grid" % MAX_RETRIES)
     _rng = RandomNumberGenerator.new()
     _rng.seed = seed_val
 
@@ -62,7 +69,10 @@ func solve(rules: TileRules, width: int, height: int, seed_val: int, pinned: Dic
                 var entropy = possibilities[y][x].size()
                 if entropy == 0:
                     # Contradiction — restart with offset seed
-                    return solve(rules, width, height, seed_val + 1, pinned)
+                    if attempt < MAX_RETRIES:
+                        return _solve_bounded(rules, width, height, seed_val + 1, pinned, attempt + 1)
+                    else:
+                        break
                 if entropy < min_entropy:
                     min_entropy = entropy
                     candidates = [Vector2i(x, y)]
