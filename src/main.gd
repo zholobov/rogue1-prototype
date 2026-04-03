@@ -10,8 +10,8 @@ var _peers_finished: Dictionary = {}  # peer_id -> bool, for reward/shop wait-fo
 func _ready():
     RunManager.state_changed.connect(_on_state_changed)
     multiplayer.server_disconnected.connect(_on_host_disconnected)
-    multiplayer.peer_disconnected.connect(func(id): GameLog.info("[Main] Peer %d disconnected" % id))
     multiplayer.peer_connected.connect(func(id): GameLog.info("[Main] Peer %d connected" % id))
+    multiplayer.peer_disconnected.connect(_on_peer_disconnected)
     _show_lobby()
 
 func _on_host_disconnected() -> void:
@@ -20,6 +20,17 @@ func _on_host_disconnected() -> void:
     is_solo = false
     RunManager.return_to_lobby()
     GameLog.info("[Main] Host disconnected — returning to lobby")
+
+func _on_peer_disconnected(peer_id: int) -> void:
+    GameLog.info("[Main] Peer %d disconnected" % peer_id)
+    # Remove from peers_finished to unblock reward/shop waiting
+    if _peers_finished.has(peer_id):
+        _peers_finished.erase(peer_id)
+        # Check if remaining peers are all done
+        if RunManager.state == RunManager.State.REWARD:
+            _check_all_finished(RunManager.State.REWARD)
+        elif RunManager.state == RunManager.State.SHOP:
+            _check_all_finished(RunManager.State.SHOP)
 
 func _on_state_changed(new_state: int) -> void:
     if Net.is_active and Net.is_host:
