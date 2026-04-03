@@ -408,7 +408,7 @@ func _on_actor_died(entity: Entity) -> void:
                 _on_player_died()
 
 func _on_player_died() -> void:
-    _alive_players -= 1
+    _alive_players = maxi(0, _alive_players - 1)
     if _alive_players <= 0 and RunManager:
         RunManager.on_player_died()
 
@@ -435,7 +435,7 @@ func _on_player_disconnected(peer_id: int) -> void:
             if child.ecs_entity and ECS.world:
                 ECS.world.remove_entity(child.ecs_entity)
             child.queue_free()
-            _alive_players -= 1
+            _alive_players = maxi(0, _alive_players - 1)
             break
 
 func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
