@@ -2,10 +2,12 @@ const http = require("http");
 const WebSocket = require("ws");
 
 const PORT = process.env.PORT || 3000;
+const HTTP_PEER_TIMEOUT_MS = 60000;   // Remove HTTP peers that haven't polled in 60s
+const LOBBY_IDLE_TIMEOUT_MS = 300000; // Remove lobbies idle for 5 minutes
+const MAX_QUEUE_SIZE = 100;           // Max queued messages per HTTP peer
+const SWEEP_INTERVAL_MS = 30000;      // Run cleanup every 30s
 
-// lobby_id -> { peers: Map<peer_id, { ws?, queue? }>, nextId: number }
-// ws peers: have ws property (WebSocket connection)
-// http peers: have queue property (Array of pending messages)
+// lobby_id -> { peers: Map<peer_id, { ws?, queue?, lastPoll? }>, nextId: number, lastActivity: number }
 const lobbies = new Map();
 
 // HTTP polling: pending long-poll responses waiting for messages
@@ -16,12 +18,17 @@ function peerKey(lobbyId, peerId) {
   return `${lobbyId}:${peerId}`;
 }
 
+function now() {
+  return Date.now();
+}
+
 // Deliver a message to a peer (WebSocket or queue for HTTP polling)
 function deliverToPeer(lobbyId, peerId, data) {
   const lobby = lobbies.get(lobbyId);
   if (!lobby) return;
   const peer = lobby.peers.get(peerId);
   if (!peer) return;
+  lobby.lastActivity = now();
 
   if (peer.ws) {
     // WebSocket peer
@@ -29,8 +36,11 @@ function deliverToPeer(lobbyId, peerId, data) {
       peer.ws.send(JSON.stringify(data));
     }
   } else if (peer.queue) {
-    // HTTP polling peer — queue the message
+    // HTTP polling peer — queue the message (cap size)
     peer.queue.push(data);
+    if (peer.queue.length > MAX_QUEUE_SIZE) {
+      peer.queue.splice(0, peer.queue.length - MAX_QUEUE_SIZE);
+    }
     // If there's a pending long-poll, resolve it immediately
     const key = peerKey(lobbyId, peerId);
     const pending = pendingPolls.get(key);
@@ -67,6 +77,40 @@ function removePeer(lobbyId, peerId) {
   console.log(`Peer ${peerId} left lobby ${lobbyId}`);
 }
 
+// Periodic cleanup: remove stale HTTP peers and idle lobbies
+function sweep() {
+  const t = now();
+  for (const [lobbyId, lobby] of lobbies) {
+    // Remove HTTP peers that haven't polled recently
+    for (const [peerId, peer] of lobby.peers) {
+      if (peer.queue && peer.lastPoll && (t - peer.lastPoll > HTTP_PEER_TIMEOUT_MS)) {
+        console.log(`[Sweep] Removing stale HTTP peer ${peerId} from lobby ${lobbyId} (${t - peer.lastPoll}ms idle)`);
+        removePeer(lobbyId, peerId);
+      }
+    }
+    // Remove idle lobbies
+    if (lobby.peers.size === 0) {
+      lobbies.delete(lobbyId);
+    } else if (t - lobby.lastActivity > LOBBY_IDLE_TIMEOUT_MS) {
+      console.log(`[Sweep] Removing idle lobby ${lobbyId} (${lobby.peers.size} peers, ${t - lobby.lastActivity}ms idle)`);
+      // Notify remaining peers before removing
+      for (const [peerId] of lobby.peers) {
+        const key = peerKey(lobbyId, peerId);
+        const pending = pendingPolls.get(key);
+        if (pending) {
+          clearTimeout(pending.timer);
+          pendingPolls.delete(key);
+          pending.res.writeHead(200, { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" });
+          pending.res.end("[]");
+        }
+      }
+      lobbies.delete(lobbyId);
+    }
+  }
+}
+
+setInterval(sweep, SWEEP_INTERVAL_MS);
+
 // ==================== HTTP Server ====================
 
 const httpServer = http.createServer((req, res) => {
@@ -101,15 +145,15 @@ const httpServer = http.createServer((req, res) => {
       try { data = JSON.parse(body); } catch { res.writeHead(400); res.end(); return; }
       const lobbyId = data.lobby || "default";
       if (!lobbies.has(lobbyId)) {
-        lobbies.set(lobbyId, { peers: new Map(), nextId: 1 });
+        lobbies.set(lobbyId, { peers: new Map(), nextId: 1, lastActivity: now() });
       }
       const lobby = lobbies.get(lobbyId);
+      lobby.lastActivity = now();
       const peerId = lobby.nextId++;
-      lobby.peers.set(peerId, { queue: [] });
+      lobby.peers.set(peerId, { queue: [], lastPoll: now() });
 
-      // Queue joined message
-      const peer = lobby.peers.get(peerId);
       // Notify existing peers and queue notifications for the new peer
+      const peer = lobby.peers.get(peerId);
       for (const [pid] of lobby.peers) {
         if (pid !== peerId) {
           deliverToPeer(lobbyId, pid, { type: "peer_connected", peer_id: peerId });
@@ -170,6 +214,10 @@ const httpServer = http.createServer((req, res) => {
       res.end();
       return;
     }
+
+    // Update last poll time
+    peer.lastPoll = now();
+    lobby.lastActivity = now();
 
     // If messages are already queued, return immediately
     if (peer.queue.length > 0) {
@@ -236,9 +284,10 @@ wss.on("connection", (ws) => {
       myLobby = lobbyId;
 
       if (!lobbies.has(lobbyId)) {
-        lobbies.set(lobbyId, { peers: new Map(), nextId: 1 });
+        lobbies.set(lobbyId, { peers: new Map(), nextId: 1, lastActivity: now() });
       }
       const lobby = lobbies.get(lobbyId);
+      lobby.lastActivity = now();
       myPeerId = lobby.nextId++;
 
       // Send joined first so the client creates the mesh before adding peers
@@ -260,6 +309,7 @@ wss.on("connection", (ws) => {
     if (msg.peer_id != null && myLobby) {
       const lobby = lobbies.get(myLobby);
       if (lobby) {
+        lobby.lastActivity = now();
         const targetPeerId = msg.peer_id;
         msg.peer_id = myPeerId; // Replace with sender's ID
         deliverToPeer(myLobby, targetPeerId, msg);
