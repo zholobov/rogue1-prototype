@@ -1,9 +1,10 @@
 class_name S_MonsterAI
 extends System
 
-# Cached once per frame to avoid repeated tree scans
+# Cached once per frame to avoid repeated tree scans (also used by S_BossAI)
 var _cached_player_nodes: Array[Node] = []
 var _cached_player_positions: Array[Vector3] = []
+static var player_positions: Array[Vector3] = []
 
 func query() -> QueryBuilder:
     return q.with_all([C_MonsterAI, C_Velocity, C_Health])
@@ -19,6 +20,7 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
         for node in tree.get_nodes_in_group("players"):
             _cached_player_nodes.append(node)
             _cached_player_positions.append(node.global_position)
+    player_positions = _cached_player_positions
 
     for entity in entities:
         if not is_instance_valid(entity):

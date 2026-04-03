@@ -3,21 +3,14 @@ extends System
 
 signal boss_projectile_requested(pos: Vector3, direction: Vector3, damage: int, speed: float, owner_id: int)
 
-# Cached once per frame
-var _cached_player_positions: Array[Vector3] = []
-
 func query() -> QueryBuilder:
     return q.with_all([C_BossAI, C_MonsterAI, C_Health])
 
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
     if Net.is_active and not Net.is_host:
         return
-    # Cache player positions ONCE per frame
-    _cached_player_positions.clear()
-    var tree = ECS.world.get_tree()
-    if tree:
-        for node in tree.get_nodes_in_group("players"):
-            _cached_player_positions.append(node.global_position)
+    # Reuse player positions cached by S_MonsterAI (runs first in system order)
+    var _cached_player_positions = S_MonsterAI.player_positions
 
     for entity in entities:
         if not is_instance_valid(entity):
