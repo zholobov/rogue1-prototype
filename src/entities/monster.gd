@@ -74,12 +74,17 @@ func _setup_visuals() -> void:
         visual_root.name = "VisualRoot"
         add_child(visual_root)
         # Find the first MeshInstance3D for hit-flash material reference
-        var keep_materials = visual_root.get_node_or_null("BodyMesh")
-        if keep_materials and keep_materials.has_meta("_keep_materials"):
-            # GLB/imported model — don't override materials
+        var body_node = visual_root.get_node_or_null("BodyMesh")
+        if body_node and body_node.has_meta("_keep_materials"):
+            # GLB/imported model — apply subtle material for depth, not full emission
             var mesh_node = _find_first_mesh(visual_root)
             if mesh_node:
-                _body_material = null  # no hit flash for now on imported models
+                var mat = StandardMaterial3D.new()
+                mat.albedo_color = Color(0.15, 0.15, 0.2)
+                mat.roughness = 0.7
+                mesh_node.material_override = mat
+                _body_material = mat
+                _base_emission_energy = 0.0
         else:
             var body_mesh = _find_first_mesh(visual_root)
             if body_mesh:
