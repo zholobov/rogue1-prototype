@@ -1,5 +1,7 @@
 extends Control
 
+var _local_player: PlayerEntity
+
 # --- Health bar ---
 var _health_container: Control
 var _health_title: Label
@@ -507,17 +509,19 @@ func on_actor_died(entity: Entity) -> void:
 # ========== PROCESS ==========
 
 func _process(_delta: float) -> void:
-    var players = get_tree().get_nodes_in_group("players")
-    for player in players:
-        if player is PlayerEntity:
-            var net_id = player.get_component(C_NetworkIdentity)
-            if net_id and not net_id.is_local:
-                continue
-            _update_health(player)
-            _update_weapon(player)
-            _update_abilities(player)
-            _update_crosshair(player)
-            break
+    if not is_instance_valid(_local_player):
+        _local_player = null
+        for player in get_tree().get_nodes_in_group("players"):
+            if player is PlayerEntity:
+                var net_id = player.get_component(C_NetworkIdentity)
+                if net_id and net_id.is_local:
+                    _local_player = player
+                    break
+    if _local_player:
+        _update_health(_local_player)
+        _update_weapon(_local_player)
+        _update_abilities(_local_player)
+        _update_crosshair(_local_player)
     _update_boss_bar()
     _fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 
