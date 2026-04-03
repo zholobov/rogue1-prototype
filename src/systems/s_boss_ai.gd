@@ -9,9 +9,6 @@ func query() -> QueryBuilder:
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
     if Net.is_active and not Net.is_host:
         return
-    # Reuse player positions cached by S_MonsterAI (runs first in system order)
-    var _cached_player_positions = S_MonsterAI.player_positions
-
     for entity in entities:
         if not is_instance_valid(entity):
             continue
@@ -38,7 +35,7 @@ func process(entities: Array[Entity], _components: Array, delta: float) -> void:
 func _find_nearest_cached(from: Vector3) -> Vector3:
     var nearest_dist := INF
     var nearest_pos := Vector3.ZERO
-    for pos in _cached_player_positions:
+    for pos in S_MonsterAI.player_positions:
         var dist = from.distance_to(pos)
         if dist < nearest_dist:
             nearest_dist = dist

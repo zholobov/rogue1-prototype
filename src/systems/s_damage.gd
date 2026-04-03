@@ -61,18 +61,21 @@ static func apply_damage(target_entity: Entity, amount: int, element: String) ->
 static func _apply_element_to_conditions(conditions: C_Conditions, element: String, elem_data: ElementDefinition, duration_mult: float = 1.0) -> void:
     # Check for interactions with existing conditions
     for cond in conditions.active.duplicate():
-        if cond.name in elem_data.removes_conditions:
-            conditions.active.erase(cond)
-        elif cond.name in elem_data.amplifies_conditions:
-            cond.duration *= 1.5
+        var interaction = Elements.get_interaction(cond.name, element)
+        if interaction:
+            conditions.remove_condition(cond.name)
+            if interaction.result_condition != "":
+                conditions.add_condition(
+                    interaction.result_condition,
+                    interaction.duration * duration_mult,
+                    Elements.stacking_mode,
+                    interaction.damage_per_tick
+                )
+            return  # interaction consumed the element
 
-    # Apply new condition
-    if elem_data.condition_name != ConditionNames.NONE:
-        var new_cond = ConditionInstance.new()
-        new_cond.name = elem_data.condition_name
-        new_cond.element = element
-        new_cond.duration = elem_data.condition_duration * duration_mult
-        new_cond.damage_per_tick = elem_data.condition_damage
-        new_cond.tick_interval = elem_data.condition_tick_interval
-        new_cond.tick_timer = 0.0
-        conditions.active.append(new_cond)
+    # No interaction — apply base condition
+    conditions.add_condition(
+        elem_data.condition_name,
+        elem_data.condition_duration * duration_mult,
+        Elements.stacking_mode
+    )
