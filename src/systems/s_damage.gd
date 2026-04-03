@@ -4,10 +4,10 @@ extends RefCounted
 ## Static utility for applying damage. Not an ECS system — called directly
 ## from collision handlers (projectile._on_body_entered, S_MonsterAI, etc.)
 
-static func apply_damage(target_entity: Entity, amount: int, element: String) -> void:
+static func apply_damage(target_entity: Entity, damage: int, element: String) -> void:
     if not is_instance_valid(target_entity):
         return
-    # Only host processes damage
+    # In multiplayer, only host applies damage
     if Net.is_active and not Net.is_host:
         return
 
@@ -15,31 +15,34 @@ static func apply_damage(target_entity: Entity, amount: int, element: String) ->
     if not health:
         return
 
-    var actual_damage = amount
+    # God mode: skip damage for players
+    if Config.god_mode:
+        var tag := target_entity.get_component(C_ActorTag) as C_ActorTag
+        if tag and tag.actor_type == C_ActorTag.ActorType.PLAYER:
+            return
 
-    # Elemental resistance/weakness
-    if element != "" and Elements:
-        var elem = Elements.get_element(element)
-        if elem:
-            var conditions := target_entity.get_component(C_Conditions) as C_Conditions
-            if conditions:
-                for cond in conditions.active:
-                    if cond.name == elem.strong_against:
-                        actual_damage = int(actual_damage * 1.5)
-                    elif cond.name == elem.weak_against:
-                        actual_damage = int(actual_damage * 0.5)
-
+    # Apply damage reduction from C_PlayerStats on target
+    var actual_damage = damage
+    var player_stats := target_entity.get_component(C_PlayerStats) as C_PlayerStats
+    if player_stats:
+        actual_damage = int(float(damage) * (1.0 - player_stats.damage_reduction))
+    actual_damage = maxi(actual_damage, 1)
     health.current_health -= actual_damage
     health.current_health = maxi(health.current_health, 0)
 
-    # Track damage for stats
-    var tag := target_entity.get_component(C_ActorTag) as C_ActorTag
-    if tag and tag.actor_type == C_ActorTag.ActorType.PLAYER and RunManager:
-        RunManager.stats.took_damage_this_level = true
+    # Track outgoing damage (only count damage TO monsters, not FROM them)
+    var dmg_target_tag := target_entity.get_component(C_ActorTag) as C_ActorTag
+    if dmg_target_tag and dmg_target_tag.actor_type == C_ActorTag.ActorType.MONSTER and RunManager:
+        RunManager.stats.damage_dealt += actual_damage
+    # Track player damage taken for no-damage bonus
+    if not Config.god_mode:
+        var dmg_tag := target_entity.get_component(C_ActorTag) as C_ActorTag
+        if dmg_tag and dmg_tag.actor_type == C_ActorTag.ActorType.PLAYER and RunManager:
+            RunManager.stats.took_damage_this_level = true
 
-    # Flash hit effect
+    # Visual hit flash on monsters
     var parent = target_entity.get_parent()
-    if parent and parent.has_method("flash_hit"):
+    if parent is MonsterEntity:
         parent.flash_hit()
 
     # Apply elemental condition
