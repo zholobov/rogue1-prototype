@@ -15,7 +15,6 @@ func _ready():
         ECS.world.add_entity(ecs_entity)
 
     ecs_entity.add_component(C_Projectile.new())
-    ecs_entity.add_component(C_DamageDealer.new())
 
     body_entered.connect(_on_body_entered)
 
@@ -35,11 +34,6 @@ func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_peer_id: int)
     proj.element = elem
     proj.damage = dmg
     proj.owner_id = owner_peer_id
-
-    var dd := ecs_entity.get_component(C_DamageDealer) as C_DamageDealer
-    dd.damage = dmg
-    dd.element = elem
-    dd.owner_entity_id = owner_peer_id
 
     var trail = VfxFactory.create_trail(elem)
     add_child(trail)
