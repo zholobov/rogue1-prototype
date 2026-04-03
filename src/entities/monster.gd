@@ -74,21 +74,27 @@ func _setup_visuals() -> void:
         visual_root.name = "VisualRoot"
         add_child(visual_root)
         # Find the first MeshInstance3D for hit-flash material reference
-        var body_mesh = _find_first_mesh(visual_root)
-        if body_mesh:
-            if body_mesh.material_override:
-                _body_material = body_mesh.material_override as StandardMaterial3D
-            elif body_mesh.mesh and body_mesh.mesh.get_surface_count() > 0:
-                # Create a material override for hit flash on imported meshes
-                var mat = StandardMaterial3D.new()
-                mat.albedo_color = theme.body_albedo
-                mat.emission_enabled = true
-                mat.emission = accent
-                mat.emission_energy_multiplier = theme.accent_emission_energy
-                body_mesh.material_override = mat
-                _body_material = mat
-            if _body_material:
-                _base_emission_energy = _body_material.emission_energy_multiplier
+        var keep_materials = visual_root.get_node_or_null("BodyMesh")
+        if keep_materials and keep_materials.has_meta("_keep_materials"):
+            # GLB/imported model — don't override materials
+            var mesh_node = _find_first_mesh(visual_root)
+            if mesh_node:
+                _body_material = null  # no hit flash for now on imported models
+        else:
+            var body_mesh = _find_first_mesh(visual_root)
+            if body_mesh:
+                if body_mesh.material_override:
+                    _body_material = body_mesh.material_override as StandardMaterial3D
+                elif body_mesh.mesh and body_mesh.mesh.get_surface_count() > 0:
+                    var mat = StandardMaterial3D.new()
+                    mat.albedo_color = theme.body_albedo
+                    mat.emission_enabled = true
+                    mat.emission = accent
+                    mat.emission_energy_multiplier = theme.accent_emission_energy
+                    body_mesh.material_override = mat
+                    _body_material = mat
+                if _body_material:
+                    _base_emission_energy = _body_material.emission_energy_multiplier
     else:
         # Procedural fallback: find existing MeshInstance3D child (from the .tscn scene)
         var mesh_node: MeshInstance3D = null
