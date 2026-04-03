@@ -127,7 +127,6 @@ func _on_poll_response(result: int, response_code: int, _headers: PackedStringAr
     elif result == HTTPRequest.RESULT_SUCCESS and response_code == 200:
         var text = body.get_string_from_utf8()
         if text != "" and text != "[]":
-            GameLog.info("[HTTPSignaling] Poll got %d bytes" % text.length())
             var messages = JSON.parse_string(text)
             if messages is Array:
                 for msg in messages:
