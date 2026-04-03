@@ -73,12 +73,22 @@ func _setup_visuals() -> void:
         var visual_root := scene_override.instantiate() as Node3D
         visual_root.name = "VisualRoot"
         add_child(visual_root)
-        # Use the scene's own materials — don't override with random accent.
-        # Just grab a reference to BodyMesh material for the hit-flash system.
-        var body_mesh := visual_root.get_node_or_null("BodyMesh") as MeshInstance3D
-        if body_mesh and body_mesh.material_override:
-            _body_material = body_mesh.material_override as StandardMaterial3D
-            _base_emission_energy = _body_material.emission_energy_multiplier if _body_material else 1.0
+        # Find the first MeshInstance3D for hit-flash material reference
+        var body_mesh = _find_first_mesh(visual_root)
+        if body_mesh:
+            if body_mesh.material_override:
+                _body_material = body_mesh.material_override as StandardMaterial3D
+            elif body_mesh.mesh and body_mesh.mesh.get_surface_count() > 0:
+                # Create a material override for hit flash on imported meshes
+                var mat = StandardMaterial3D.new()
+                mat.albedo_color = theme.body_albedo
+                mat.emission_enabled = true
+                mat.emission = accent
+                mat.emission_energy_multiplier = theme.accent_emission_energy
+                body_mesh.material_override = mat
+                _body_material = mat
+            if _body_material:
+                _base_emission_energy = _body_material.emission_energy_multiplier
     else:
         # Procedural fallback: find existing MeshInstance3D child (from the .tscn scene)
         var mesh_node: MeshInstance3D = null
@@ -119,6 +129,15 @@ func _add_eye(offset: Vector3, _accent: Color) -> void:
     eye.material_override = mat
 
     add_child(eye)
+
+func _find_first_mesh(node: Node) -> MeshInstance3D:
+    if node is MeshInstance3D:
+        return node
+    for child in node.get_children():
+        var found = _find_first_mesh(child)
+        if found:
+            return found
+    return null
 
 func setup_as_boss(loop: int) -> void:
     var theme := ThemeManager.active_theme
