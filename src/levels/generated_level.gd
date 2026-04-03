@@ -461,13 +461,14 @@ func _on_damage_dealt(pos: Vector3, amount: int, element: String) -> void:
     get_tree().current_scene.add_child(ft)
     ft.show_text(pos, "-%d" % amount)
 
-    # Clean up old entries that were never flushed
-    var stale_keys: Array = []
-    for k in _damage_accum:
-        if now - _damage_accum[k].time > 1.0:
-            stale_keys.append(k)
-    for k in stale_keys:
-        _damage_accum.erase(k)
+    # Clean up old entries periodically (only when dictionary grows)
+    if _damage_accum.size() > 20:
+        var stale_keys: Array = []
+        for k in _damage_accum:
+            if now - _damage_accum[k].time > 1.0:
+                stale_keys.append(k)
+        for k in stale_keys:
+            _damage_accum.erase(k)
 
 func _find_in_group(node: Node, group: String) -> Array[Node]:
     var found: Array[Node] = []
