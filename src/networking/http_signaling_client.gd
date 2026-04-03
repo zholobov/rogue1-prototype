@@ -29,8 +29,15 @@ func connect_to_server(url: String) -> Error:
         _pending_lobby = ""
     return OK
 
+var _join_sent_time: float = 0.0
+var _logged_wait := false
+
 func poll() -> void:
-    pass  # HTTP client uses HTTPRequest callbacks, no frame-based polling needed
+    if _join_sent_time > 0 and _peer_id == 0 and not _logged_wait:
+        var elapsed = (Time.get_ticks_msec() / 1000.0) - _join_sent_time
+        if elapsed > 5.0:
+            _logged_wait = true
+            GameLog.info("[HTTPSignaling] Join request pending for >5s — may be blocked by CORS or network")
 
 func join_lobby(lobby_id: String) -> void:
     if _connected:
@@ -62,18 +69,23 @@ func close() -> void:
 
 func _join(lobby_id: String) -> void:
     _lobby_id = lobby_id
-    GameLog.info("[HTTPSignaling] Joining lobby: %s" % lobby_id)
+    var url = _base_url + "/api/join"
+    var body = JSON.stringify({"lobby": lobby_id})
+    GameLog.info("[HTTPSignaling] POST %s body=%s" % [url, body])
+    _join_sent_time = Time.get_ticks_msec() / 1000.0
+    _logged_wait = false
     var req = HTTPRequest.new()
     add_child(req)
     req.request_completed.connect(_on_join_response.bind(req))
-    req.request(_base_url + "/api/join",
-        ["Content-Type: application/json"], HTTPClient.METHOD_POST,
-        JSON.stringify({"lobby": lobby_id}))
+    var err = req.request(url, ["Content-Type: application/json"], HTTPClient.METHOD_POST, body)
+    if err != OK:
+        GameLog.info("[HTTPSignaling] request() returned error: %d" % err)
 
 func _on_join_response(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray, req: HTTPRequest) -> void:
+    GameLog.info("[HTTPSignaling] Join response: result=%d code=%d body_len=%d" % [result, response_code, body.size()])
     req.queue_free()
     if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-        GameLog.info("[HTTPSignaling] Join failed: result=%d code=%d" % [result, response_code])
+        GameLog.info("[HTTPSignaling] Join failed: result=%d code=%d body=%s" % [result, response_code, body.get_string_from_utf8().substr(0, 200)])
         return
     var parsed = JSON.parse_string(body.get_string_from_utf8())
     if not parsed:
@@ -110,9 +122,12 @@ func _on_poll_response(result: int, response_code: int, _headers: PackedStringAr
     req.queue_free()
     if not _polling:
         return
-    if result == HTTPRequest.RESULT_SUCCESS and response_code == 200:
+    if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
+        GameLog.info("[HTTPSignaling] Poll error: result=%d code=%d" % [result, response_code])
+    elif result == HTTPRequest.RESULT_SUCCESS and response_code == 200:
         var text = body.get_string_from_utf8()
         if text != "" and text != "[]":
+            GameLog.info("[HTTPSignaling] Poll got %d bytes" % text.length())
             var messages = JSON.parse_string(text)
             if messages is Array:
                 for msg in messages:
