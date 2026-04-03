@@ -3,8 +3,11 @@ extends Area3D
 
 var ecs_entity: Entity
 var _dying := false
+const SELF_DESTRUCT_TIME := 5.0
+const OWNER_GRACE_PERIOD := 0.2
+
 var _owner_peer_id: int = -1
-var _grace_timer: float = 0.2
+var _grace_timer: float = OWNER_GRACE_PERIOD
 
 func _ready():
     ecs_entity = Entity.new()
@@ -23,7 +26,7 @@ func _ready():
         visible = false
 
     # Self-destruct timer (works on both host and client)
-    get_tree().create_timer(5.0).timeout.connect(_expire)
+    get_tree().create_timer(SELF_DESTRUCT_TIME).timeout.connect(_expire)
 
 func setup(dir: Vector3, spd: float, dmg: int, elem: String, owner_peer_id: int) -> void:
     visible = true
@@ -76,7 +79,7 @@ func _on_body_entered(body: Node) -> void:
         return
 
     # Grace period: skip owner during first 0.2s so projectile clears the body
-    if _grace_timer > 0 and body is CharacterBody3D:
+    if _grace_timer > 0.0 and body is CharacterBody3D:
         var player_name = "Player_%d" % _owner_peer_id
         if body.name == player_name:
             return
