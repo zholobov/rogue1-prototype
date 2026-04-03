@@ -34,7 +34,10 @@ func _on_peer_disconnected(peer_id: int) -> void:
 
 func _on_state_changed(new_state: int) -> void:
     if Net.is_active and Net.is_host:
-        # Send level config BEFORE state change so client has correct seed
+        # IMPORTANT: level config MUST be sent BEFORE state change RPC.
+        # Both use the reliable channel (SCTP ordered), so config arrives first.
+        # If this ordering breaks (e.g. switching to unreliable), clients will
+        # generate levels with wrong seeds/grids.
         if new_state == RunManager.State.LEVEL or new_state == RunManager.State.BOSS:
             # Pre-generate grid so it's available for the RPC
             var gen = LevelGenerator.new()
