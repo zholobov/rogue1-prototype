@@ -207,16 +207,16 @@ func _on_upgrade_picked(upgrade: UpgradeData) -> void:
     RunManager.active_upgrades.append(upgrade)
     if Net.is_active:
         if Net.is_host:
-            _notify_reward_done(Net.my_peer_id)
+            _notify_player_done(Net.my_peer_id)
         else:
-            _notify_reward_done.rpc_id(1, Net.my_peer_id)
+            _notify_player_done.rpc_id(1, Net.my_peer_id)
 
 @rpc("any_peer", "reliable")
-func _notify_reward_done(peer_id: int) -> void:
+func _notify_player_done(peer_id: int) -> void:
     if not Net.is_host:
         return
     _peers_finished[peer_id] = true
-    _check_all_finished(RunManager.State.REWARD)
+    _check_all_finished(RunManager.state)
 
 func _reset_peers_finished() -> void:
     _peers_finished.clear()
@@ -273,14 +273,7 @@ func _on_shop_finished() -> void:
         return
     if Net.is_active:
         if Net.is_host:
-            _notify_shop_done(Net.my_peer_id)
+            _notify_player_done(Net.my_peer_id)
         else:
-            _notify_shop_done.rpc_id(1, Net.my_peer_id)
-
-@rpc("any_peer", "reliable")
-func _notify_shop_done(peer_id: int) -> void:
-    if not Net.is_host:
-        return
-    _peers_finished[peer_id] = true
-    _check_all_finished(RunManager.State.SHOP)
+            _notify_player_done.rpc_id(1, Net.my_peer_id)
 
