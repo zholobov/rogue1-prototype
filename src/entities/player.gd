@@ -173,7 +173,7 @@ func _input(event: InputEvent) -> void:
     if event.is_action_pressed("ui_cancel"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-    if not GameLog.input_blocked:
+    if not UIState.input_blocked:
         for i in range(WeaponRegistry.weapon_count()):
             if event.is_action_pressed("weapon_%d" % (i + 1)):
                 _equip_weapon(i)

@@ -56,7 +56,7 @@ static func apply_damage(target_entity: Entity, amount: int, element: String) ->
 
     # Emit damage event for floating numbers
     if parent and DamageEvents:
-        DamageEvents.damage_dealt.emit(parent.global_position, actual_damage, element)
+        DamageEvents.emit_damage(parent.global_position, actual_damage, element)
 
 static func _apply_element_to_conditions(conditions: C_Conditions, element: String, elem_data: ElementDefinition, duration_mult: float = 1.0) -> void:
     # Check for interactions with existing conditions

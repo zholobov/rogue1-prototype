@@ -32,6 +32,7 @@ MetaSave="*res://src/run/meta_save.gd"
 DamageEvents="*res://src/events/damage_events.gd"
 VersionInfo="*res://src/config/version_info.gd"
 GameLog="*res://src/ui/game_log.gd"
+UIState="*res://src/ui/ui_state.gd"
 
 [display]
 

@@ -14,14 +14,14 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
 
         var pi := entity.get_component(C_PlayerInput) as C_PlayerInput
         var vel := entity.get_component(C_Velocity) as C_Velocity
+        var weapon := entity.get_component(C_Weapon) as C_Weapon
 
         # Block game input when UI overlay is active
-        if GameLog.input_blocked:
+        if UIState.input_blocked:
             pi.move_direction = Vector2.ZERO
             pi.jumping = false
             vel.direction = Vector3.ZERO
             vel.speed = 0.0
-            var weapon := entity.get_component(C_Weapon) as C_Weapon
             weapon.is_firing = false
             continue
 
@@ -41,5 +41,4 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
         vel.speed = base_speed if vel.direction != Vector3.ZERO else 0.0
 
         # Fire weapon
-        var weapon := entity.get_component(C_Weapon) as C_Weapon
         weapon.is_firing = Input.is_action_pressed("fire")
