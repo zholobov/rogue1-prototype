@@ -23,7 +23,6 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
                 ft.show_text(parent.global_position, "+%d" % reward)
 
             actor_died.emit(entity)
-            if ECS.world:
-                ECS.world.remove_entity(entity)
+            # Defer removal to avoid modifying entity arrays during iteration
             if is_instance_valid(parent):
-                parent.queue_free()
+                parent.call_deferred("queue_free")
