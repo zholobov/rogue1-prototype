@@ -340,6 +340,12 @@ func _build_pause_menu() -> void:
     resume_btn.pressed.connect(_on_pause_resume)
     vbox.add_child(resume_btn)
 
+    var god_mode_toggle = CheckButton.new()
+    god_mode_toggle.text = "God Mode"
+    god_mode_toggle.button_pressed = Config.god_mode
+    god_mode_toggle.toggled.connect(func(on): Config.god_mode = on)
+    vbox.add_child(god_mode_toggle)
+
     var config_btn = Button.new()
     config_btn.text = "Config"
     config_btn.pressed.connect(_on_pause_config)

@@ -41,7 +41,7 @@ extends Node
 @export_enum("normal", "dense", "large", "dark", "horde", "boss") var current_modifier: String = Modifiers.NORMAL
 
 @export_group("Debug")
-@export var god_mode: bool = false
+@export var god_mode: bool = true
 
 # Multiplayer: host-generated grid sent to clients (not exported)
 var synced_grid: Array = []
