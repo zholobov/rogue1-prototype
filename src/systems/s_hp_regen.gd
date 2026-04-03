@@ -10,6 +10,14 @@ func query() -> QueryBuilder:
 func process(entities: Array[Entity], _components: Array, delta: float) -> void:
     if Net.is_active and not Net.is_host:
         return
+    # Prune stale entries
+    var valid_ids: Dictionary = {}
+    for entity in entities:
+        if is_instance_valid(entity):
+            valid_ids[entity.get_instance_id()] = true
+    for eid in _regen_accum.keys():
+        if not valid_ids.has(eid):
+            _regen_accum.erase(eid)
     for entity in entities:
         if not is_instance_valid(entity):
             continue

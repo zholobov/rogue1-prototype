@@ -12,6 +12,16 @@ func query() -> QueryBuilder:
     return q.with_all([C_WeaponVisual])
 
 func process(entities: Array[Entity], _components: Array, _delta: float) -> void:
+    # Prune stale entries
+    var valid_ids: Dictionary = {}
+    for entity in entities:
+        if is_instance_valid(entity):
+            valid_ids[entity.get_instance_id()] = true
+    for eid in _last_index.keys():
+        if not valid_ids.has(eid):
+            _last_index.erase(eid)
+            _weapon_nodes.erase(eid)
+            _recoil_tweens.erase(eid)
     for entity in entities:
         if not is_instance_valid(entity):
             continue
