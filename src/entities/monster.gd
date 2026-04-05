@@ -180,7 +180,9 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
     return null
 
 func _play_anim(anim_name: StringName) -> void:
-    if not _anim_player or _current_anim == anim_name:
+    if not _anim_player:
+        return
+    if _current_anim == anim_name and _anim_player.is_playing():
         return
     if _anim_player.has_animation(anim_name):
         _anim_player.play(anim_name)
