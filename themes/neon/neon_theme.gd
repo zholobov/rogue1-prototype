@@ -89,14 +89,14 @@ static func create() -> ThemeData:
     var basic = MonsterVariantDefinition.new()
     basic.variant_name = "Neon Basic"
     basic.variant_key = &"basic"
-    basic.scene = load("res://themes/neon/monster_basic.tscn")
+    basic.scene = load("res://themes/neon/monster_kaykit_barbarian.tscn")
     basic.spawn_weight = 2.0
     t.monster_variants.append(basic)
 
     var boss = MonsterVariantDefinition.new()
     boss.variant_name = "Neon Boss"
     boss.variant_key = Modifiers.BOSS
-    boss.scene = load("res://themes/neon/monster_boss.tscn")
+    boss.scene = load("res://themes/neon/monster_kaykit_mage.tscn")
     boss.is_boss = true
     boss.spawn_weight = 0.0
     t.monster_variants.append(boss)

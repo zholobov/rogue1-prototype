@@ -8,6 +8,9 @@ var _health_bar_node: Node3D
 var _health_bar_fg: MeshInstance3D
 var _health_bar_visible := false
 var visual_variant: String = "basic"
+var _anim_player: AnimationPlayer
+var _current_anim: StringName = &""
+var _cached_ai: C_MonsterAI
 var synced_conditions: Array = []  # Array of condition name strings for VFX sync
 var synced_health: int = 100:
     set(val):
@@ -34,6 +37,8 @@ func _ready():
     var tag := ecs_entity.get_component(C_ActorTag) as C_ActorTag
     tag.actor_type = C_ActorTag.ActorType.MONSTER
     tag.team = 1
+
+    _cached_ai = ecs_entity.get_component(C_MonsterAI) as C_MonsterAI
 
     _setup_visuals()
     _setup_health_bar()
@@ -75,7 +80,22 @@ func _setup_visuals() -> void:
         add_child(visual_root)
         # Find the first MeshInstance3D for hit-flash material reference
         var body_node = visual_root.get_node_or_null("BodyMesh")
-        if body_node and body_node.has_meta("_keep_materials"):
+        if body_node and body_node.has_meta("_preserve_textures"):
+            # Textured model (e.g. KayKit) — keep original materials, add emission for hit flash
+            var mesh_node = _find_first_mesh(visual_root)
+            if mesh_node:
+                var existing_mat = mesh_node.get_active_material(0)
+                if existing_mat and existing_mat is StandardMaterial3D:
+                    _body_material = existing_mat.duplicate() as StandardMaterial3D
+                    _body_material.emission_enabled = true
+                    _body_material.emission = Color.WHITE
+                    _body_material.emission_energy_multiplier = 0.0
+                    mesh_node.material_override = _body_material
+                    _base_emission_energy = 0.0
+            _anim_player = _find_animation_player(visual_root)
+            if _anim_player:
+                _play_anim(&"Idle")
+        elif body_node and body_node.has_meta("_keep_materials"):
             # GLB/imported model — apply subtle material for depth, not full emission
             var mesh_node = _find_first_mesh(visual_root)
             if mesh_node:
@@ -150,6 +170,22 @@ func _find_first_mesh(node: Node) -> MeshInstance3D:
             return found
     return null
 
+func _find_animation_player(node: Node) -> AnimationPlayer:
+    if node is AnimationPlayer:
+        return node
+    for child in node.get_children():
+        var found = _find_animation_player(child)
+        if found:
+            return found
+    return null
+
+func _play_anim(anim_name: StringName) -> void:
+    if not _anim_player or _current_anim == anim_name:
+        return
+    if _anim_player.has_animation(anim_name):
+        _anim_player.play(anim_name)
+        _current_anim = anim_name
+
 func setup_as_boss(loop: int) -> void:
     var theme := ThemeManager.active_theme
 
@@ -168,22 +204,39 @@ func setup_as_boss(loop: int) -> void:
         var visual_root := boss_scene.instantiate() as Node3D
         visual_root.name = "VisualRoot"
         add_child(visual_root)
-        var body_mesh := visual_root.get_node_or_null("BodyMesh") as MeshInstance3D
-        if body_mesh:
-            _body_material = StandardMaterial3D.new()
-            _body_material.albedo_color = theme.boss_albedo
-            _body_material.emission_enabled = true
-            _body_material.emission = theme.boss_emission
-            _body_material.emission_energy_multiplier = 2.0
-            body_mesh.material_override = _body_material
-        var eye_mesh := visual_root.get_node_or_null("EyeMesh") as MeshInstance3D
-        if eye_mesh:
-            var eye_mat = StandardMaterial3D.new()
-            eye_mat.albedo_color = Color.BLACK
-            eye_mat.emission_enabled = true
-            eye_mat.emission = theme.eye_color
-            eye_mat.emission_energy_multiplier = 3.0
-            eye_mesh.material_override = eye_mat
+        var body_node := visual_root.get_node_or_null("BodyMesh")
+        if body_node and body_node.has_meta("_preserve_textures"):
+            # Textured boss model — keep original materials, add emission for hit flash
+            var mesh_node = _find_first_mesh(visual_root)
+            if mesh_node:
+                var existing_mat = mesh_node.get_active_material(0)
+                if existing_mat and existing_mat is StandardMaterial3D:
+                    _body_material = existing_mat.duplicate() as StandardMaterial3D
+                    _body_material.emission_enabled = true
+                    _body_material.emission = Color.WHITE
+                    _body_material.emission_energy_multiplier = 0.0
+                    mesh_node.material_override = _body_material
+                    _base_emission_energy = 0.0
+            _anim_player = _find_animation_player(visual_root)
+            if _anim_player:
+                _play_anim(&"Idle")
+        else:
+            var body_mesh := body_node as MeshInstance3D
+            if body_mesh:
+                _body_material = StandardMaterial3D.new()
+                _body_material.albedo_color = theme.boss_albedo
+                _body_material.emission_enabled = true
+                _body_material.emission = theme.boss_emission
+                _body_material.emission_energy_multiplier = 2.0
+                body_mesh.material_override = _body_material
+            var eye_mesh := visual_root.get_node_or_null("EyeMesh") as MeshInstance3D
+            if eye_mesh:
+                var eye_mat = StandardMaterial3D.new()
+                eye_mat.albedo_color = Color.BLACK
+                eye_mat.emission_enabled = true
+                eye_mat.emission = theme.eye_color
+                eye_mat.emission_energy_multiplier = 3.0
+                eye_mesh.material_override = eye_mat
 
     scale = Vector3(2.0, 2.0, 2.0)
 
@@ -285,6 +338,16 @@ func _setup_health_bar() -> void:
 var _last_health: int = -1
 
 func _process(_delta: float) -> void:
+    # Drive animation from AI state
+    if _anim_player and _cached_ai:
+        match _cached_ai.state:
+            C_MonsterAI.AIState.CHASE:
+                _play_anim(&"Running_A")
+            C_MonsterAI.AIState.ATTACK:
+                _play_anim(&"1H_Melee_Attack_Chop")
+            _:
+                _play_anim(&"Idle")
+
     # Host pushes health and condition names for sync
     if not Net.is_active or Net.is_host:
         var h := ecs_entity.get_component(C_Health) as C_Health

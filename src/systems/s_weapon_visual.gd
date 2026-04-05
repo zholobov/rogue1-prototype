@@ -19,6 +19,9 @@ func process(entities: Array[Entity], _components: Array, _delta: float) -> void
             valid_ids[entity.get_instance_id()] = true
     for eid in _last_index.keys():
         if not valid_ids.has(eid):
+            var old_weapon = _weapon_nodes.get(eid)
+            if old_weapon and is_instance_valid(old_weapon):
+                old_weapon.queue_free()
             _last_index.erase(eid)
             _weapon_nodes.erase(eid)
             _recoil_tweens.erase(eid)
